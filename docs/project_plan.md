@@ -15,6 +15,7 @@ Expanded docs:
 - [Architecture](architecture.md)
 - [Version 1 scope](version_1_scope.md)
 - [Roadmap](roadmap.md)
+- [Design decisions](design_decisions.md)
 
 ## Core Design Philosophy
 
@@ -27,6 +28,7 @@ Expanded docs:
 - [Design boundaries](design_boundaries.md)
 - [ASIC portability](asic_portability.md)
 - [Coding style](coding_style.md)
+- [ASIC signoff flow](asic_signoff_flow.md)
 
 ## Target Platform
 
@@ -140,6 +142,29 @@ compare generated framebuffer output against golden frames.
 Expanded doc:
 
 - [Verification plan](verification_plan.md)
+- [Formal verification](formal_verification.md)
+- [Coverage plan](coverage_plan.md)
+
+## Formal and ASIC-Style Signoff Plan
+
+Formal verification and ASIC-style signoff are now explicit project lanes.
+They should improve RTL quality from the beginning without blocking the first
+FPGA-visible GPU milestone.
+
+Practical sequencing:
+
+1. build the visible FPGA GPU path
+2. formally prove reusable protocol-heavy blocks in parallel
+3. add ASIC lint and synthesis checks once the first core modules stabilize
+4. attempt OpenROAD or OpenLane hardening after Version 1 behavior is stable
+
+Expanded docs:
+
+- [Formal verification](formal_verification.md)
+- [ASIC signoff flow](asic_signoff_flow.md)
+- [DFT plan](dft_plan.md)
+- [Timing constraints](timing_constraints.md)
+- [SRAM strategy](sram_strategy.md)
 
 ## FPGA Bring-Up Plan
 
@@ -166,6 +191,8 @@ I/O, and board-specific logic behind wrappers.
 Expanded doc:
 
 - [ASIC portability](asic_portability.md)
+- [SRAM strategy](sram_strategy.md)
+- [Timing constraints](timing_constraints.md)
 
 ## Guiding Principle
 

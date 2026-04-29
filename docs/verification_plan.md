@@ -3,6 +3,11 @@
 Verification starts before FPGA bring-up. Every major module should have a
 simulation path and a small set of targeted tests.
 
+Formal verification and coverage are first-class verification activities. This
+document describes the whole verification stack; detailed proof planning lives
+in [formal_verification.md](formal_verification.md), and coverage planning lives
+in [coverage_plan.md](coverage_plan.md).
+
 ## Verification Pyramid
 
 ```mermaid
@@ -74,6 +79,34 @@ Add simple assertions for protocol mistakes:
 - no FIFO push when full unless simultaneous pop allows it
 - draw unit `done` only follows an accepted `start`
 - memory write mask is nonzero for writes
+
+## Formal Verification Lane
+
+Initial formal targets:
+
+- FIFO ordering, overflow, and underflow safety
+- valid/ready payload stability
+- clear engine termination under fair backpressure
+- rectangle fill bounds safety
+- framebuffer writer address and write-mask correctness
+- memory arbiter one-hot grants and no dropped accepted request
+
+Formal is not a replacement for framebuffer golden tests. It proves local
+properties that are difficult to cover exhaustively with simulation.
+
+## ASIC-Oriented Verification
+
+ASIC-style verification adds:
+
+- lint with waiver discipline
+- clock/reset structural checks
+- CDC checks when multiple clocks are introduced
+- synthesis smoke tests outside Vivado
+- RTL-to-gate equivalence checks
+- timing constraint checks for unconstrained paths
+
+The first ASIC-oriented milestone is a clean lint and generic synthesis run for
+the portable core, not a complete physical layout.
 
 ## FPGA Validation
 

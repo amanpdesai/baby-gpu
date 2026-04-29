@@ -40,6 +40,7 @@ Start with [docs/index.md](docs/index.md).
 Key documents:
 
 - [Project plan](docs/project_plan.md)
+- [Design decisions](docs/design_decisions.md)
 - [Architecture](docs/architecture.md)
 - [Design boundaries](docs/design_boundaries.md)
 - [Target platform](docs/target_platform.md)
@@ -48,8 +49,13 @@ Key documents:
 - [Memory system](docs/memory_system.md)
 - [Video pipeline](docs/video_pipeline.md)
 - [Verification plan](docs/verification_plan.md)
+- [Formal verification](docs/formal_verification.md)
 - [FPGA bring-up](docs/fpga_bringup.md)
 - [ASIC portability](docs/asic_portability.md)
+- [ASIC signoff flow](docs/asic_signoff_flow.md)
+- [Coverage plan](docs/coverage_plan.md)
+- [Timing constraints](docs/timing_constraints.md)
+- [SRAM strategy](docs/sram_strategy.md)
 - [Version 1 scope](docs/version_1_scope.md)
 
 ## Current Status

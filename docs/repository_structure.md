@@ -10,6 +10,9 @@ baby-gpu/
   rtl/
   platform/
   tb/
+  formal/
+  verification/
+  asic/
   tools/
   tests/
   fpga/
@@ -24,6 +27,9 @@ flowchart TB
   Repo --> RTL[rtl]
   Repo --> Platform[platform]
   Repo --> TB[tb]
+  Repo --> Formal[formal]
+  Repo --> Verification[verification]
+  Repo --> ASICFlow[asic]
   Repo --> Tools[tools]
   Repo --> Tests[tests]
   Repo --> FPGA[fpga]
@@ -53,6 +59,14 @@ flowchart TB
 | `platform/asic/` | Placeholder wrappers for SRAM, PLL, pads, and future ASIC integration. |
 | `tb/unit/` | Unit testbenches for individual modules. |
 | `tb/integration/` | Full-core and framebuffer render tests. |
+| `formal/properties/` | Reusable SystemVerilog assertions and assumptions. |
+| `formal/harnesses/` | Module-specific formal harnesses. |
+| `formal/scripts/` | SymbiYosys or formal tool launch scripts. |
+| `verification/` | Regression manifests, coverage plans, and generated reports. |
+| `asic/constraints/` | SDC and ASIC timing constraints. |
+| `asic/openroad/` | OpenROAD or OpenLane physical-design experiments. |
+| `asic/reports/` | Synthesis, timing, area, power, LEC, and signoff reports. |
+| `asic/scripts/` | ASIC flow scripts. |
 | `tools/scripts/` | Build, simulation, lint, and formatting scripts. |
 | `tools/generators/` | Test image, sprite ROM, and command stream generators. |
 | `tests/` | Command streams, expected frames, and generated frames. |

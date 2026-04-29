@@ -74,6 +74,21 @@ Assertions should document invariants that are easy to violate:
 
 Assertions should live near the behavior they protect.
 
+## ASIC-Oriented RTL Rules
+
+When implementation starts, use these additional rules:
+
+- avoid declaration-time initialization in synthesizable RTL
+- avoid `initial` blocks in portable synthesizable RTL
+- use sized constants for datapath logic
+- make FSM encodings explicit where helpful for debug
+- include illegal-state recovery for control FSMs
+- keep memories behind wrappers or interfaces
+- document every intended multicycle behavior
+- keep valid/ready payload stable during stalls
+- make every draw unit's termination condition explicit
+- make every counter width bounded by parameters
+
 ## Comments
 
 Comment non-obvious hardware behavior:

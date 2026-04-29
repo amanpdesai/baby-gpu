@@ -53,6 +53,8 @@ flowchart LR
 - Urbana video wrapper
 - design documentation
 - unit and integration testbench scaffolding
+- formal proof scaffolding for FIFO and valid/ready interfaces
+- ASIC flow scaffolding for constraints, reports, and synthesis experiments
 
 ## Out of Scope
 
@@ -66,6 +68,9 @@ flowchart LR
 - programmable shaders
 - multi-clock optimization
 - ASIC physical design
+- complete ASIC signoff
+- scan insertion
+- multi-corner timing closure
 
 ## Definition of Done
 
@@ -80,6 +85,7 @@ Version 1 is complete when:
 - Urbana-specific code is isolated under `platform/urbana/`
 - architecture, command format, and memory map docs exist
 - notes capture bring-up and design decisions
+- formal and ASIC signoff plans exist
 
 ## First Demo
 

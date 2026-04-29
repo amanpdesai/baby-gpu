@@ -3,6 +3,10 @@
 The design does not need to be ASIC-ready on day one. It should avoid choices
 that make an ASIC path unnecessarily expensive later.
 
+The detailed ASIC-style implementation flow is covered in
+[asic_signoff_flow.md](asic_signoff_flow.md). This document focuses on RTL and
+architecture choices that preserve portability.
+
 ## Replacement Boundary
 
 ```mermaid
@@ -64,6 +68,26 @@ ASIC-aware lint should flag:
 - incomplete resets where reset is required
 - unintended clock gating
 - unsynchronized CDC paths
+
+## Signoff-Oriented Additions
+
+To support an ASIC hardening experiment, the plan now includes:
+
+- formal proof targets for reusable blocks
+- an SRAM wrapper strategy
+- SDC timing constraints
+- DFT planning
+- generic synthesis
+- RTL-to-gate equivalence checking
+- OpenROAD or OpenLane experiment directories
+
+Related docs:
+
+- [Formal verification](formal_verification.md)
+- [ASIC signoff flow](asic_signoff_flow.md)
+- [DFT plan](dft_plan.md)
+- [Timing constraints](timing_constraints.md)
+- [SRAM strategy](sram_strategy.md)
 
 ## Portability Exit Criteria
 
