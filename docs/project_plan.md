@@ -144,6 +144,7 @@ Expanded doc:
 - [Verification plan](verification_plan.md)
 - [Formal verification](formal_verification.md)
 - [Coverage plan](coverage_plan.md)
+- [Native toolchain](toolchain.md)
 
 ## Formal and ASIC-Style Signoff Plan
 

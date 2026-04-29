@@ -50,6 +50,7 @@ Key documents:
 - [Video pipeline](docs/video_pipeline.md)
 - [Verification plan](docs/verification_plan.md)
 - [Formal verification](docs/formal_verification.md)
+- [Native toolchain](docs/toolchain.md)
 - [FPGA bring-up](docs/fpga_bringup.md)
 - [ASIC portability](docs/asic_portability.md)
 - [ASIC signoff flow](docs/asic_signoff_flow.md)
@@ -60,5 +61,12 @@ Key documents:
 
 ## Current Status
 
-This repository currently contains the project scaffold and design
-documentation. RTL implementation comes next.
+This repository currently contains the project scaffold, design documentation,
+and native VM toolchain checks. RTL implementation comes next.
+
+## Toolchain Check
+
+```text
+make check-tools
+make tool-versions
+```

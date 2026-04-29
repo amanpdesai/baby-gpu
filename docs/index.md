@@ -23,6 +23,7 @@ RTL is written.
 | Graphics pipeline | [graphics_pipeline.md](graphics_pipeline.md) | Explains draw-unit sequencing and pixel write flow. |
 | Verification | [verification_plan.md](verification_plan.md) | Defines unit, integration, image, and FPGA validation. |
 | Formal verification | [formal_verification.md](formal_verification.md) | Defines proofs, harnesses, assumptions, and property targets. |
+| Native toolchain | [toolchain.md](toolchain.md) | Documents installed VM tools and project tool checks. |
 | FPGA bring-up | [fpga_bringup.md](fpga_bringup.md) | Defines the staged Urbana hardware bring-up plan. |
 | ASIC portability | [asic_portability.md](asic_portability.md) | Captures rules that keep the core replaceable and portable. |
 | ASIC signoff flow | [asic_signoff_flow.md](asic_signoff_flow.md) | Maps the project to an ASIC-style implementation and signoff flow. |
@@ -55,5 +56,6 @@ RTL is written.
 7. [graphics_pipeline.md](graphics_pipeline.md)
 8. [verification_plan.md](verification_plan.md)
 9. [formal_verification.md](formal_verification.md)
-10. [asic_signoff_flow.md](asic_signoff_flow.md)
-11. [fpga_bringup.md](fpga_bringup.md)
+10. [toolchain.md](toolchain.md)
+11. [asic_signoff_flow.md](asic_signoff_flow.md)
+12. [fpga_bringup.md](fpga_bringup.md)

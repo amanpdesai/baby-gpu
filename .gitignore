@@ -1,0 +1,45 @@
+# Build outputs
+build/
+out/
+obj_dir/
+sim_build/
+work/
+
+# Simulation artifacts
+*.vcd
+*.fst
+*.lxt
+*.lxt2
+*.vvp
+*.log
+
+# Formal outputs
+formal/**/engine_*/
+formal/**/status
+formal/**/trace*.vcd
+formal/**/trace*.fst
+
+# FPGA outputs
+*.bit
+*.bin
+*.jou
+*.rpt
+*.dcp
+*.runs/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.sim/
+
+# ASIC flow outputs
+asic/reports/*
+!asic/reports/.gitkeep
+
+# Python
+__pycache__/
+.pytest_cache/
+
+# Editor and OS noise
+.DS_Store
+*.swp
+*.swo
