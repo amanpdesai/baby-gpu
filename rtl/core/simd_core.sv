@@ -184,7 +184,7 @@ module simd_core #(
   // Debug reads share the register-file read port used by instruction decode.
   // The read data is only contractually valid while the core is not busy.
   assign rf_read_addr_a = busy ? fit_reg_addr(decoded_ra) : debug_read_addr;
-  assign rf_read_addr_b = fit_reg_addr(decoded_rb);
+  assign rf_read_addr_b = decoded_memory_write ? fit_reg_addr(decoded_rd) : fit_reg_addr(decoded_rb);
   assign debug_read_data = rf_read_data_a;
   assign rf_write_addr = (state == STATE_WAIT_LSU) ? lsu_write_addr_q : fit_reg_addr(decoded_rd);
   assign instruction_has_error = decoder_illegal || (decoded_uses_special && special_illegal);
@@ -225,7 +225,7 @@ module simd_core #(
 
     for (int lane = 0; lane < LANES_PORT_W; lane++) begin
       lsu_lane_addr[(lane*ADDR_PORT_W)+:ADDR_PORT_W] =
-          rf_read_data_a[(lane*DATA_PORT_W)+:ADDR_PORT_W];
+          rf_read_data_a[(lane*DATA_PORT_W)+:ADDR_PORT_W] + ADDR_PORT_W'(decoded_imm18);
       lsu_lane_wdata[(lane*32)+:32] =
           rf_read_data_b[(lane*DATA_PORT_W)+:32];
       lsu_writeback_value[(lane*DATA_PORT_W)+:32] =

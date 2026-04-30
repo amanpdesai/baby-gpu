@@ -122,22 +122,22 @@ module instruction_decoder (
             end
 
             ISA_OP_LOAD: begin
-                writes_register = r_type_reserved_clear && (rb == '0);
-                uses_memory = r_type_reserved_clear && (rb == '0);
-                illegal = !r_type_reserved_clear || (rb != '0);
+                writes_register = 1'b1;
+                uses_immediate = 1'b1;
+                uses_memory = 1'b1;
             end
 
             ISA_OP_STORE: begin
-                uses_memory = r_type_reserved_clear && (rd == '0);
-                memory_write = r_type_reserved_clear && (rd == '0);
-                illegal = !r_type_reserved_clear || (rd != '0);
+                uses_immediate = 1'b1;
+                uses_memory = 1'b1;
+                memory_write = 1'b1;
             end
 
             ISA_OP_STORE16: begin
-                uses_memory = r_type_reserved_clear && (rd == '0);
-                memory_write = r_type_reserved_clear && (rd == '0);
-                memory_store16 = r_type_reserved_clear && (rd == '0);
-                illegal = !r_type_reserved_clear || (rd != '0);
+                uses_immediate = 1'b1;
+                uses_memory = 1'b1;
+                memory_write = 1'b1;
+                memory_store16 = 1'b1;
             end
 
             default: begin

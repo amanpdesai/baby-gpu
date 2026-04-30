@@ -296,7 +296,7 @@ module tb_programmable_core_framebuffer_gradient;
       write_imem(8'd11, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd8, 4'd0, 18'h60));
       write_imem(8'd12, isa_pkg::isa_r_type(ISA_OP_ADD, 4'd8, 4'd8, 4'd4));
       write_imem(8'd13, isa_pkg::isa_r_type(ISA_OP_ADD, 4'd8, 4'd8, 4'd1));
-      write_imem(8'd14, isa_pkg::isa_r_type(ISA_OP_STORE16, 4'd0, 4'd7, 4'd8));
+      write_imem(8'd14, isa_pkg::isa_m_type(ISA_OP_STORE16, 4'd8, 4'd7, 18'd0));
       write_imem(8'd15, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
     end
   endtask

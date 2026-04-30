@@ -282,7 +282,7 @@ module tb_programmable_core_store16_framebuffer;
       write_imem(8'd5, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd5, ISA_SR_LINEAR_GLOBAL_ID));
       write_imem(8'd6, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd6, 4'd0, 18'h50));
       write_imem(8'd7, isa_pkg::isa_r_type(ISA_OP_ADD, 4'd5, 4'd5, 4'd6));
-      write_imem(8'd8, isa_pkg::isa_r_type(ISA_OP_STORE16, 4'd0, 4'd4, 4'd5));
+      write_imem(8'd8, isa_pkg::isa_m_type(ISA_OP_STORE16, 4'd5, 4'd4, 18'd0));
       write_imem(8'd9, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
     end
   endtask

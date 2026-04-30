@@ -116,6 +116,7 @@ module tb_instruction_decoder;
       input logic [ISA_REG_ADDR_W-1:0] exp_rd,
       input logic [ISA_REG_ADDR_W-1:0] exp_ra,
       input logic [ISA_REG_ADDR_W-1:0] exp_rb,
+      input logic [ISA_IMM18_W-1:0] exp_imm18,
       input logic exp_writes_register,
       input logic exp_memory_write,
       input logic exp_memory_store16,
@@ -128,8 +129,9 @@ module tb_instruction_decoder;
     if (rd !== exp_rd) $fatal(1, "memory rd mismatch");
     if (ra !== exp_ra) $fatal(1, "memory ra mismatch");
     if (rb !== exp_rb) $fatal(1, "memory rb mismatch");
+    if (imm18 !== exp_imm18) $fatal(1, "memory imm18 mismatch");
     if (writes_register !== exp_writes_register) $fatal(1, "memory writes_register mismatch");
-    if (uses_immediate !== 1'b0) $fatal(1, "memory uses_immediate mismatch");
+    if (uses_immediate !== !exp_illegal) $fatal(1, "memory uses_immediate mismatch");
     if (uses_special !== 1'b0) $fatal(1, "memory uses_special mismatch");
     if (uses_alu !== 1'b0) $fatal(1, "memory uses_alu mismatch");
     if (uses_memory !== !exp_illegal) $fatal(1, "memory uses_memory mismatch");
@@ -405,11 +407,12 @@ module tb_instruction_decoder;
     );
 
     expect_memory_decode(
-        pack_r_type(ISA_OP_LOAD, 4'd3, 4'd4, 4'd0),
+        isa_pkg::isa_m_type(ISA_OP_LOAD, 4'd3, 4'd4, 18'h0_0034),
         ISA_OP_LOAD,
         4'd3,
         4'd4,
         4'd0,
+        18'h0_0034,
         1'b1,
         1'b0,
         1'b0,
@@ -417,11 +420,12 @@ module tb_instruction_decoder;
     );
 
     expect_memory_decode(
-        pack_r_type(ISA_OP_STORE, 4'd0, 4'd5, 4'd6),
+        isa_pkg::isa_m_type(ISA_OP_STORE, 4'd6, 4'd5, 18'h1_2345),
         ISA_OP_STORE,
-        4'd0,
-        4'd5,
         4'd6,
+        4'd5,
+        4'd4,
+        18'h1_2345,
         1'b0,
         1'b1,
         1'b0,
@@ -429,11 +433,12 @@ module tb_instruction_decoder;
     );
 
     expect_memory_decode(
-        pack_r_type(ISA_OP_STORE16, 4'd0, 4'd7, 4'd8),
+        isa_pkg::isa_m_type(ISA_OP_STORE16, 4'd8, 4'd7, 18'h2_3456),
         ISA_OP_STORE16,
-        4'd0,
+        4'd8,
         4'd7,
         4'd8,
+        18'h2_3456,
         1'b0,
         1'b1,
         1'b1,
@@ -441,27 +446,16 @@ module tb_instruction_decoder;
     );
 
     expect_memory_decode(
-        pack_r_type(ISA_OP_LOAD, 4'd3, 4'd4, 4'd1),
+        isa_pkg::isa_m_type(ISA_OP_LOAD, 4'd3, 4'd4, 18'h3_ffff),
         ISA_OP_LOAD,
         4'd3,
         4'd4,
-        4'd1,
+        4'd15,
+        18'h3_ffff,
+        1'b1,
         1'b0,
         1'b0,
-        1'b0,
-        1'b1
-    );
-
-    expect_memory_decode(
-        pack_r_type(ISA_OP_STORE, 4'd1, 4'd5, 4'd6),
-        ISA_OP_STORE,
-        4'd1,
-        4'd5,
-        4'd6,
-        1'b0,
-        1'b0,
-        1'b0,
-        1'b1
+        1'b0
     );
 
     expect_unimplemented_known_opcode(ISA_OP_CMP);

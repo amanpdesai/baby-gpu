@@ -116,18 +116,16 @@ The first implemented ISA should be small:
 | `STORE` | 32-bit global store. | vector add |
 | `STORE16` | 16-bit global store. | RGB565 framebuffer |
 
-Initial memory instructions use the existing R-type field positions, with no
-encoded offset yet:
+Memory instructions use M-type field positions:
 
 ```text
-LOAD    rd, [ra]      ; rb must be zero
-STORE   [ra], rb      ; rd must be zero
-STORE16 [ra], rb      ; rd must be zero
+LOAD    rd, [ra + offset18]
+STORE   [ra + offset18], rs
+STORE16 [ra + offset18], rs
 ```
 
 The address register is per-lane. The first implementation issues each active
-lane as a blocking request through the LSU. Offset addressing can be added
-after `vector_add` passes if the kernel code needs denser instruction streams.
+lane as a blocking request through the LSU.
 
 This set can implement:
 
@@ -364,6 +362,10 @@ Address calculation:
 addr = R[ra] + zero_extend(offset18)
 ```
 
+For `LOAD`, `rd/rs` is the destination register. For `STORE` and `STORE16`,
+`rd/rs` is the source data register. Store instructions do not use the R-type
+`rb` field; those bits are part of `offset18`.
+
 Initial memory offsets are unsigned. Signed offsets should be added explicitly
 later if needed.
 
@@ -395,9 +397,9 @@ the divergence error and halts the kernel.
 | `0x03` | `MOVSR` | S | yes |
 | `0x04` | `ADD` | R | yes |
 | `0x05` | `MUL` | R | yes |
-| `0x06` | `LOAD` | M | next |
-| `0x07` | `STORE` | M | next |
-| `0x08` | `STORE16` | M | after `STORE` |
+| `0x06` | `LOAD` | M | yes |
+| `0x07` | `STORE` | M | yes |
+| `0x08` | `STORE16` | M | yes |
 | `0x09` | `CMP` | R | later |
 | `0x0A` | `BRA` | B | later |
 | `0x0B` | `SUB` | R | yes |
@@ -411,10 +413,7 @@ All unlisted opcodes are illegal.
 
 ## Remaining ISA Decisions
 
-Still open before branch and memory RTL:
-
 - exact predicate representation for `CMP` and `BRA`
 - whether to add signed immediates as flags or separate opcodes
 - whether to add `ADDI` before `LOAD`/`STORE`
-- whether `STORE16` should trap on odd addresses or support both halfword lanes
 - exact illegal-instruction status bit mapping in the programmable core

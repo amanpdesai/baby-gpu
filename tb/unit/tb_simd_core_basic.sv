@@ -159,6 +159,26 @@ module tb_simd_core_basic;
     end
   endtask
 
+  task automatic expect_next_mem_req(
+      input logic expected_write,
+      input logic [31:0] expected_addr,
+      input string message);
+    int timeout;
+    begin
+      timeout = 0;
+      while (!data_req_valid) begin
+        step();
+        timeout = timeout + 1;
+        check(timeout < 96, {message, " request timed out"});
+      end
+
+      check(data_req_ready, {message, " request is ready"});
+      check(data_req_write == expected_write, {message, " write flag"});
+      check(data_req_addr == expected_addr, {message, " address"});
+      step();
+    end
+  endtask
+
   task automatic expect_all_lanes(input logic [DATA_W-1:0] expected, input string message);
     int lane;
     begin
@@ -352,10 +372,18 @@ module tb_simd_core_basic;
     imem[3] = isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd2, ISA_SR_LANE_ID);
     imem[4] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd3, 4'd0, 18'd10);
     imem[5] = isa_pkg::isa_r_type(ISA_OP_ADD, 4'd2, 4'd2, 4'd3);
-    imem[6] = isa_pkg::isa_r_type(ISA_OP_STORE, 4'd0, 4'd1, 4'd2);
-    imem[7] = isa_pkg::isa_r_type(ISA_OP_LOAD, 4'd4, 4'd1, 4'd0);
+    imem[6] = isa_pkg::isa_m_type(ISA_OP_STORE, 4'd2, 4'd1, 18'd16);
+    imem[7] = isa_pkg::isa_m_type(ISA_OP_LOAD, 4'd4, 4'd1, 18'd16);
     imem[8] = isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0);
     pulse_start();
+    expect_next_mem_req(1'b1, 32'd16, "lane 0 STORE uses offset");
+    expect_next_mem_req(1'b1, 32'd20, "lane 1 STORE uses offset");
+    expect_next_mem_req(1'b1, 32'd24, "lane 2 STORE uses offset");
+    expect_next_mem_req(1'b1, 32'd28, "lane 3 STORE uses offset");
+    expect_next_mem_req(1'b0, 32'd16, "lane 0 LOAD uses offset");
+    expect_next_mem_req(1'b0, 32'd20, "lane 1 LOAD uses offset");
+    expect_next_mem_req(1'b0, 32'd24, "lane 2 LOAD uses offset");
+    expect_next_mem_req(1'b0, 32'd28, "lane 3 LOAD uses offset");
     wait_done();
     check(done && !core_error, "LOAD/STORE program completes without core error");
     check(!data_mem_error, "LOAD/STORE program leaves data memory error low");

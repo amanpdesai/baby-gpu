@@ -82,6 +82,14 @@ package isa_pkg;
     isa_i_type = {opcode, rd, ra, imm18};
   endfunction
 
+  function automatic logic [ISA_WORD_W-1:0] isa_m_type(
+      input logic [ISA_OPCODE_W-1:0] opcode,
+      input logic [ISA_REG_ADDR_W-1:0] rd_rs,
+      input logic [ISA_REG_ADDR_W-1:0] ra,
+      input logic [ISA_IMM18_W-1:0] offset18);
+    isa_m_type = {opcode, rd_rs, ra, offset18};
+  endfunction
+
   function automatic logic [ISA_WORD_W-1:0] isa_s_type(
       input logic [ISA_OPCODE_W-1:0] opcode,
       input logic [ISA_REG_ADDR_W-1:0] rd,

@@ -283,14 +283,14 @@ module tb_programmable_core_vector_add;
       write_imem(8'd2, isa_pkg::isa_r_type(ISA_OP_MUL, 4'd1, 4'd1, 4'd2));
       write_imem(8'd3, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd3, 4'd0, A_BASE[17:0]));
       write_imem(8'd4, isa_pkg::isa_r_type(ISA_OP_ADD, 4'd4, 4'd3, 4'd1));
-      write_imem(8'd5, isa_pkg::isa_r_type(ISA_OP_LOAD, 4'd5, 4'd4, 4'd0));
+      write_imem(8'd5, isa_pkg::isa_m_type(ISA_OP_LOAD, 4'd5, 4'd4, 18'd0));
       write_imem(8'd6, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd3, 4'd0, B_BASE[17:0]));
       write_imem(8'd7, isa_pkg::isa_r_type(ISA_OP_ADD, 4'd4, 4'd3, 4'd1));
-      write_imem(8'd8, isa_pkg::isa_r_type(ISA_OP_LOAD, 4'd6, 4'd4, 4'd0));
+      write_imem(8'd8, isa_pkg::isa_m_type(ISA_OP_LOAD, 4'd6, 4'd4, 18'd0));
       write_imem(8'd9, isa_pkg::isa_r_type(ISA_OP_ADD, 4'd7, 4'd5, 4'd6));
       write_imem(8'd10, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd3, 4'd0, C_BASE[17:0]));
       write_imem(8'd11, isa_pkg::isa_r_type(ISA_OP_ADD, 4'd4, 4'd3, 4'd1));
-      write_imem(8'd12, isa_pkg::isa_r_type(ISA_OP_STORE, 4'd0, 4'd4, 4'd7));
+      write_imem(8'd12, isa_pkg::isa_m_type(ISA_OP_STORE, 4'd7, 4'd4, 18'd0));
       write_imem(8'd13, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
     end
   endtask
