@@ -241,7 +241,7 @@ Build in this order:
 10. `vector_add` kernel test
 11. `STORE16`
 12. `framebuffer_gradient` kernel test
-13. branch behavior
+13. `CMP` plus branch behavior
 14. rectangle or bounded graphics kernel
 
 This order gives a working programmable machine before adding complex graphics

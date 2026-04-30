@@ -8,12 +8,14 @@ module instruction_decoder (
     output logic [ISA_REG_ADDR_W-1:0] rb,
     output logic [ISA_IMM18_W-1:0] imm18,
     output logic [ISA_BRANCH_OFFSET_W-1:0] branch_offset,
+    output logic [ISA_CMP_COND_W-1:0] cmp_op,
     output logic [ISA_SPECIAL_W-1:0] special_reg_id,
     output logic [3:0] alu_op,
     output logic writes_register,
     output logic uses_immediate,
     output logic uses_special,
     output logic uses_alu,
+    output logic uses_compare,
     output logic uses_memory,
     output logic uses_branch,
     output logic memory_write,
@@ -21,8 +23,9 @@ module instruction_decoder (
     output logic ends_lane,
     output logic illegal
 );
-  logic r_type_reserved_clear;
-  logic s_type_reserved_clear;
+    logic r_type_reserved_clear;
+    logic cmp_type_reserved_clear;
+    logic s_type_reserved_clear;
 
   assign opcode = instruction[ISA_OPCODE_MSB:ISA_OPCODE_LSB];
   assign rd = instruction[ISA_RD_MSB:ISA_RD_LSB];
@@ -30,10 +33,12 @@ module instruction_decoder (
     assign rb = instruction[ISA_RB_MSB:ISA_RB_LSB];
     assign imm18 = instruction[ISA_IMM18_MSB:ISA_IMM18_LSB];
     assign branch_offset = instruction[ISA_BRANCH_OFFSET_MSB:ISA_BRANCH_OFFSET_LSB];
+    assign cmp_op = instruction[ISA_CMP_COND_MSB:ISA_CMP_COND_LSB];
     assign special_reg_id = instruction[ISA_SPECIAL_MSB:ISA_SPECIAL_LSB];
 
-  assign r_type_reserved_clear = instruction[13:0] == 14'd0;
-  assign s_type_reserved_clear = instruction[15:0] == 16'd0;
+    assign r_type_reserved_clear = instruction[13:0] == 14'd0;
+    assign cmp_type_reserved_clear = instruction[13:ISA_CMP_COND_W] == '0;
+    assign s_type_reserved_clear = instruction[15:0] == 16'd0;
 
   always_comb begin
     alu_op = ISA_ALU_PASS_A;
@@ -41,6 +46,7 @@ module instruction_decoder (
         uses_immediate = 1'b0;
         uses_special = 1'b0;
         uses_alu = 1'b0;
+        uses_compare = 1'b0;
         uses_memory = 1'b0;
         uses_branch = 1'b0;
         memory_write = 1'b0;
@@ -142,6 +148,12 @@ module instruction_decoder (
                 uses_memory = 1'b1;
                 memory_write = 1'b1;
                 memory_store16 = 1'b1;
+            end
+
+            ISA_OP_CMP: begin
+                writes_register = cmp_type_reserved_clear && (cmp_op <= ISA_CMP_GES);
+                uses_compare = cmp_type_reserved_clear && (cmp_op <= ISA_CMP_GES);
+                illegal = !cmp_type_reserved_clear || (cmp_op > ISA_CMP_GES);
             end
 
             ISA_OP_BRA: begin

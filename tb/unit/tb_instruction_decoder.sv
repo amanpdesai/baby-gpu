@@ -8,12 +8,14 @@ module tb_instruction_decoder;
   logic [ISA_REG_ADDR_W-1:0] rb;
   logic [ISA_IMM18_W-1:0] imm18;
   logic [ISA_BRANCH_OFFSET_W-1:0] branch_offset;
+  logic [ISA_CMP_COND_W-1:0] cmp_op;
   logic [ISA_SPECIAL_W-1:0] special_reg_id;
   logic [3:0] alu_op;
   logic writes_register;
   logic uses_immediate;
   logic uses_special;
   logic uses_alu;
+  logic uses_compare;
   logic uses_memory;
   logic uses_branch;
   logic memory_write;
@@ -29,12 +31,14 @@ module tb_instruction_decoder;
       .rb(rb),
       .imm18(imm18),
       .branch_offset(branch_offset),
+      .cmp_op(cmp_op),
       .special_reg_id(special_reg_id),
       .alu_op(alu_op),
       .writes_register(writes_register),
       .uses_immediate(uses_immediate),
       .uses_special(uses_special),
       .uses_alu(uses_alu),
+      .uses_compare(uses_compare),
       .uses_memory(uses_memory),
       .uses_branch(uses_branch),
       .memory_write(memory_write),
@@ -91,12 +95,44 @@ module tb_instruction_decoder;
       if (uses_immediate !== 1'b0) $fatal(1, "branch uses_immediate mismatch");
       if (uses_special !== 1'b0) $fatal(1, "branch uses_special mismatch");
       if (uses_alu !== 1'b0) $fatal(1, "branch uses_alu mismatch");
+      if (uses_compare !== 1'b0) $fatal(1, "branch uses_compare mismatch");
       if (uses_memory !== 1'b0) $fatal(1, "branch uses_memory mismatch");
       if (uses_branch !== 1'b1) $fatal(1, "branch uses_branch mismatch");
       if (memory_write !== 1'b0) $fatal(1, "branch memory_write mismatch");
       if (memory_store16 !== 1'b0) $fatal(1, "branch memory_store16 mismatch");
       if (ends_lane !== 1'b0) $fatal(1, "branch ends_lane mismatch");
       if (illegal !== 1'b0) $fatal(1, "branch illegal mismatch");
+    end
+  endtask
+
+  task automatic expect_compare_decode(
+      input logic [ISA_WORD_W-1:0] test_instruction,
+      input logic [ISA_REG_ADDR_W-1:0] exp_rd,
+      input logic [ISA_REG_ADDR_W-1:0] exp_ra,
+      input logic [ISA_REG_ADDR_W-1:0] exp_rb,
+      input logic [ISA_CMP_COND_W-1:0] exp_cmp_op,
+      input logic exp_illegal
+  );
+    begin
+      instruction = test_instruction;
+      #1;
+
+      if (opcode !== ISA_OP_CMP) $fatal(1, "compare opcode mismatch");
+      if (rd !== exp_rd) $fatal(1, "compare rd mismatch");
+      if (ra !== exp_ra) $fatal(1, "compare ra mismatch");
+      if (rb !== exp_rb) $fatal(1, "compare rb mismatch");
+      if (cmp_op !== exp_cmp_op) $fatal(1, "compare condition mismatch");
+      if (writes_register !== !exp_illegal) $fatal(1, "compare writes_register mismatch");
+      if (uses_immediate !== 1'b0) $fatal(1, "compare uses_immediate mismatch");
+      if (uses_special !== 1'b0) $fatal(1, "compare uses_special mismatch");
+      if (uses_alu !== 1'b0) $fatal(1, "compare uses_alu mismatch");
+      if (uses_compare !== !exp_illegal) $fatal(1, "compare uses_compare mismatch");
+      if (uses_memory !== 1'b0) $fatal(1, "compare uses_memory mismatch");
+      if (uses_branch !== 1'b0) $fatal(1, "compare uses_branch mismatch");
+      if (memory_write !== 1'b0) $fatal(1, "compare memory_write mismatch");
+      if (memory_store16 !== 1'b0) $fatal(1, "compare memory_store16 mismatch");
+      if (ends_lane !== 1'b0) $fatal(1, "compare ends_lane mismatch");
+      if (illegal !== exp_illegal) $fatal(1, "compare illegal mismatch");
     end
   endtask
 
@@ -131,6 +167,7 @@ module tb_instruction_decoder;
     if (uses_immediate !== exp_uses_immediate) $fatal(1, "uses_immediate mismatch");
     if (uses_special !== exp_uses_special) $fatal(1, "uses_special mismatch");
     if (uses_alu !== exp_uses_alu) $fatal(1, "uses_alu mismatch");
+    if (uses_compare !== 1'b0) $fatal(1, "uses_compare default mismatch");
     if (uses_memory !== 1'b0) $fatal(1, "uses_memory default mismatch");
     if (uses_branch !== 1'b0) $fatal(1, "uses_branch default mismatch");
     if (memory_write !== 1'b0) $fatal(1, "memory_write default mismatch");
@@ -164,6 +201,7 @@ module tb_instruction_decoder;
     if (uses_immediate !== !exp_illegal) $fatal(1, "memory uses_immediate mismatch");
     if (uses_special !== 1'b0) $fatal(1, "memory uses_special mismatch");
     if (uses_alu !== 1'b0) $fatal(1, "memory uses_alu mismatch");
+    if (uses_compare !== 1'b0) $fatal(1, "memory uses_compare mismatch");
     if (uses_memory !== !exp_illegal) $fatal(1, "memory uses_memory mismatch");
     if (uses_branch !== 1'b0) $fatal(1, "memory uses_branch mismatch");
     if (memory_write !== exp_memory_write) $fatal(1, "memory_write mismatch");
@@ -501,7 +539,22 @@ module tb_instruction_decoder;
         22'h3f_ffff
     );
 
-    expect_unimplemented_known_opcode(ISA_OP_CMP);
+    expect_compare_decode(isa_pkg::isa_cmp_type(4'd1, 4'd2, 4'd3, ISA_CMP_EQ),
+                          4'd1, 4'd2, 4'd3, ISA_CMP_EQ, 1'b0);
+    expect_compare_decode(isa_pkg::isa_cmp_type(4'd4, 4'd5, 4'd6, ISA_CMP_NE),
+                          4'd4, 4'd5, 4'd6, ISA_CMP_NE, 1'b0);
+    expect_compare_decode(isa_pkg::isa_cmp_type(4'd7, 4'd8, 4'd9, ISA_CMP_LTU),
+                          4'd7, 4'd8, 4'd9, ISA_CMP_LTU, 1'b0);
+    expect_compare_decode(isa_pkg::isa_cmp_type(4'd10, 4'd11, 4'd12, ISA_CMP_GEU),
+                          4'd10, 4'd11, 4'd12, ISA_CMP_GEU, 1'b0);
+    expect_compare_decode(isa_pkg::isa_cmp_type(4'd13, 4'd14, 4'd15, ISA_CMP_LTS),
+                          4'd13, 4'd14, 4'd15, ISA_CMP_LTS, 1'b0);
+    expect_compare_decode(isa_pkg::isa_cmp_type(4'd3, 4'd4, 4'd5, ISA_CMP_GES),
+                          4'd3, 4'd4, 4'd5, ISA_CMP_GES, 1'b0);
+    expect_compare_decode(isa_pkg::isa_cmp_type(4'd3, 4'd4, 4'd5, 3'h6),
+                          4'd3, 4'd4, 4'd5, 3'h6, 1'b1);
+    expect_compare_decode(isa_pkg::isa_cmp_type(4'd3, 4'd4, 4'd5, ISA_CMP_EQ) | 32'd8,
+                          4'd3, 4'd4, 4'd5, ISA_CMP_EQ, 1'b1);
     expect_unimplemented_known_opcode(6'h3F);
 
     $display("tb_instruction_decoder PASS");

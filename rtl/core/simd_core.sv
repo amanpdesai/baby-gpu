@@ -120,6 +120,7 @@ module simd_core #(
     logic [ISA_REG_ADDR_W-1:0] decoded_rb;
     logic [ISA_IMM18_W-1:0] decoded_imm18;
     logic [ISA_BRANCH_OFFSET_W-1:0] decoded_branch_offset;
+    logic [ISA_CMP_COND_W-1:0] decoded_cmp_op;
     logic [ISA_SPECIAL_W-1:0] decoded_special_reg_id;
   localparam int REG_ADDR_SELECT_W =
       (REG_ADDR_PORT_W > ISA_REG_ADDR_W) ? ISA_REG_ADDR_W : REG_ADDR_PORT_W;
@@ -130,8 +131,9 @@ module simd_core #(
   logic [3:0] decoded_alu_op;
   logic decoded_writes_register;
   logic decoded_uses_immediate;
-  logic decoded_uses_special;
+    logic decoded_uses_special;
     logic decoded_uses_alu;
+    logic decoded_uses_compare;
     logic decoded_uses_memory;
     logic decoded_uses_branch;
     logic decoded_memory_write;
@@ -145,10 +147,11 @@ module simd_core #(
   logic [(LANES_PORT_W*DATA_PORT_W)-1:0] rf_read_data_b;
   logic [LANES_PORT_W-1:0] rf_write_enable;
   logic [REG_ADDR_PORT_W-1:0] rf_write_addr;
-  logic [(LANES_PORT_W*DATA_PORT_W)-1:0] rf_write_data;
+    logic [(LANES_PORT_W*DATA_PORT_W)-1:0] rf_write_data;
 
-  logic [(LANES_PORT_W*DATA_PORT_W)-1:0] alu_result;
-  logic [LANES_PORT_W-1:0] alu_zero;
+    logic [(LANES_PORT_W*DATA_PORT_W)-1:0] alu_result;
+    logic [LANES_PORT_W-1:0] alu_zero;
+    logic [(LANES_PORT_W*DATA_PORT_W)-1:0] compare_result;
   logic [(LANES_PORT_W*DATA_PORT_W)-1:0] special_value;
   logic special_illegal;
   logic instruction_has_error;
@@ -240,6 +243,25 @@ module simd_core #(
         end
     endfunction
 
+    function automatic logic [DATA_PORT_W-1:0] eval_compare(
+        input logic [ISA_CMP_COND_W-1:0] cond,
+        input logic [DATA_PORT_W-1:0] operand_a,
+        input logic [DATA_PORT_W-1:0] operand_b
+    );
+        begin
+            eval_compare = '0;
+            case (cond)
+                ISA_CMP_EQ: eval_compare = DATA_PORT_W'(operand_a == operand_b);
+                ISA_CMP_NE: eval_compare = DATA_PORT_W'(operand_a != operand_b);
+                ISA_CMP_LTU: eval_compare = DATA_PORT_W'(operand_a < operand_b);
+                ISA_CMP_GEU: eval_compare = DATA_PORT_W'(operand_a >= operand_b);
+                ISA_CMP_LTS: eval_compare = DATA_PORT_W'($signed(operand_a) < $signed(operand_b));
+                ISA_CMP_GES: eval_compare = DATA_PORT_W'($signed(operand_a) >= $signed(operand_b));
+                default: eval_compare = '0;
+            endcase
+        end
+    endfunction
+
     assign immediate_value = replicate_immediate(decoded_imm18);
   assign lsu_op = decoded_memory_store16 ? LSU_OP_STORE16 :
                   decoded_memory_write ? LSU_OP_STORE :
@@ -286,8 +308,8 @@ module simd_core #(
   assign special_framebuffer_width = framebuffer_width[SPECIAL_COORD_W-1:0];
   assign special_framebuffer_height = framebuffer_height[SPECIAL_COORD_W-1:0];
 
-  always_comb begin
-    rf_write_data = '0;
+    always_comb begin
+        rf_write_data = '0;
 
     if (state == STATE_WAIT_LSU) begin
       rf_write_data = lsu_writeback_value;
@@ -295,8 +317,21 @@ module simd_core #(
       rf_write_data = immediate_value;
     end else if (decoded_uses_special) begin
       rf_write_data = special_value;
+    end else if (decoded_uses_compare) begin
+      rf_write_data = compare_result;
     end else if (decoded_uses_alu) begin
       rf_write_data = alu_result;
+        end
+    end
+
+    always_comb begin
+        compare_result = '0;
+
+        for (int lane = 0; lane < LANES_PORT_W; lane++) begin
+            compare_result[(lane*DATA_PORT_W)+:DATA_PORT_W] = eval_compare(
+                decoded_cmp_op,
+                rf_read_data_a[(lane*DATA_PORT_W)+:DATA_PORT_W],
+                rf_read_data_b[(lane*DATA_PORT_W)+:DATA_PORT_W]);
         end
     end
 
@@ -322,12 +357,14 @@ module simd_core #(
         .rb(decoded_rb),
         .imm18(decoded_imm18),
         .branch_offset(decoded_branch_offset),
+        .cmp_op(decoded_cmp_op),
         .special_reg_id(decoded_special_reg_id),
         .alu_op(decoded_alu_op),
       .writes_register(decoded_writes_register),
       .uses_immediate(decoded_uses_immediate),
-      .uses_special(decoded_uses_special),
+        .uses_special(decoded_uses_special),
         .uses_alu(decoded_uses_alu),
+        .uses_compare(decoded_uses_compare),
         .uses_memory(decoded_uses_memory),
         .uses_branch(decoded_uses_branch),
         .memory_write(decoded_memory_write),

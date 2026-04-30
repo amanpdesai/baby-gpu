@@ -275,13 +275,28 @@ MUL
 SUB
 AND/OR/XOR
 SHL/SHR
-CMP later
+CMP
 ```
 
 Reserved bits must be zero initially.
 
 `SHL` and `SHR` are logical shifts. The shift amount comes from `rb[4:0]`, so
 32-bit lanes ignore higher bits of the shift-count source register.
+
+`CMP` writes `1` to `rd` when the selected condition is true and `0` when it is
+false. The condition is encoded in `flags[2:0]`; R-type bits `[13:3]` must be
+zero.
+
+| Condition | Encoding | Meaning |
+| --- | ---: | --- |
+| `EQ` | `0x0` | `ra == rb` |
+| `NE` | `0x1` | `ra != rb` |
+| `LTU` | `0x2` | unsigned `ra < rb` |
+| `GEU` | `0x3` | unsigned `ra >= rb` |
+| `LTS` | `0x4` | signed `ra < rb` |
+| `GES` | `0x5` | signed `ra >= rb` |
+
+Condition encodings `0x6` and `0x7` are reserved and illegal.
 
 ### I-Type
 
@@ -404,7 +419,7 @@ valid never-taken predicate.
 | `0x06` | `LOAD` | M | yes |
 | `0x07` | `STORE` | M | yes |
 | `0x08` | `STORE16` | M | yes |
-| `0x09` | `CMP` | R | later |
+| `0x09` | `CMP` | R | yes |
 | `0x0A` | `BRA` | B | yes |
 | `0x0B` | `SUB` | R | yes |
 | `0x0C` | `AND` | R | yes |
@@ -417,7 +432,6 @@ All unlisted opcodes are illegal.
 
 ## Remaining ISA Decisions
 
-- exact `CMP` condition encoding and result convention
 - whether to add signed immediates as flags or separate opcodes
 - whether to add `ADDI` before `LOAD`/`STORE`
 - exact illegal-instruction status bit mapping in the programmable core

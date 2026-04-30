@@ -4,6 +4,7 @@ package isa_pkg;
   localparam int ISA_REG_ADDR_W = 4;
   localparam int ISA_IMM18_W = 18;
   localparam int ISA_BRANCH_OFFSET_W = 22;
+  localparam int ISA_CMP_COND_W = 3;
   localparam int ISA_SPECIAL_W = 6;
 
   localparam int ISA_OPCODE_MSB = 31;
@@ -18,6 +19,8 @@ package isa_pkg;
   localparam int ISA_IMM18_LSB = 0;
   localparam int ISA_BRANCH_OFFSET_MSB = 21;
   localparam int ISA_BRANCH_OFFSET_LSB = 0;
+  localparam int ISA_CMP_COND_MSB = 2;
+  localparam int ISA_CMP_COND_LSB = 0;
   localparam int ISA_SPECIAL_MSB = 21;
   localparam int ISA_SPECIAL_LSB = 16;
 
@@ -54,6 +57,15 @@ package isa_pkg;
     ISA_ALU_SHR = 4'h9
   } isa_alu_op_e;
 
+  typedef enum logic [ISA_CMP_COND_W-1:0] {
+    ISA_CMP_EQ = 3'h0,
+    ISA_CMP_NE = 3'h1,
+    ISA_CMP_LTU = 3'h2,
+    ISA_CMP_GEU = 3'h3,
+    ISA_CMP_LTS = 3'h4,
+    ISA_CMP_GES = 3'h5
+  } isa_cmp_cond_e;
+
   typedef enum logic [ISA_SPECIAL_W-1:0] {
     ISA_SR_LANE_ID = 6'h00,
     ISA_SR_GLOBAL_ID_X = 6'h01,
@@ -75,6 +87,14 @@ package isa_pkg;
       input logic [ISA_REG_ADDR_W-1:0] ra,
       input logic [ISA_REG_ADDR_W-1:0] rb);
     isa_r_type = {opcode, rd, ra, rb, 14'd0};
+  endfunction
+
+  function automatic logic [ISA_WORD_W-1:0] isa_cmp_type(
+      input logic [ISA_REG_ADDR_W-1:0] rd,
+      input logic [ISA_REG_ADDR_W-1:0] ra,
+      input logic [ISA_REG_ADDR_W-1:0] rb,
+      input logic [ISA_CMP_COND_W-1:0] cond);
+    isa_cmp_type = {ISA_OP_CMP, rd, ra, rb, 11'd0, cond};
   endfunction
 
   function automatic logic [ISA_WORD_W-1:0] isa_i_type(
