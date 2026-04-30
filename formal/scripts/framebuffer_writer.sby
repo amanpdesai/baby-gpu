@@ -1,0 +1,14 @@
+[options]
+mode bmc
+depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv framebuffer_writer.sv framebuffer_writer_formal.sv
+prep -top framebuffer_writer_formal
+
+[files]
+rtl/core/framebuffer_writer.sv
+formal/harnesses/framebuffer_writer_formal.sv
