@@ -98,4 +98,4 @@ DDR3 wrapper requirements:
 
 ## Bring-Up Log
 
-Record hardware observations in [../notes/bringup_log.md](../notes/bringup_log.md).
+Record hardware observations in [../../notes/bringup_log.md](../../notes/bringup_log.md).

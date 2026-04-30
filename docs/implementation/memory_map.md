@@ -4,7 +4,7 @@ All register addresses are byte offsets. Registers are 32 bits unless noted.
 
 This map covers the host-visible control plane. Kernel instruction memory and
 global data memory are separate architectural spaces described in
-[memory_model.md](memory_model.md).
+[memory_model.md](../architecture/memory_model.md).
 
 ## Base Registers
 

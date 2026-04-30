@@ -65,11 +65,11 @@ architecture.
 
 Document the programmable model before writing more core RTL:
 
-- [programming_model.md](programming_model.md)
-- [isa.md](isa.md)
-- [core_architecture.md](core_architecture.md)
-- [memory_model.md](memory_model.md)
-- [kernel_execution.md](kernel_execution.md)
+- [programming_model.md](../architecture/programming_model.md)
+- [isa.md](../architecture/isa.md)
+- [core_architecture.md](../architecture/core_architecture.md)
+- [memory_model.md](../architecture/memory_model.md)
+- [kernel_execution.md](../architecture/kernel_execution.md)
 
 Exit criteria:
 

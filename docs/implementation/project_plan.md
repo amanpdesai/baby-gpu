@@ -12,12 +12,12 @@ programmable SIMD execution.
 
 Primary architecture references:
 
-- [Architecture](architecture.md)
-- [Programming model](programming_model.md)
-- [ISA](isa.md)
-- [Core architecture](core_architecture.md)
-- [Memory model](memory_model.md)
-- [Kernel execution](kernel_execution.md)
+- [Architecture](../architecture/architecture.md)
+- [Programming model](../architecture/programming_model.md)
+- [ISA](../architecture/isa.md)
+- [Core architecture](../architecture/core_architecture.md)
+- [Memory model](../architecture/memory_model.md)
+- [Kernel execution](../architecture/kernel_execution.md)
 - [Roadmap](roadmap.md)
 
 ## Goal

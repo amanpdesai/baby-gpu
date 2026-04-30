@@ -20,13 +20,13 @@ The active architecture is a unified programmable tiny GPU.
 
 Primary docs:
 
-- [architecture.md](architecture.md)
-- [programming_model.md](programming_model.md)
-- [isa.md](isa.md)
-- [core_architecture.md](core_architecture.md)
-- [memory_model.md](memory_model.md)
-- [kernel_execution.md](kernel_execution.md)
-- [roadmap.md](roadmap.md)
+- [architecture.md](../architecture/architecture.md)
+- [programming_model.md](../architecture/programming_model.md)
+- [isa.md](../architecture/isa.md)
+- [core_architecture.md](../architecture/core_architecture.md)
+- [memory_model.md](../architecture/memory_model.md)
+- [kernel_execution.md](../architecture/kernel_execution.md)
+- [roadmap.md](../implementation/roadmap.md)
 
 Current implementation state:
 
@@ -274,7 +274,7 @@ Do not modify:
 rtl/core/simd_core.sv
 rtl/core/lane_register_file.sv
 rtl/core/simd_alu.sv
-docs/isa.md
+docs/architecture/isa.md
 ```
 
 If the decoder needs constants, ask main thread to add a shared package first.
@@ -320,7 +320,7 @@ Do not modify:
 rtl/core/simd_core.sv
 rtl/core/lane_register_file.sv
 rtl/core/simd_alu.sv
-docs/isa.md
+docs/architecture/isa.md
 ```
 
 Required checks:
@@ -400,7 +400,7 @@ Task:
 <specific implementation>
 
 Constraints:
-- follow docs/isa.md and docs/core_architecture.md
+- follow docs/architecture/isa.md and docs/architecture/core_architecture.md
 - use existing RTL style
 - add unit tests
 - no vendor primitives

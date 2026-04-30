@@ -49,7 +49,12 @@ flowchart TB
 
 | Directory | Contents |
 | --- | --- |
-| `docs/` | Design documents, specifications, and implementation plans. |
+| `docs/` | Documentation root and table of contents. |
+| `docs/architecture/` | Architecture, programming model, ISA, core, memory, graphics, video, and draw-unit specs. |
+| `docs/implementation/` | Implementation plan, repo structure, command/memory maps, timing, reset, and SRAM strategy. |
+| `docs/verification/` | Simulation, formal, coverage, DFT, ASIC-style signoff, and verification strategy. |
+| `docs/platform/` | Target board, toolchain, FPGA bring-up, and ASIC portability notes. |
+| `docs/process/` | Coding style and agent workflow. |
 | `rtl/core/` | Portable top-level GPU modules. |
 | `rtl/draw_units/` | Clear, rectangle, line, sprite, tile, and triangle units. |
 | `rtl/interfaces/` | Shared interface definitions and protocol documentation. |

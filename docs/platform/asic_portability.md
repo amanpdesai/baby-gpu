@@ -4,7 +4,7 @@ The design does not need to be ASIC-ready on day one. It should avoid choices
 that make an ASIC path unnecessarily expensive later.
 
 The detailed ASIC-style implementation flow is covered in
-[asic_signoff_flow.md](asic_signoff_flow.md). This document focuses on RTL and
+[asic_signoff_flow.md](../verification/asic_signoff_flow.md). This document focuses on RTL and
 architecture choices that preserve portability.
 
 ## Replacement Boundary
@@ -83,11 +83,11 @@ To support an ASIC hardening experiment, the plan now includes:
 
 Related docs:
 
-- [Formal verification](formal_verification.md)
-- [ASIC signoff flow](asic_signoff_flow.md)
-- [DFT plan](dft_plan.md)
-- [Timing constraints](timing_constraints.md)
-- [SRAM strategy](sram_strategy.md)
+- [Formal verification](../verification/formal_verification.md)
+- [ASIC signoff flow](../verification/asic_signoff_flow.md)
+- [DFT plan](../verification/dft_plan.md)
+- [Timing constraints](../implementation/timing_constraints.md)
+- [SRAM strategy](../implementation/sram_strategy.md)
 
 ## Portability Exit Criteria
 
