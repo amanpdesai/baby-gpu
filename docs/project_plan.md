@@ -1,202 +1,151 @@
 # Custom FPGA GPU RTL Project Plan
 
-This is the canonical project plan for UrbanaGPU-1. The linked documents expand
-each section into implementation-ready detail.
+UrbanaGPU-1 is a small custom GPU project in portable SystemVerilog RTL. The
+project began with fixed-function graphics bring-up, but the intended end goal
+is now a unified programmable tiny GPU that can run compute and graphics-style
+kernels.
 
-## Project Goal
+The project should not fork into separate "fixed graphics" and "programmable
+GPU" designs. Fixed-function clear and rectangle blocks are bring-up tools and
+possible future compatibility helpers. The architecture direction is
+programmable SIMD execution.
 
-Build a small custom GPU-like graphics accelerator in portable SystemVerilog
-RTL. The first target platform is the RealDigital Urbana FPGA board, while the
-long-term architecture keeps the GPU core portable enough for future boards or
-ASIC-oriented experiments.
-
-Expanded docs:
+Primary architecture references:
 
 - [Architecture](architecture.md)
-- [Version 1 scope](version_1_scope.md)
+- [Programming model](programming_model.md)
+- [ISA](isa.md)
+- [Core architecture](core_architecture.md)
+- [Memory model](memory_model.md)
+- [Kernel execution](kernel_execution.md)
 - [Roadmap](roadmap.md)
-- [Design decisions](design_decisions.md)
 
-## Core Design Philosophy
+## Goal
 
-The FPGA board is a development platform, not the architecture. The core must
-stay free of board-specific primitives and communicate through explicit
-interfaces.
+Build a portable GPU-like accelerator that can:
 
-Expanded docs:
+- accept command streams from a host or testbench
+- configure and launch programmable kernels
+- execute kernels on a small SIMD core
+- read and write global memory
+- treat the framebuffer as global memory
+- display framebuffer contents on the Urbana FPGA board
+- remain portable to simulation, FPGA, and ASIC experiments
 
-- [Design boundaries](design_boundaries.md)
-- [ASIC portability](asic_portability.md)
-- [Coding style](coding_style.md)
-- [ASIC signoff flow](asic_signoff_flow.md)
-
-## Target Platform
-
-Initial platform:
-
-- RealDigital Urbana FPGA board
-- AMD/Xilinx Spartan-7 FPGA
-- 128 MB DDR3 memory
-- video output
-- USB/UART programming and communication
-- buttons, switches, LEDs, and general I/O
-
-Expanded doc:
-
-- [Target platform](target_platform.md)
-
-## Repository Structure
-
-The repository separates documents, portable RTL, platform wrappers,
-testbenches, generated test data, FPGA build scripts, and notes.
-
-Expanded doc:
-
-- [Repository structure](repository_structure.md)
-
-## Major Design Boundaries
-
-Portable RTL lives under `rtl/`. Platform-specific wrappers live under
-`platform/`. The core can be simulated without Urbana files.
-
-Expanded docs:
-
-- [Design boundaries](design_boundaries.md)
-- [Memory system](memory_system.md)
-- [Video pipeline](video_pipeline.md)
-
-## Clocking Strategy
-
-Version 1 uses one clock domain:
+## Initial Programmable Target
 
 ```text
-gpu_clk
-reset_sync
+1 core
+4 SIMD lanes
+32-bit registers
+2D kernel launch
+separate instruction memory and global memory
+blocking load/store unit
+convergent branches only
 ```
 
-Expanded doc:
+This is the first target shape, not a hard architectural limit.
 
-- [Clocking and reset](clocking_reset.md)
+## First Kernel Tests
 
-## Memory Strategy
+The first programmable milestone should prove several behaviors, not just one
+demo.
 
-Start with a small RGB565 framebuffer in inferred memory or BRAM. Add DDR3 only
-after simulation and BRAM scanout are working.
+| Kernel | Purpose |
+| --- | --- |
+| `vector_add` | Compute loads, ALU, stores, and tail lanes. |
+| `framebuffer_gradient` | 2D IDs, RGB565 stores, framebuffer memory. |
+| `solid_fill` or bounded fill | Simple graphics behavior and predicates. |
 
-Expanded doc:
+All kernels must run in RTL simulation before FPGA bring-up is considered
+meaningful.
 
-- [Memory system](memory_system.md)
+## Current Foundation RTL
 
-## Video Strategy
+The current RTL foundation includes:
 
-The first hardware video targets are test patterns, then framebuffer scanout,
-then GPU-updated framebuffer output.
+- command FIFO
+- command processor
+- register file
+- framebuffer writer
+- clear engine
+- rectangle fill engine
+- top-level smoke integration
 
-Expanded doc:
+This is valuable infrastructure. It should be used to keep tests running while
+the programmable core is added. It should not expand into a large fixed-function
+graphics engine before the programmable path exists.
 
-- [Video pipeline](video_pipeline.md)
+## Implementation Priorities
 
-## Command Processor
+Near-term work:
 
-Version 1 accepts compact 32-bit command packets:
+1. finalize initial ISA encoding
+2. add lane register file
+3. add SIMD ALU
+4. add instruction memory model
+5. add instruction decoder
+6. add scheduler for `1 core x 4 lanes`
+7. add blocking load/store unit
+8. pass `vector_add` in simulation
+9. add `STORE16`
+10. pass `framebuffer_gradient` in simulation
 
-- `NOP`
-- `CLEAR`
-- `FILL_RECT`
-- `WAIT_IDLE`
-- `SET_REGISTER`
+Later work:
 
-Expanded doc:
+- predicate support
+- bounded fill kernel
+- video scanout from global memory
+- per-core scratchpad
+- multi-core memory IDs
+- more lanes
+- caches
+- divergence masks
+- FPGA display bring-up
+- ASIC memory wrappers and synthesis experiments
 
-- [Command format](command_format.md)
+## Design Boundaries
 
-## Register Map
+Portable RTL lives under `rtl/`.
 
-The register model exposes identity, status, control, framebuffer configuration,
-command FIFO writes, and interrupt state.
+Platform-specific code lives under:
 
-Expanded doc:
+```text
+platform/urbana/
+platform/sim/
+platform/asic/
+```
 
-- [Memory map](memory_map.md)
+The programmable core must not instantiate Xilinx primitives directly. Memory
+wrappers and video output wrappers are platform responsibilities.
 
-## Graphics Pipeline Milestones
+## Verification Policy
 
-Draw units are documented individually:
+Simulation is the primary correctness tool.
 
-- [Clear engine](draw_units/clear_engine.md)
-- [Rectangle fill engine](draw_units/rect_fill_engine.md)
-- [Line engine](draw_units/line_engine.md)
-- [Sprite engine](draw_units/sprite_engine.md)
-- [Tile engine](draw_units/tile_engine.md)
-- [Triangle rasterizer](draw_units/triangle_rasterizer.md)
+Required for each new architectural block:
 
-Pipeline-level behavior is covered in:
+- unit test
+- integration test when connected to command/kernel flow
+- timeout on hangs
+- sticky error checks
+- deterministic expected memory output when applicable
 
-- [Graphics pipeline](graphics_pipeline.md)
+Formal verification should be added for FIFOs, valid/ready payload stability,
+scheduler bounds, and load/store request behavior.
 
-## Verification Plan
+## Critical Project Discipline
 
-Every major module should have a unit testbench. Full-core simulations should
-compare generated framebuffer output against golden frames.
+Do not add features because they are GPU-like. Add features because they are
+needed by the next kernel test or because they preserve a documented scaling
+path.
 
-Expanded doc:
+Do not add caches before the blocking memory model is correct.
 
-- [Verification plan](verification_plan.md)
-- [Formal verification](formal_verification.md)
-- [Coverage plan](coverage_plan.md)
-- [Native toolchain](toolchain.md)
+Do not add multi-core execution before memory request/response identity exists.
 
-## Formal and ASIC-Style Signoff Plan
+Do not add full divergence support before convergent branches and simple kernels
+work.
 
-Formal verification and ASIC-style signoff are now explicit project lanes.
-They should improve RTL quality from the beginning without blocking the first
-FPGA-visible GPU milestone.
-
-Practical sequencing:
-
-1. build the visible FPGA GPU path
-2. formally prove reusable protocol-heavy blocks in parallel
-3. add ASIC lint and synthesis checks once the first core modules stabilize
-4. attempt OpenROAD or OpenLane hardening after Version 1 behavior is stable
-
-Expanded docs:
-
-- [Formal verification](formal_verification.md)
-- [ASIC signoff flow](asic_signoff_flow.md)
-- [DFT plan](dft_plan.md)
-- [Timing constraints](timing_constraints.md)
-- [SRAM strategy](sram_strategy.md)
-
-## FPGA Bring-Up Plan
-
-Bring up the board in stages:
-
-1. board skeleton
-2. clock/reset
-3. LEDs
-4. video test patterns
-5. framebuffer scanout
-6. GPU core integration
-7. host command input
-8. DDR3
-
-Expanded doc:
-
-- [FPGA bring-up](fpga_bringup.md)
-
-## ASIC-Portability Rules
-
-The project avoids obvious ASIC-hostile patterns by isolating memories, PLLs,
-I/O, and board-specific logic behind wrappers.
-
-Expanded doc:
-
-- [ASIC portability](asic_portability.md)
-- [SRAM strategy](sram_strategy.md)
-- [Timing constraints](timing_constraints.md)
-
-## Guiding Principle
-
-Do not build a modern GPU first. Build a small, understandable, correct graphics
-machine. Make it visible. Make it testable. Make it portable. Then make it
-faster and more capable.
+Do not make framebuffer writes a special execution path. The framebuffer is
+global memory.

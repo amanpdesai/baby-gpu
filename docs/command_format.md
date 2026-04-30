@@ -1,30 +1,15 @@
 # Command Format
 
-The command stream is a simple sequence of 32-bit words. Version 1 supports
-only the commands needed to clear and draw filled rectangles.
+The command stream is the host-facing control path. Commands configure
+registers, launch kernels, wait for completion, and support a few compatibility
+operations.
 
-## Command Flow
+The command processor should stay small. It should validate packet structure and
+trigger higher-level blocks. It should not implement kernel behavior directly.
 
-```mermaid
-sequenceDiagram
-  participant Host
-  participant FIFO as Command FIFO
-  participant CP as Command Processor
-  participant DU as Draw Unit
-  participant MEM as Memory Path
+## Header Word
 
-  Host->>FIFO: write command words
-  FIFO->>CP: valid command word
-  CP->>CP: decode opcode and operands
-  CP->>DU: start operation
-  DU->>MEM: emit pixel writes
-  DU-->>CP: done
-  CP-->>FIFO: consume next command
-```
-
-## Word Layout
-
-Every command starts with a header word:
+Every command starts with a 32-bit header:
 
 ```text
 31        24 23        16 15                         0
@@ -33,35 +18,93 @@ Every command starts with a header word:
 +------------+------------+---------------------------+
 ```
 
-`word_count` includes the header word. This lets the command processor skip or
-flag malformed packets deterministically.
+`word_count` includes the header word.
 
-## Version 1 Opcodes
+Reserved flag bits must be written as zero until documented. Strict validation
+can reject nonzero reserved bits later.
 
-| Opcode | Name | Words | Description |
+## Command Set
+
+| Opcode | Name | Words | Purpose |
 | --- | --- | ---: | --- |
 | `0x00` | `NOP` | 1 | No operation. |
-| `0x01` | `CLEAR` | 2 | Fill the framebuffer with one RGB565 color. |
-| `0x02` | `FILL_RECT` | 5 | Fill a clipped rectangle. |
-| `0x03` | `WAIT_IDLE` | 1 | Stall command execution until all draw units are idle. |
+| `0x01` | `CLEAR` | 2 | Compatibility clear command. |
+| `0x02` | `FILL_RECT` | 5 | Compatibility rectangle command. |
+| `0x03` | `WAIT_IDLE` | 1 | Wait until command/kernel/memory work is idle. |
 | `0x10` | `SET_REGISTER` | 3 | Write one register by byte address. |
+| `0x20` | `LAUNCH_KERNEL` | 1 | Launch programmable kernel using launch registers. |
 
-## CLEAR Packet
+`CLEAR` and `FILL_RECT` exist for smoke tests and host convenience. Long term
+they should dispatch built-in kernels or microcode, not bypass the programmable
+architecture with an unrelated path.
+
+## `SET_REGISTER`
+
+```text
+word 0: header opcode=SET_REGISTER, word_count=3
+word 1: register byte address
+word 2: register write data
+```
+
+This command is the primary way to configure:
+
+- control bits
+- framebuffer configuration
+- kernel launch registers
+- interrupt/debug registers
+
+## `LAUNCH_KERNEL`
+
+```text
+word 0: header opcode=LAUNCH_KERNEL, word_count=1
+```
+
+`LAUNCH_KERNEL` consumes launch state from the register file:
+
+```text
+PROGRAM_BASE
+GRID_X
+GRID_Y
+GROUP_SIZE_X
+GROUP_SIZE_Y
+ARG_BASE
+LAUNCH_FLAGS
+```
+
+The command processor must reject or report:
+
+- launch while busy
+- zero grid dimensions
+- unsupported group size
+- invalid program base
+- unsupported launch flags
+
+The scheduler latches launch registers at launch time.
+
+## `WAIT_IDLE`
+
+`WAIT_IDLE` completes when:
+
+- command FIFO has no command currently being decoded
+- scheduler is idle
+- SIMD core is idle
+- all accepted memory requests from the active command/kernel are complete or
+  architecturally accepted
+- fixed-function compatibility engines are idle
+
+`WAIT_IDLE` must not complete just because the command processor is idle.
+
+## Compatibility `CLEAR`
 
 ```text
 word 0: header opcode=CLEAR, word_count=2
 word 1: color[15:0]
 ```
 
-The clear engine uses current framebuffer registers:
+Current behavior can use the fixed clear engine. Long-term behavior should be
+equivalent to launching an internal solid-fill kernel over the framebuffer.
 
-- base
-- width
-- height
-- stride
-- format
-
-## FILL_RECT Packet
+## Compatibility `FILL_RECT`
 
 ```text
 word 0: header opcode=FILL_RECT, word_count=5
@@ -71,28 +114,9 @@ word 3: color[15:0]
 word 4: reserved
 ```
 
-`reserved` must be written as zero in Version 1. The command processor may
-ignore it now and validate it later.
-
-## SET_REGISTER Packet
-
-```text
-word 0: header opcode=SET_REGISTER, word_count=3
-word 1: register byte address
-word 2: register write data
-```
-
-This gives simple command-stream control without requiring a separate bus in
-early simulation.
-
-## WAIT_IDLE Semantics
-
-`WAIT_IDLE` completes when:
-
-- command processor has no active dispatch
-- all draw units are idle
-- framebuffer writer has accepted all pending writes
-- memory arbiter has no outstanding writes from the command
+The reserved word must be zero. Current behavior can use the rectangle engine.
+Long-term behavior should be equivalent to an internal bounded-fill kernel once
+predication or divergence handling is specified.
 
 ## Error Handling
 
@@ -100,9 +124,11 @@ The command processor sets sticky error bits for:
 
 - unknown opcode
 - incorrect `word_count`
+- unsupported flags
 - FIFO underflow while reading a packet
-- unsupported framebuffer format
-- invalid reserved bits when strict validation is enabled
+- launch while busy
+- invalid launch configuration
+- strict validation failure on reserved fields
 
-Errors do not require the hardware to hang. The processor should enter a safe
-idle state and wait for software to clear or reset the error.
+Errors should never hang hardware. The command processor should return to a
+safe idle/error state and wait for software to clear errors or reset.

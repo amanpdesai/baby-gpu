@@ -1,61 +1,64 @@
 # Documentation Index
 
-This directory expands the main project plan into implementation-ready design
-documents. Each document is scoped so it can be reviewed independently before
-RTL is written.
+## Architecture Direction
 
-## System-Level Documents
-
-| Topic | Document | Purpose |
-| --- | --- | --- |
-| Project plan | [project_plan.md](project_plan.md) | Canonical plan with links to expanded subpoint docs. |
-| Design decisions | [design_decisions.md](design_decisions.md) | Open and accepted architecture decisions. |
-| Architecture | [architecture.md](architecture.md) | Defines the portable GPU core and data flow. |
-| Target platform | [target_platform.md](target_platform.md) | Captures Urbana assumptions and board-facing risks. |
-| Repository structure | [repository_structure.md](repository_structure.md) | Explains where source, tests, tools, and notes live. |
-| Design boundaries | [design_boundaries.md](design_boundaries.md) | Separates portable RTL from FPGA-specific wrappers. |
-| Coding style | [coding_style.md](coding_style.md) | Defines RTL rules used across the project. |
-| Clocking and reset | [clocking_reset.md](clocking_reset.md) | Defines the initial single-clock strategy and later CDC plan. |
-| Memory system | [memory_system.md](memory_system.md) | Defines abstract memory access, framebuffer layout, and arbitration. |
-| Video pipeline | [video_pipeline.md](video_pipeline.md) | Defines scanout, scaling, test patterns, and display bring-up. |
-| Command format | [command_format.md](command_format.md) | Defines command words, packet layout, dispatch, and errors. |
-| Memory map | [memory_map.md](memory_map.md) | Defines the host-visible register model. |
-| Graphics pipeline | [graphics_pipeline.md](graphics_pipeline.md) | Explains draw-unit sequencing and pixel write flow. |
-| Verification | [verification_plan.md](verification_plan.md) | Defines unit, integration, image, and FPGA validation. |
-| Formal verification | [formal_verification.md](formal_verification.md) | Defines proofs, harnesses, assumptions, and property targets. |
-| Native toolchain | [toolchain.md](toolchain.md) | Documents installed VM tools and project tool checks. |
-| FPGA bring-up | [fpga_bringup.md](fpga_bringup.md) | Defines the staged Urbana hardware bring-up plan. |
-| ASIC portability | [asic_portability.md](asic_portability.md) | Captures rules that keep the core replaceable and portable. |
-| ASIC signoff flow | [asic_signoff_flow.md](asic_signoff_flow.md) | Maps the project to an ASIC-style implementation and signoff flow. |
-| DFT plan | [dft_plan.md](dft_plan.md) | Captures scan, test-mode, and memory-test planning. |
-| Timing constraints | [timing_constraints.md](timing_constraints.md) | Defines SDC discipline and timing-closure expectations. |
-| Coverage plan | [coverage_plan.md](coverage_plan.md) | Defines functional, scenario, code, and formal coverage goals. |
-| SRAM strategy | [sram_strategy.md](sram_strategy.md) | Defines ASIC memory wrapper and macro strategy. |
-| Roadmap | [roadmap.md](roadmap.md) | Tracks staged implementation order beyond Version 1. |
-| Version 1 | [version_1_scope.md](version_1_scope.md) | Defines the exact done criteria for UrbanaGPU-1. |
-
-## Draw Unit Documents
-
-| Unit | Document |
+| Document | Description |
 | --- | --- |
-| Clear engine | [draw_units/clear_engine.md](draw_units/clear_engine.md) |
-| Rectangle fill engine | [draw_units/rect_fill_engine.md](draw_units/rect_fill_engine.md) |
-| Line engine | [draw_units/line_engine.md](draw_units/line_engine.md) |
-| Sprite engine | [draw_units/sprite_engine.md](draw_units/sprite_engine.md) |
-| Tile engine | [draw_units/tile_engine.md](draw_units/tile_engine.md) |
-| Triangle rasterizer | [draw_units/triangle_rasterizer.md](draw_units/triangle_rasterizer.md) |
+| [architecture.md](architecture.md) | Top-level programmable GPU architecture and current direction. |
+| [programming_model.md](programming_model.md) | Kernel launch model, work-items, lanes, host contract. |
+| [isa.md](isa.md) | ISA envelope, register model, initial instruction set, extension rules. |
+| [core_architecture.md](core_architecture.md) | SIMD core, scheduler, lane state, execution pipeline, scaling plan. |
+| [memory_model.md](memory_model.md) | Global memory, framebuffer convention, scratchpad/cache plan. |
+| [kernel_execution.md](kernel_execution.md) | Launch flow, scheduler algorithm, kernel tests, implementation order. |
+| [roadmap.md](roadmap.md) | Implementation phases for the unified programmable architecture. |
 
-## Recommended Reading Order
+## Existing Foundation Documents
 
-1. [project_plan.md](project_plan.md)
-2. [design_decisions.md](design_decisions.md)
-3. [architecture.md](architecture.md)
-4. [design_boundaries.md](design_boundaries.md)
-5. [memory_system.md](memory_system.md)
-6. [command_format.md](command_format.md)
-7. [graphics_pipeline.md](graphics_pipeline.md)
-8. [verification_plan.md](verification_plan.md)
-9. [formal_verification.md](formal_verification.md)
-10. [toolchain.md](toolchain.md)
-11. [asic_signoff_flow.md](asic_signoff_flow.md)
-12. [fpga_bringup.md](fpga_bringup.md)
+| Document | Description |
+| --- | --- |
+| [project_plan.md](project_plan.md) | Original project goals and bring-up plan. |
+| [repository_structure.md](repository_structure.md) | Source tree organization. |
+| [design_boundaries.md](design_boundaries.md) | Portable RTL versus platform wrappers. |
+| [design_decisions.md](design_decisions.md) | Decision log. |
+| [coding_style.md](coding_style.md) | SystemVerilog coding rules. |
+| [clocking_reset.md](clocking_reset.md) | Clock and reset policy. |
+| [target_platform.md](target_platform.md) | RealDigital Urbana platform assumptions. |
+| [toolchain.md](toolchain.md) | Native toolchain expectations. |
+
+## Current Fixed-Function Bring-Up Docs
+
+These documents describe useful infrastructure and smoke-test blocks. They do
+not override the programmable architecture direction.
+
+| Document | Description |
+| --- | --- |
+| [command_format.md](command_format.md) | Existing command packet format. |
+| [memory_map.md](memory_map.md) | Host-visible registers. |
+| [graphics_pipeline.md](graphics_pipeline.md) | Current fixed-function draw-unit pipeline. |
+| [memory_system.md](memory_system.md) | Initial framebuffer and memory interface notes. |
+| [video_pipeline.md](video_pipeline.md) | Scanout and scaling plan. |
+
+## Verification and Implementation Support
+
+| Document | Description |
+| --- | --- |
+| [verification_plan.md](verification_plan.md) | Simulation, golden tests, and verification stack. |
+| [formal_verification.md](formal_verification.md) | Formal proof strategy. |
+| [coverage_plan.md](coverage_plan.md) | Coverage expectations. |
+| [timing_constraints.md](timing_constraints.md) | Timing constraint planning. |
+| [asic_portability.md](asic_portability.md) | ASIC portability concerns. |
+| [asic_signoff_flow.md](asic_signoff_flow.md) | ASIC signoff planning. |
+| [dft_plan.md](dft_plan.md) | DFT planning. |
+| [sram_strategy.md](sram_strategy.md) | SRAM and memory wrapper strategy. |
+
+## Priority Reading Order
+
+Read these first before adding new RTL:
+
+1. [architecture.md](architecture.md)
+2. [programming_model.md](programming_model.md)
+3. [isa.md](isa.md)
+4. [core_architecture.md](core_architecture.md)
+5. [memory_model.md](memory_model.md)
+6. [kernel_execution.md](kernel_execution.md)
+7. [roadmap.md](roadmap.md)

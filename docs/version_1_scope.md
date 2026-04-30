@@ -1,99 +1,62 @@
-# Version 1 Scope: UrbanaGPU-1
+# Initial Scope
 
-Version 1 proves the full loop from command input to visible pixels.
+This document is retained for historical continuity, but the project should not
+be interpreted as separate fixed-function and programmable versions. The active
+architecture is the unified programmable GPU described in
+[architecture.md](architecture.md).
 
-## Functional Goal
+## Initial Hardware Scope
 
-The GPU can:
+The initial scope is:
 
-- accept a small command stream
-- clear a framebuffer
-- draw filled rectangles
-- display the framebuffer over video output
-- run the same core in simulation and on Urbana
-
-## Required Commands
-
-```text
-CLEAR color
-FILL_RECT x y width height color
-WAIT_IDLE
-```
-
-## Required Render Target
-
-```text
-internal: 160x120 RGB565
-output: 640x480
-scale: 4x
-```
-
-## Minimal System Diagram
-
-```mermaid
-flowchart LR
-  Commands[Command Source] --> GPU[GPU Core]
-  GPU --> FB[Framebuffer Memory]
-  FB --> Scanout[Video Scanout]
-  Scanout --> Display[Display Output]
-```
-
-## In Scope
-
-- portable command processor
-- register file
 - command FIFO
-- clear engine
-- rectangle fill engine
-- framebuffer writer
-- simple memory arbiter
-- simulation memory
-- simulation video sink
-- Urbana top-level wrapper
-- Urbana video wrapper
-- design documentation
-- unit and integration testbench scaffolding
-- formal proof scaffolding for FIFO and valid/ready interfaces
-- ASIC flow scaffolding for constraints, reports, and synthesis experiments
+- register file
+- command processor
+- fixed-function smoke engines for clear and rectangle fill
+- programmable kernel launch registers
+- one programmable SIMD core
+- four lanes
+- blocking global memory load/store path
+- simulation RAM
+- framebuffer region in global memory
+- video scanout after memory correctness is proven
 
-## Out of Scope
+## Required First Kernels
 
+```text
+vector_add
+framebuffer_gradient
+solid_fill or bounded fill
+```
+
+The project is not complete at "clear a framebuffer with a fixed engine." That
+is only a bring-up checkpoint.
+
+## Out of Initial Scope
+
+- caches
+- multiple cores
+- full divergent branch reconvergence
+- floating point
+- atomics
 - DDR3 framebuffer
-- sprites
-- tilemaps
-- line drawing
-- triangles
-- depth buffer
-- texture mapping
-- programmable shaders
-- multi-clock optimization
-- ASIC physical design
-- complete ASIC signoff
-- scan insertion
-- multi-corner timing closure
+- texture filtering
+- programmable shaders in the commercial GPU sense
+- compiler optimization
+- full ASIC signoff
 
-## Definition of Done
+These are not rejected. They are staged after the base programmable core works.
 
-Version 1 is complete when:
+## Initial Exit Criteria
 
-- GPU core is custom RTL
-- clear engine works in simulation
-- rectangle engine works in simulation
-- framebuffer can be displayed on Urbana
-- commands can modify the framebuffer
-- core has no direct Xilinx primitive instantiations
-- Urbana-specific code is isolated under `platform/urbana/`
-- architecture, command format, and memory map docs exist
-- notes capture bring-up and design decisions
-- formal and ASIC signoff plans exist
+The first architecture milestone is done when:
 
-## First Demo
-
-Recommended first visible demo:
-
-1. clear screen to dark background
-2. draw a red rectangle
-3. draw a green rectangle overlapping it
-4. draw a blue rectangle clipped against the right edge
-5. wait idle
-6. leave image stable on display
+- `vector_add` passes RTL simulation
+- `framebuffer_gradient` passes RTL simulation
+- at least one graphics-style bounded write kernel passes or is explicitly
+  deferred pending predication
+- global memory and framebuffer writes use the same memory path
+- the fixed-function engines are not required for programmable kernel tests
+- lint passes
+- relevant unit tests pass
+- documentation matches the implemented programming model
