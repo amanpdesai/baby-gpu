@@ -1,0 +1,14 @@
+[options]
+mode prove
+depth 24
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv command_fifo.sv command_fifo_formal.sv
+prep -top command_fifo_formal
+
+[files]
+rtl/core/command_fifo.sv
+formal/harnesses/command_fifo_formal.sv
