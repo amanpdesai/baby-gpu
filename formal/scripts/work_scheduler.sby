@@ -1,0 +1,14 @@
+[options]
+mode prove
+depth 24
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv work_scheduler.sv work_scheduler_formal.sv
+prep -top work_scheduler_formal
+
+[files]
+rtl/core/work_scheduler.sv
+formal/harnesses/work_scheduler_formal.sv
