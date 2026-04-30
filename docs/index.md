@@ -12,6 +12,7 @@
 | [kernel_execution.md](kernel_execution.md) | Launch flow, scheduler algorithm, kernel tests, implementation order. |
 | [roadmap.md](roadmap.md) | Implementation phases for the unified programmable architecture. |
 | [agent_workflow.md](agent_workflow.md) | Main-thread and subagent workflow, checks, and handoff format. |
+| [signoff_strategy.md](signoff_strategy.md) | Simulation, formal, FPGA, and ASIC-style verification discipline. |
 
 ## Existing Foundation Documents
 

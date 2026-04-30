@@ -33,6 +33,11 @@ gantt
   Simulation RAM                      :10, 2
   Video scanout from global memory    :16, 2
   Urbana framebuffer display          :18, 3
+  section Signoff Discipline
+  Block formal proofs                 :7, 8
+  Open-source synthesis smoke         :10, 6
+  Vivado synthesis smoke              :14, 6
+  Timing and constraints              :16, 8
   section Scaling
   Scratchpad experiment               :21, 3
   Multi-core memory IDs               :24, 2
@@ -101,6 +106,15 @@ STORE
 ```
 
 Branching and predicates can wait until `vector_add` works.
+
+Verification gates for this milestone:
+
+- unit simulation for each leaf block
+- integration simulation for basic programs
+- formal plan or proof for decoder, register file, scheduler, and LSU
+- lint clean
+- open-source synthesis smoke target tracked
+- Vivado synthesis smoke target before FPGA platform claims
 
 ## First Kernel Milestone: `vector_add`
 
