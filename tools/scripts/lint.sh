@@ -8,5 +8,5 @@ if [[ "${#rtl_files[@]}" -eq 0 ]]; then
   exit 0
 fi
 
-verilator --lint-only --sv "${rtl_files[@]}"
+verilator --lint-only --sv --Wno-MULTITOP "${rtl_files[@]}"
 svlint "${rtl_files[@]}"
