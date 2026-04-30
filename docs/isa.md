@@ -219,13 +219,188 @@ Every new instruction must come with:
 - at least one integration or kernel test
 - documentation update
 
-## Open ISA Decisions
+## Initial Encoding Decisions
 
-Before decode RTL starts, decide:
+These decisions are locked for the first decoder implementation. Later changes
+must be treated as ISA changes, not incidental RTL edits.
 
-- whether `R0` is hardwired zero
-- exact bit layout for R/I/M/B/S formats
-- signed versus unsigned immediates
-- branch offset unit: instruction words or bytes
-- predicate representation
-- whether special registers use `MOVSR` or mapped register numbers
+### Register Zero
+
+`R0` is hardwired zero.
+
+Rules:
+
+- reads from `R0` return `0`
+- writes to `R0` are ignored
+- `R1..R15` are writable per-lane registers
+
+This costs one register but simplifies programs, decode, and tests.
+
+### Common Header
+
+All instructions are 32 bits.
+
+```text
+31        26 25     22 21     18 17     14 13                 0
++------------+---------+---------+---------+--------------------+
+| opcode[5:0] | rd[3:0] | ra[3:0] | rb[3:0] | format-specific    |
++------------+---------+---------+---------+--------------------+
+```
+
+Opcode width is 6 bits, allowing 64 primary opcodes. Register fields address
+the 16 architectural lane registers.
+
+### R-Type
+
+```text
+31        26 25     22 21     18 17     14 13       8 7       0
++------------+---------+---------+---------+----------+---------+
+| opcode     | rd      | ra      | rb      | reserved | flags   |
++------------+---------+---------+---------+----------+---------+
+```
+
+Used by:
+
+```text
+ADD
+MUL
+SUB later
+AND/OR/XOR later
+CMP later
+```
+
+Reserved bits must be zero initially.
+
+### I-Type
+
+```text
+31        26 25     22 21     18 17                         0
++------------+---------+---------+----------------------------+
+| opcode     | rd      | ra      | imm18                      |
++------------+---------+---------+----------------------------+
+```
+
+Used by:
+
+```text
+MOVI
+ADDI later
+address offset helpers later
+```
+
+Immediate interpretation is instruction-specific. `MOVI` zero-extends `imm18`
+into the destination register for the first implementation. Sign extension can
+be added with a separate instruction or flag later.
+
+### S-Type
+
+```text
+31        26 25     22 21     16 15                         0
++------------+---------+---------+----------------------------+
+| opcode     | rd      | sr[5:0] | reserved                   |
++------------+---------+---------+----------------------------+
+```
+
+Used by:
+
+```text
+MOVSR
+```
+
+Special registers are read with `MOVSR`; they are not mapped into the `R0..R15`
+register namespace.
+
+Initial special register IDs:
+
+| ID | Name |
+| ---: | --- |
+| `0x00` | `lane_id` |
+| `0x01` | `global_id_x` |
+| `0x02` | `global_id_y` |
+| `0x03` | `linear_global_id` |
+| `0x04` | `group_id_x` |
+| `0x05` | `group_id_y` |
+| `0x06` | `local_id_x` |
+| `0x07` | `local_id_y` |
+| `0x08` | `arg_base` |
+| `0x09` | `framebuffer_base` |
+| `0x0A` | `framebuffer_width` |
+| `0x0B` | `framebuffer_height` |
+
+### M-Type
+
+```text
+31        26 25     22 21     18 17                         0
++------------+---------+---------+----------------------------+
+| opcode     | rd/rs   | ra      | offset18                   |
++------------+---------+---------+----------------------------+
+```
+
+Used by:
+
+```text
+LOAD
+STORE
+STORE16
+```
+
+Address calculation:
+
+```text
+addr = R[ra] + zero_extend(offset18)
+```
+
+Initial memory offsets are unsigned. Signed offsets should be added explicitly
+later if needed.
+
+### B-Type
+
+```text
+31        26 25     22 21                         0
++------------+---------+----------------------------+
+| opcode     | pred    | offset22                   |
++------------+---------+----------------------------+
+```
+
+Branch offsets are signed instruction-word offsets relative to the next PC:
+
+```text
+target_pc = pc + 1 + sign_extend(offset22)
+```
+
+Branches are convergent-only at first. If active lanes disagree, hardware sets
+the divergence error and halts the kernel.
+
+## Initial Opcode Map
+
+| Opcode | Mnemonic | Format | Implement now |
+| ---: | --- | --- | --- |
+| `0x00` | `NOP` | R | yes |
+| `0x01` | `END` | R | yes |
+| `0x02` | `MOVI` | I | yes |
+| `0x03` | `MOVSR` | S | yes |
+| `0x04` | `ADD` | R | yes |
+| `0x05` | `MUL` | R | yes |
+| `0x06` | `LOAD` | M | next |
+| `0x07` | `STORE` | M | next |
+| `0x08` | `STORE16` | M | after `STORE` |
+| `0x09` | `CMP` | R | later |
+| `0x0A` | `BRA` | B | later |
+| `0x0B` | `SUB` | R | later |
+| `0x0C` | `AND` | R | later |
+| `0x0D` | `OR` | R | later |
+| `0x0E` | `XOR` | R | later |
+| `0x0F` | `SHL` | R | later |
+| `0x10` | `SHR` | R | later |
+
+All unlisted opcodes are illegal.
+
+## Remaining ISA Decisions
+
+Still open before branch and memory RTL:
+
+- exact predicate representation for `CMP` and `BRA`
+- whether to add signed immediates as flags or separate opcodes
+- whether to add `ADDI` before `LOAD`/`STORE`
+- whether `STORE16` should trap on odd addresses or support both halfword lanes
+- exact illegal-instruction status bit mapping in the programmable core
