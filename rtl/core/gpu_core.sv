@@ -27,19 +27,26 @@ module gpu_core #(
     output logic [(DATA_W/8)-1:0] mem_req_wmask
 );
   localparam int FIFO_COUNT_W = $clog2(FIFO_DEPTH + 1);
-  localparam logic [ADDR_W-1:0] FB_BASE = '0;
-  localparam logic [COORD_W-1:0] FB_WIDTH_CONST = COORD_W'(FB_WIDTH);
-  localparam logic [COORD_W-1:0] FB_HEIGHT_CONST = COORD_W'(FB_HEIGHT);
-  localparam logic [ADDR_W-1:0] FB_STRIDE_BYTES = ADDR_W'(FB_WIDTH * 2);
 
   logic fifo_valid;
   logic fifo_ready;
   logic [DATA_W-1:0] fifo_data;
   logic fifo_empty;
   logic [FIFO_COUNT_W-1:0] fifo_count;
-  logic [7:0] cp_error_status;
 
   logic cp_busy;
+  logic [7:0] cp_error_status;
+
+  logic register_soft_reset;
+  logic register_clear_errors;
+  logic [ADDR_W-1:0] register_fb_base;
+  logic [COORD_W-1:0] register_fb_width;
+  logic [COORD_W-1:0] register_fb_height;
+  logic [1:0] register_fb_format;
+  logic combined_reset;
+  logic combined_clear_errors;
+  logic [ADDR_W-1:0] register_stride_bytes;
+
   logic clear_start;
   logic [COLOR_W-1:0] clear_color;
   logic clear_busy;
@@ -72,16 +79,50 @@ module gpu_core #(
   logic [COORD_W-1:0] writer_pixel_y;
   logic [COLOR_W-1:0] writer_pixel_color;
 
+  logic reg_write_valid;
+  logic [DATA_W-1:0] reg_write_addr;
+  logic [DATA_W-1:0] reg_write_data;
+
+  assign combined_clear_errors = clear_errors || register_clear_errors;
+  assign combined_reset = reset || register_soft_reset;
+  assign register_stride_bytes = ADDR_W'(register_fb_width) << 1;
   assign busy = cp_busy || !fifo_empty;
   assign error_status = cp_error_status | {clear_error, rect_error, 6'b000000};
+
+  register_file #(
+      .ADDR_W(ADDR_W),
+      .DATA_W(DATA_W),
+      .COORD_W(COORD_W),
+      .FB_WIDTH_DEFAULT(FB_WIDTH),
+      .FB_HEIGHT_DEFAULT(FB_HEIGHT)
+  ) u_register_file (
+      .clk(clk),
+      .reset(reset),
+      .write_valid(reg_write_valid),
+      .write_addr(reg_write_addr),
+      .write_data(reg_write_data),
+      .read_valid(1'b0),
+      .read_addr('0),
+      .read_data(),
+      .status_busy(busy),
+      .status_errors(error_status),
+      .core_enable(),
+      .soft_reset_pulse(register_soft_reset),
+      .clear_errors_pulse(register_clear_errors),
+      .test_pattern_enable(),
+      .fb_base(register_fb_base),
+      .fb_width(register_fb_width),
+      .fb_height(register_fb_height),
+      .fb_format(register_fb_format)
+  );
 
   command_fifo #(
       .DATA_W(DATA_W),
       .DEPTH(FIFO_DEPTH)
   ) u_command_fifo (
       .clk(clk),
-      .reset(reset),
-      .flush(clear_errors),
+      .reset(combined_reset),
+      .flush(combined_clear_errors),
       .in_valid(cmd_valid),
       .in_ready(cmd_ready),
       .in_data(cmd_data),
@@ -99,9 +140,9 @@ module gpu_core #(
       .COLOR_W(COLOR_W)
   ) u_command_processor (
       .clk(clk),
-      .reset(reset),
+      .reset(combined_reset),
       .enable(enable),
-      .clear_errors(clear_errors),
+      .clear_errors(combined_clear_errors),
       .cmd_valid(fifo_valid),
       .cmd_ready(fifo_ready),
       .cmd_data(fifo_data),
@@ -117,9 +158,9 @@ module gpu_core #(
       .rect_color(rect_color),
       .rect_busy(rect_busy),
       .rect_done(rect_done),
-      .reg_write_valid(),
-      .reg_write_addr(),
-      .reg_write_data(),
+      .reg_write_valid(reg_write_valid),
+      .reg_write_addr(reg_write_addr),
+      .reg_write_data(reg_write_data),
       .busy(cp_busy),
       .error_status(cp_error_status)
   );
@@ -131,7 +172,7 @@ module gpu_core #(
       .COLOR_W(COLOR_W)
   ) u_clear_engine (
       .clk(clk),
-      .reset(reset),
+      .reset(combined_reset),
       .start(clear_start),
       .start_color(clear_color),
       .busy(clear_busy),
@@ -151,7 +192,7 @@ module gpu_core #(
       .COLOR_W(COLOR_W)
   ) u_rect_fill_engine (
       .clk(clk),
-      .reset(reset),
+      .reset(combined_reset),
       .start(rect_start),
       .rect_x(rect_x),
       .rect_y(rect_y),
@@ -186,10 +227,10 @@ module gpu_core #(
       .pixel_x(writer_pixel_x),
       .pixel_y(writer_pixel_y),
       .pixel_color(writer_pixel_color),
-      .fb_base(FB_BASE),
-      .fb_width(FB_WIDTH_CONST),
-      .fb_height(FB_HEIGHT_CONST),
-      .stride_bytes(FB_STRIDE_BYTES),
+      .fb_base(register_fb_base),
+      .fb_width(register_fb_width),
+      .fb_height(register_fb_height),
+      .stride_bytes(register_stride_bytes),
       .mem_req_valid(mem_req_valid),
       .mem_req_ready(mem_req_ready),
       .mem_req_write(mem_req_write),
@@ -197,5 +238,4 @@ module gpu_core #(
       .mem_req_wdata(mem_req_wdata),
       .mem_req_wmask(mem_req_wmask)
   );
-
 endmodule

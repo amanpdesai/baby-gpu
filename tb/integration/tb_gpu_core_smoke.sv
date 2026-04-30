@@ -149,6 +149,23 @@ module tb_gpu_core_smoke;
     check(pixel_at(3, 1) == 16'h1234, "RECT leaves right neighbor unchanged");
     check(error_status == 8'h00, "smoke command stream has no core errors");
 
+    send_word(32'h1003_0000);
+    send_word(32'h0000_0014);
+    send_word(32'h0000_0002);
+    wait_idle();
+    send_word(32'h1003_0000);
+    send_word(32'h0000_0018);
+    send_word(32'h0000_0002);
+    wait_idle();
+    send_word(32'h0102_0000);
+    send_word(32'h0000_7777);
+    wait_idle();
+
+    check(framebuffer[0] == 32'h7777_7777, "SET_REGISTER width changes clear row 0 stride");
+    check(framebuffer[1] == 32'h7777_7777, "SET_REGISTER height allows second compact row");
+    check(framebuffer[2][15:0] == 16'h1234, "SET_REGISTER bounds leave old wide row untouched");
+    check(error_status == 8'h00, "register-configured command stream has no core errors");
+
     $display("tb_gpu_core_smoke PASS");
     $finish;
   end
