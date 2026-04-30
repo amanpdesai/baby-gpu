@@ -223,18 +223,15 @@ module load_store_unit #(
                 STATE_REQ: begin
                     if (req_ready) begin
                         req_valid_q <= 1'b0;
-                        if (op_q == LSU_OP_LOAD) begin
-                            state_q <= STATE_WAIT_RSP;
-                        end else begin
-                            lane_idx_q <= next_lane_cursor + {{(LANE_IDX_W-1){1'b0}}, 1'b1};
-                            state_q <= STATE_PREP;
-                        end
+                        state_q <= STATE_WAIT_RSP;
                     end
                 end
                 STATE_WAIT_RSP: begin
                     if (rsp_valid) begin
-                        lane_rdata_arr[next_lane] <= rsp_rdata;
-                        lane_rvalid_q[next_lane] <= 1'b1;
+                        if (op_q == LSU_OP_LOAD) begin
+                            lane_rdata_arr[next_lane] <= rsp_rdata;
+                            lane_rvalid_q[next_lane] <= 1'b1;
+                        end
                         lane_idx_q <= next_lane_cursor + {{(LANE_IDX_W-1){1'b0}}, 1'b1};
                         state_q <= STATE_PREP;
                     end

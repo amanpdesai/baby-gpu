@@ -116,6 +116,19 @@ The first implemented ISA should be small:
 | `STORE` | 32-bit global store. | vector add |
 | `STORE16` | 16-bit global store. | RGB565 framebuffer |
 
+Initial memory instructions use the existing R-type field positions, with no
+encoded offset yet:
+
+```text
+LOAD    rd, [ra]      ; rb must be zero
+STORE   [ra], rb      ; rd must be zero
+STORE16 [ra], rb      ; rd must be zero
+```
+
+The address register is per-lane. The first implementation issues each active
+lane as a blocking request through the LSU. Offset addressing can be added
+after `vector_add` passes if the kernel code needs denser instruction streams.
+
 This set can implement:
 
 - vector add

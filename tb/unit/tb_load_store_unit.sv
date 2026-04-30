@@ -150,6 +150,16 @@ module tb_load_store_unit;
         end
     endtask
 
+    task automatic send_rsp(input logic [DATA_W-1:0] rdata);
+        begin
+            rsp_rdata = rdata;
+            rsp_valid = 1'b1;
+            tick();
+            rsp_valid = 1'b0;
+            rsp_rdata = '0;
+        end
+    endtask
+
     task automatic expect_store_req(
         input logic [ADDR_W-1:0] exp_addr,
         input logic [DATA_W-1:0] exp_wdata,
@@ -163,6 +173,8 @@ module tb_load_store_unit;
             check(req_wdata == exp_wdata, {message, " wdata"});
             check(req_wmask == exp_wmask, {message, " wmask"});
             tick();
+            check(rsp_ready, {message, " waits for write response"});
+            send_rsp('0);
         end
     endtask
 
@@ -252,6 +264,8 @@ module tb_load_store_unit;
             req_ready = 1'b1;
             tick();
             req_ready = 1'b0;
+            check(rsp_ready, "store waits for write response after request acceptance");
+            send_rsp('0);
             wait_for_done();
         end
     endtask
@@ -277,6 +291,8 @@ module tb_load_store_unit;
             req_ready = 1'b1;
             tick();
             req_ready = 1'b0;
+            check(rsp_ready, "busy-rejection store waits for write response");
+            send_rsp('0);
             wait_for_done();
         end
     endtask

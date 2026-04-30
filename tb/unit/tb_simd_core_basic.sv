@@ -16,6 +16,16 @@ module tb_simd_core_basic;
   logic core_error;
   logic [PC_W-1:0] instruction_addr;
   logic [ISA_WORD_W-1:0] instruction;
+  logic data_req_valid;
+  logic data_req_ready;
+  logic data_req_write;
+  logic [31:0] data_req_addr;
+  logic [31:0] data_req_wdata;
+  logic [3:0] data_req_wmask;
+  logic data_rsp_valid;
+  logic data_rsp_ready;
+  logic [31:0] data_rsp_rdata;
+  logic data_mem_error;
   logic [(LANES*COORD_W)-1:0] lane_id;
   logic [(LANES*COORD_W)-1:0] global_id_x;
   logic [(LANES*COORD_W)-1:0] global_id_y;
@@ -49,6 +59,15 @@ module tb_simd_core_basic;
       .error(core_error),
       .instruction_addr(instruction_addr),
       .instruction(instruction),
+      .data_req_valid(data_req_valid),
+      .data_req_ready(data_req_ready),
+      .data_req_write(data_req_write),
+      .data_req_addr(data_req_addr),
+      .data_req_wdata(data_req_wdata),
+      .data_req_wmask(data_req_wmask),
+      .data_rsp_valid(data_rsp_valid),
+      .data_rsp_ready(data_rsp_ready),
+      .data_rsp_rdata(data_rsp_rdata),
       .lane_id(lane_id),
       .global_id_x(global_id_x),
       .global_id_y(global_id_y),
@@ -63,6 +82,25 @@ module tb_simd_core_basic;
       .framebuffer_height(framebuffer_height),
       .debug_read_addr(debug_read_addr),
       .debug_read_data(debug_read_data)
+  );
+
+  data_memory #(
+      .ADDR_W(32),
+      .DATA_W(32),
+      .DEPTH_WORDS(64)
+  ) u_data_memory (
+      .clk(clk),
+      .reset(reset),
+      .req_valid(data_req_valid),
+      .req_ready(data_req_ready),
+      .req_write(data_req_write),
+      .req_addr(data_req_addr),
+      .req_wdata(data_req_wdata),
+      .req_wmask(data_req_wmask),
+      .rsp_valid(data_rsp_valid),
+      .rsp_ready(data_rsp_ready),
+      .rsp_rdata(data_rsp_rdata),
+      .error(data_mem_error)
   );
 
   assign instruction = imem[instruction_addr];
@@ -116,7 +154,7 @@ module tb_simd_core_basic;
       while (!done && !core_error) begin
         step();
         timeout = timeout + 1;
-        check(timeout < 32, "SIMD core timed out");
+      check(timeout < 96, "SIMD core timed out");
       end
     end
   endtask
@@ -268,6 +306,31 @@ module tb_simd_core_basic;
     check(lane_word(debug_read_data, 1) == 32'd2, "lane 1 doubled lane_id");
     check(lane_word(debug_read_data, 2) == 32'd4, "lane 2 doubled lane_id");
     check(lane_word(debug_read_data, 3) == 32'd6, "lane 3 doubled lane_id");
+
+    reset = 1'b1;
+    step();
+    reset = 1'b0;
+    launch_active_mask = '1;
+    clear_program();
+    imem[0] = isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, ISA_SR_LANE_ID);
+    imem[1] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd4);
+    imem[2] = isa_pkg::isa_r_type(ISA_OP_MUL, 4'd1, 4'd1, 4'd2);
+    imem[3] = isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd2, ISA_SR_LANE_ID);
+    imem[4] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd3, 4'd0, 18'd10);
+    imem[5] = isa_pkg::isa_r_type(ISA_OP_ADD, 4'd2, 4'd2, 4'd3);
+    imem[6] = isa_pkg::isa_r_type(ISA_OP_STORE, 4'd0, 4'd1, 4'd2);
+    imem[7] = isa_pkg::isa_r_type(ISA_OP_LOAD, 4'd4, 4'd1, 4'd0);
+    imem[8] = isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0);
+    pulse_start();
+    wait_done();
+    check(done && !core_error, "LOAD/STORE program completes without core error");
+    check(!data_mem_error, "LOAD/STORE program leaves data memory error low");
+    debug_read_addr = 4'd4;
+    #1;
+    check(lane_word(debug_read_data, 0) == 32'd10, "lane 0 loads its own stored word");
+    check(lane_word(debug_read_data, 1) == 32'd11, "lane 1 loads its own stored word");
+    check(lane_word(debug_read_data, 2) == 32'd12, "lane 2 loads its own stored word");
+    check(lane_word(debug_read_data, 3) == 32'd13, "lane 3 loads its own stored word");
 
     reset = 1'b1;
     step();

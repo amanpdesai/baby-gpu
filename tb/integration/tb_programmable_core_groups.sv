@@ -25,6 +25,15 @@ module tb_programmable_core_groups;
   logic busy;
   logic done;
   logic error;
+  logic data_req_valid;
+  logic data_req_ready;
+  logic data_req_write;
+  logic [ADDR_W-1:0] data_req_addr;
+  logic [31:0] data_req_wdata;
+  logic [3:0] data_req_wmask;
+  logic data_rsp_valid;
+  logic data_rsp_ready;
+  logic [31:0] data_rsp_rdata;
   logic [REG_ADDR_W-1:0] debug_read_addr;
   logic [(LANES*DATA_W)-1:0] debug_read_data;
   logic imem_write_en;
@@ -53,12 +62,25 @@ module tb_programmable_core_groups;
       .framebuffer_height(framebuffer_height),
       .instruction_addr(instruction_addr),
       .instruction(instruction),
+      .data_req_valid(data_req_valid),
+      .data_req_ready(data_req_ready),
+      .data_req_write(data_req_write),
+      .data_req_addr(data_req_addr),
+      .data_req_wdata(data_req_wdata),
+      .data_req_wmask(data_req_wmask),
+      .data_rsp_valid(data_rsp_valid),
+      .data_rsp_ready(data_rsp_ready),
+      .data_rsp_rdata(data_rsp_rdata),
       .busy(busy),
       .done(done),
       .error(error),
       .debug_read_addr(debug_read_addr),
       .debug_read_data(debug_read_data)
   );
+
+  assign data_req_ready = 1'b1;
+  assign data_rsp_valid = 1'b0;
+  assign data_rsp_rdata = '0;
 
   instruction_memory #(
       .WORD_W(ISA_WORD_W),

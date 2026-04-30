@@ -13,6 +13,9 @@ module instruction_decoder (
     output logic uses_immediate,
     output logic uses_special,
     output logic uses_alu,
+    output logic uses_memory,
+    output logic memory_write,
+    output logic memory_store16,
     output logic ends_lane,
     output logic illegal
 );
@@ -32,11 +35,14 @@ module instruction_decoder (
   always_comb begin
     alu_op = ISA_ALU_PASS_A;
     writes_register = 1'b0;
-    uses_immediate = 1'b0;
-    uses_special = 1'b0;
-    uses_alu = 1'b0;
-    ends_lane = 1'b0;
-    illegal = 1'b0;
+        uses_immediate = 1'b0;
+        uses_special = 1'b0;
+        uses_alu = 1'b0;
+        uses_memory = 1'b0;
+        memory_write = 1'b0;
+        memory_store16 = 1'b0;
+        ends_lane = 1'b0;
+        illegal = 1'b0;
 
     case (opcode)
       ISA_OP_NOP: begin
@@ -66,16 +72,35 @@ module instruction_decoder (
         illegal = !r_type_reserved_clear;
       end
 
-      ISA_OP_MUL: begin
-        writes_register = r_type_reserved_clear;
-        uses_alu = r_type_reserved_clear;
-        alu_op = ISA_ALU_MUL;
-        illegal = !r_type_reserved_clear;
-      end
+            ISA_OP_MUL: begin
+                writes_register = r_type_reserved_clear;
+                uses_alu = r_type_reserved_clear;
+                alu_op = ISA_ALU_MUL;
+                illegal = !r_type_reserved_clear;
+            end
 
-      default: begin
-        illegal = 1'b1;
-      end
+            ISA_OP_LOAD: begin
+                writes_register = r_type_reserved_clear && (rb == '0);
+                uses_memory = r_type_reserved_clear && (rb == '0);
+                illegal = !r_type_reserved_clear || (rb != '0);
+            end
+
+            ISA_OP_STORE: begin
+                uses_memory = r_type_reserved_clear && (rd == '0);
+                memory_write = r_type_reserved_clear && (rd == '0);
+                illegal = !r_type_reserved_clear || (rd != '0);
+            end
+
+            ISA_OP_STORE16: begin
+                uses_memory = r_type_reserved_clear && (rd == '0);
+                memory_write = r_type_reserved_clear && (rd == '0);
+                memory_store16 = r_type_reserved_clear && (rd == '0);
+                illegal = !r_type_reserved_clear || (rd != '0);
+            end
+
+            default: begin
+                illegal = 1'b1;
+            end
     endcase
   end
 endmodule

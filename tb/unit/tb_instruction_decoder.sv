@@ -13,6 +13,9 @@ module tb_instruction_decoder;
   logic uses_immediate;
   logic uses_special;
   logic uses_alu;
+  logic uses_memory;
+  logic memory_write;
+  logic memory_store16;
   logic ends_lane;
   logic illegal;
 
@@ -29,6 +32,9 @@ module tb_instruction_decoder;
       .uses_immediate(uses_immediate),
       .uses_special(uses_special),
       .uses_alu(uses_alu),
+      .uses_memory(uses_memory),
+      .memory_write(memory_write),
+      .memory_store16(memory_store16),
       .ends_lane(ends_lane),
       .illegal(illegal)
   );
@@ -93,12 +99,45 @@ module tb_instruction_decoder;
       if (special_reg_id !== exp_special_reg_id) $fatal(1, "special register mismatch");
       if (alu_op !== exp_alu_op) $fatal(1, "alu_op mismatch");
       if (writes_register !== exp_writes_register) $fatal(1, "writes_register mismatch");
-      if (uses_immediate !== exp_uses_immediate) $fatal(1, "uses_immediate mismatch");
-      if (uses_special !== exp_uses_special) $fatal(1, "uses_special mismatch");
-      if (uses_alu !== exp_uses_alu) $fatal(1, "uses_alu mismatch");
-      if (ends_lane !== exp_ends_lane) $fatal(1, "ends_lane mismatch");
+    if (uses_immediate !== exp_uses_immediate) $fatal(1, "uses_immediate mismatch");
+    if (uses_special !== exp_uses_special) $fatal(1, "uses_special mismatch");
+    if (uses_alu !== exp_uses_alu) $fatal(1, "uses_alu mismatch");
+    if (uses_memory !== 1'b0) $fatal(1, "uses_memory default mismatch");
+    if (memory_write !== 1'b0) $fatal(1, "memory_write default mismatch");
+    if (memory_store16 !== 1'b0) $fatal(1, "memory_store16 default mismatch");
+    if (ends_lane !== exp_ends_lane) $fatal(1, "ends_lane mismatch");
       if (illegal !== exp_illegal) $fatal(1, "illegal mismatch");
-    end
+  end
+  endtask
+
+  task automatic expect_memory_decode(
+      input logic [ISA_WORD_W-1:0] test_instruction,
+      input logic [ISA_OPCODE_W-1:0] exp_opcode,
+      input logic [ISA_REG_ADDR_W-1:0] exp_rd,
+      input logic [ISA_REG_ADDR_W-1:0] exp_ra,
+      input logic [ISA_REG_ADDR_W-1:0] exp_rb,
+      input logic exp_writes_register,
+      input logic exp_memory_write,
+      input logic exp_memory_store16,
+      input logic exp_illegal
+  );
+  begin
+    instruction = test_instruction;
+    #1;
+    if (opcode !== exp_opcode) $fatal(1, "memory opcode mismatch");
+    if (rd !== exp_rd) $fatal(1, "memory rd mismatch");
+    if (ra !== exp_ra) $fatal(1, "memory ra mismatch");
+    if (rb !== exp_rb) $fatal(1, "memory rb mismatch");
+    if (writes_register !== exp_writes_register) $fatal(1, "memory writes_register mismatch");
+    if (uses_immediate !== 1'b0) $fatal(1, "memory uses_immediate mismatch");
+    if (uses_special !== 1'b0) $fatal(1, "memory uses_special mismatch");
+    if (uses_alu !== 1'b0) $fatal(1, "memory uses_alu mismatch");
+    if (uses_memory !== !exp_illegal) $fatal(1, "memory uses_memory mismatch");
+    if (memory_write !== exp_memory_write) $fatal(1, "memory_write mismatch");
+    if (memory_store16 !== exp_memory_store16) $fatal(1, "memory_store16 mismatch");
+    if (ends_lane !== 1'b0) $fatal(1, "memory ends_lane mismatch");
+    if (illegal !== exp_illegal) $fatal(1, "memory illegal mismatch");
+  end
   endtask
 
   task automatic expect_unimplemented_known_opcode(
@@ -263,9 +302,66 @@ module tb_instruction_decoder;
         1'b1
     );
 
-    expect_unimplemented_known_opcode(ISA_OP_LOAD);
-    expect_unimplemented_known_opcode(ISA_OP_STORE);
-    expect_unimplemented_known_opcode(ISA_OP_STORE16);
+    expect_memory_decode(
+        pack_r_type(ISA_OP_LOAD, 4'd3, 4'd4, 4'd0),
+        ISA_OP_LOAD,
+        4'd3,
+        4'd4,
+        4'd0,
+        1'b1,
+        1'b0,
+        1'b0,
+        1'b0
+    );
+
+    expect_memory_decode(
+        pack_r_type(ISA_OP_STORE, 4'd0, 4'd5, 4'd6),
+        ISA_OP_STORE,
+        4'd0,
+        4'd5,
+        4'd6,
+        1'b0,
+        1'b1,
+        1'b0,
+        1'b0
+    );
+
+    expect_memory_decode(
+        pack_r_type(ISA_OP_STORE16, 4'd0, 4'd7, 4'd8),
+        ISA_OP_STORE16,
+        4'd0,
+        4'd7,
+        4'd8,
+        1'b0,
+        1'b1,
+        1'b1,
+        1'b0
+    );
+
+    expect_memory_decode(
+        pack_r_type(ISA_OP_LOAD, 4'd3, 4'd4, 4'd1),
+        ISA_OP_LOAD,
+        4'd3,
+        4'd4,
+        4'd1,
+        1'b0,
+        1'b0,
+        1'b0,
+        1'b1
+    );
+
+    expect_memory_decode(
+        pack_r_type(ISA_OP_STORE, 4'd1, 4'd5, 4'd6),
+        ISA_OP_STORE,
+        4'd1,
+        4'd5,
+        4'd6,
+        1'b0,
+        1'b0,
+        1'b0,
+        1'b1
+    );
+
     expect_unimplemented_known_opcode(ISA_OP_CMP);
     expect_unimplemented_known_opcode(ISA_OP_BRA);
     expect_unimplemented_known_opcode(ISA_OP_SUB);

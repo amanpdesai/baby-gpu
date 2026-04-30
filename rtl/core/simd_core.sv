@@ -28,6 +28,16 @@ module simd_core #(
     output logic [PC_PORT_W-1:0] instruction_addr,
     input logic [ISA_WORD_W-1:0] instruction,
 
+    output logic data_req_valid,
+    input logic data_req_ready,
+    output logic data_req_write,
+    output logic [ADDR_PORT_W-1:0] data_req_addr,
+    output logic [31:0] data_req_wdata,
+    output logic [3:0] data_req_wmask,
+    input logic data_rsp_valid,
+    output logic data_rsp_ready,
+    input logic [31:0] data_rsp_rdata,
+
     input logic [(LANES_PORT_W*COORD_PORT_W)-1:0] lane_id,
     input logic [(LANES_PORT_W*COORD_PORT_W)-1:0] global_id_x,
     input logic [(LANES_PORT_W*COORD_PORT_W)-1:0] global_id_y,
@@ -44,12 +54,17 @@ module simd_core #(
     input logic [REG_ADDR_PORT_W-1:0] debug_read_addr,
     output logic [(LANES_PORT_W*DATA_PORT_W)-1:0] debug_read_data
 );
-  typedef enum logic [1:0] {
+  typedef enum logic [2:0] {
     STATE_IDLE,
     STATE_RUN,
+    STATE_WAIT_LSU,
     STATE_DONE,
     STATE_ERROR
   } state_e;
+
+  localparam logic [1:0] LSU_OP_LOAD = 2'd0;
+  localparam logic [1:0] LSU_OP_STORE = 2'd1;
+  localparam logic [1:0] LSU_OP_STORE16 = 2'd2;
 
   initial begin : parameter_guards
     if (LANES < 1) begin
@@ -69,6 +84,9 @@ module simd_core #(
     end
     if (ADDR_W > DATA_W) begin
       $fatal(1, "simd_core requires ADDR_W <= DATA_W for special-register reads");
+    end
+    if (DATA_PORT_W < 32) begin
+      $fatal(1, "simd_core requires at least 32-bit data registers for memory operations");
     end
     if (REGS < 2) begin
       $fatal(1, "simd_core requires REGS >= 2");
@@ -113,6 +131,9 @@ module simd_core #(
   logic decoded_uses_immediate;
   logic decoded_uses_special;
   logic decoded_uses_alu;
+  logic decoded_uses_memory;
+  logic decoded_memory_write;
+  logic decoded_memory_store16;
   logic decoded_ends_lane;
   logic decoder_illegal;
 
@@ -129,7 +150,19 @@ module simd_core #(
   logic [(LANES_PORT_W*DATA_PORT_W)-1:0] special_value;
   logic special_illegal;
   logic instruction_has_error;
+  logic lsu_start_valid;
+  logic lsu_start_ready;
+  logic lsu_done;
+  logic lsu_error;
+  logic [1:0] lsu_op;
+  logic lsu_writes_register_q;
+  logic [REG_ADDR_PORT_W-1:0] lsu_write_addr_q;
+  logic [(LANES_PORT_W*ADDR_PORT_W)-1:0] lsu_lane_addr;
+  logic [(LANES_PORT_W*32)-1:0] lsu_lane_wdata;
+  logic [(LANES_PORT_W*32)-1:0] lsu_lane_rdata;
+  logic [LANES_PORT_W-1:0] lsu_lane_rvalid;
   logic [(LANES_PORT_W*DATA_PORT_W)-1:0] immediate_value;
+  logic [(LANES_PORT_W*DATA_PORT_W)-1:0] lsu_writeback_value;
   logic [(LANES_PORT_W*SPECIAL_COORD_W)-1:0] special_lane_id;
   logic [(LANES_PORT_W*SPECIAL_COORD_W)-1:0] special_global_id_x;
   logic [(LANES_PORT_W*SPECIAL_COORD_W)-1:0] special_global_id_y;
@@ -142,7 +175,7 @@ module simd_core #(
   logic [SPECIAL_COORD_W-1:0] special_framebuffer_width;
   logic [SPECIAL_COORD_W-1:0] special_framebuffer_height;
 
-  assign busy = state == STATE_RUN;
+  assign busy = (state == STATE_RUN) || (state == STATE_WAIT_LSU);
   assign done = state == STATE_DONE;
   assign error = state == STATE_ERROR;
   assign launch_ready = (state == STATE_IDLE) && launch_armed;
@@ -153,9 +186,12 @@ module simd_core #(
   assign rf_read_addr_a = busy ? fit_reg_addr(decoded_ra) : debug_read_addr;
   assign rf_read_addr_b = fit_reg_addr(decoded_rb);
   assign debug_read_data = rf_read_data_a;
-  assign rf_write_addr = fit_reg_addr(decoded_rd);
+  assign rf_write_addr = (state == STATE_WAIT_LSU) ? lsu_write_addr_q : fit_reg_addr(decoded_rd);
   assign instruction_has_error = decoder_illegal || (decoded_uses_special && special_illegal);
-  assign rf_write_enable = (busy && decoded_writes_register && !instruction_has_error) ? active_mask : '0;
+  assign rf_write_enable =
+      ((state == STATE_WAIT_LSU) && lsu_writes_register_q && lsu_done && !lsu_error) ? lsu_lane_rvalid :
+      ((state == STATE_RUN) && decoded_writes_register && !decoded_uses_memory && !instruction_has_error) ?
+          active_mask : '0;
 
   function automatic logic [(LANES_PORT_W*DATA_PORT_W)-1:0] replicate_immediate(
       input logic [ISA_IMM18_W-1:0] imm);
@@ -177,6 +213,25 @@ module simd_core #(
   endfunction
 
   assign immediate_value = replicate_immediate(decoded_imm18);
+  assign lsu_op = decoded_memory_store16 ? LSU_OP_STORE16 :
+                  decoded_memory_write ? LSU_OP_STORE :
+                  LSU_OP_LOAD;
+  assign lsu_start_valid = (state == STATE_RUN) && decoded_uses_memory && !instruction_has_error;
+
+  always_comb begin
+    lsu_lane_addr = '0;
+    lsu_lane_wdata = '0;
+    lsu_writeback_value = '0;
+
+    for (int lane = 0; lane < LANES_PORT_W; lane++) begin
+      lsu_lane_addr[(lane*ADDR_PORT_W)+:ADDR_PORT_W] =
+          rf_read_data_a[(lane*DATA_PORT_W)+:ADDR_PORT_W];
+      lsu_lane_wdata[(lane*32)+:32] =
+          rf_read_data_b[(lane*DATA_PORT_W)+:32];
+      lsu_writeback_value[(lane*DATA_PORT_W)+:32] =
+          lsu_lane_rdata[(lane*32)+:32];
+    end
+  end
 
   genvar special_lane;
   generate
@@ -206,7 +261,9 @@ module simd_core #(
   always_comb begin
     rf_write_data = '0;
 
-    if (decoded_uses_immediate) begin
+    if (state == STATE_WAIT_LSU) begin
+      rf_write_data = lsu_writeback_value;
+    end else if (decoded_uses_immediate) begin
       rf_write_data = immediate_value;
     end else if (decoded_uses_special) begin
       rf_write_data = special_value;
@@ -228,6 +285,9 @@ module simd_core #(
       .uses_immediate(decoded_uses_immediate),
       .uses_special(decoded_uses_special),
       .uses_alu(decoded_uses_alu),
+      .uses_memory(decoded_uses_memory),
+      .memory_write(decoded_memory_write),
+      .memory_store16(decoded_memory_store16),
       .ends_lane(decoded_ends_lane),
       .illegal(decoder_illegal)
   );
@@ -284,12 +344,42 @@ module simd_core #(
       .illegal(special_illegal)
   );
 
+  load_store_unit #(
+      .LANES(LANES_PORT_W),
+      .ADDR_W(ADDR_PORT_W)
+  ) u_load_store_unit (
+      .clk(clk),
+      .reset(reset),
+      .start_valid(lsu_start_valid),
+      .start_ready(lsu_start_ready),
+      .op(lsu_op),
+      .active_mask(active_mask),
+      .lane_addr(lsu_lane_addr),
+      .lane_wdata(lsu_lane_wdata),
+      .busy(),
+      .done(lsu_done),
+      .error(lsu_error),
+      .lane_rdata(lsu_lane_rdata),
+      .lane_rvalid(lsu_lane_rvalid),
+      .req_valid(data_req_valid),
+      .req_ready(data_req_ready),
+      .req_write(data_req_write),
+      .req_addr(data_req_addr),
+      .req_wdata(data_req_wdata),
+      .req_wmask(data_req_wmask),
+      .rsp_valid(data_rsp_valid),
+      .rsp_ready(data_rsp_ready),
+      .rsp_rdata(data_rsp_rdata)
+  );
+
   always_ff @(posedge clk) begin
     if (reset) begin
       state <= STATE_IDLE;
       pc <= '0;
       active_mask <= '0;
       launch_armed <= 1'b1;
+      lsu_writes_register_q <= 1'b0;
+      lsu_write_addr_q <= '0;
     end else begin
       if (!start) begin
         launch_armed <= 1'b1;
@@ -309,11 +399,29 @@ module simd_core #(
           if (instruction_has_error) begin
             state <= STATE_ERROR;
             active_mask <= '0;
+          end else if (decoded_uses_memory) begin
+            if (lsu_start_ready) begin
+              lsu_writes_register_q <= decoded_writes_register;
+              lsu_write_addr_q <= fit_reg_addr(decoded_rd);
+              state <= STATE_WAIT_LSU;
+            end
           end else if (decoded_ends_lane) begin
             state <= STATE_DONE;
             active_mask <= '0;
           end else begin
             pc <= pc + PC_PORT_W'(1);
+          end
+        end
+
+        STATE_WAIT_LSU: begin
+          if (lsu_error) begin
+            state <= STATE_ERROR;
+            active_mask <= '0;
+            lsu_writes_register_q <= 1'b0;
+          end else if (lsu_done) begin
+            pc <= pc + PC_PORT_W'(1);
+            lsu_writes_register_q <= 1'b0;
+            state <= STATE_RUN;
           end
         end
 
