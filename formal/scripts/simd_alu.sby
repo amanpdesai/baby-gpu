@@ -1,0 +1,14 @@
+[options]
+mode bmc
+depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv simd_alu.sv simd_alu_formal.sv
+prep -top simd_alu_formal
+
+[files]
+rtl/core/simd_alu.sv
+formal/harnesses/simd_alu_formal.sv
