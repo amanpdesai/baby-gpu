@@ -77,7 +77,8 @@ Initial PC behavior:
 
 - start at `program_base`
 - increment by one instruction after normal instruction execution
-- branch updates PC only when branch is convergent
+- `BRA` updates PC only when all active lanes agree on the branch direction
+- divergent `BRA` decisions set a core error and halt the current SIMD group
 - `END` marks lanes done
 - when all active lanes are done, scheduler loads the next SIMD group
 
@@ -240,7 +241,7 @@ Build in this order:
 10. `vector_add` kernel test
 11. `STORE16`
 12. `framebuffer_gradient` kernel test
-13. branch/CMP behavior
+13. branch behavior
 14. rectangle or bounded graphics kernel
 
 This order gives a working programmable machine before adding complex graphics

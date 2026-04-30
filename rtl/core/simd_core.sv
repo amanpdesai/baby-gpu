@@ -116,10 +116,11 @@ module simd_core #(
 
   logic [ISA_OPCODE_W-1:0] decoded_opcode;
   logic [ISA_REG_ADDR_W-1:0] decoded_rd;
-  logic [ISA_REG_ADDR_W-1:0] decoded_ra;
-  logic [ISA_REG_ADDR_W-1:0] decoded_rb;
-  logic [ISA_IMM18_W-1:0] decoded_imm18;
-  logic [ISA_SPECIAL_W-1:0] decoded_special_reg_id;
+    logic [ISA_REG_ADDR_W-1:0] decoded_ra;
+    logic [ISA_REG_ADDR_W-1:0] decoded_rb;
+    logic [ISA_IMM18_W-1:0] decoded_imm18;
+    logic [ISA_BRANCH_OFFSET_W-1:0] decoded_branch_offset;
+    logic [ISA_SPECIAL_W-1:0] decoded_special_reg_id;
   localparam int REG_ADDR_SELECT_W =
       (REG_ADDR_PORT_W > ISA_REG_ADDR_W) ? ISA_REG_ADDR_W : REG_ADDR_PORT_W;
   localparam int SPECIAL_COORD_W =
@@ -130,9 +131,10 @@ module simd_core #(
   logic decoded_writes_register;
   logic decoded_uses_immediate;
   logic decoded_uses_special;
-  logic decoded_uses_alu;
-  logic decoded_uses_memory;
-  logic decoded_memory_write;
+    logic decoded_uses_alu;
+    logic decoded_uses_memory;
+    logic decoded_uses_branch;
+    logic decoded_memory_write;
   logic decoded_memory_store16;
   logic decoded_ends_lane;
   logic decoder_illegal;
@@ -161,9 +163,14 @@ module simd_core #(
   logic [(LANES_PORT_W*32)-1:0] lsu_lane_wdata;
   logic [(LANES_PORT_W*32)-1:0] lsu_lane_rdata;
   logic [LANES_PORT_W-1:0] lsu_lane_rvalid;
-  logic [(LANES_PORT_W*DATA_PORT_W)-1:0] immediate_value;
-  logic [(LANES_PORT_W*DATA_PORT_W)-1:0] lsu_writeback_value;
-  logic [(LANES_PORT_W*SPECIAL_COORD_W)-1:0] special_lane_id;
+    logic [(LANES_PORT_W*DATA_PORT_W)-1:0] immediate_value;
+    logic [(LANES_PORT_W*DATA_PORT_W)-1:0] lsu_writeback_value;
+    logic [LANES_PORT_W-1:0] branch_lane_taken;
+    logic branch_any_taken;
+    logic branch_any_not_taken;
+    logic branch_divergent;
+    logic branch_taken;
+    logic [(LANES_PORT_W*SPECIAL_COORD_W)-1:0] special_lane_id;
   logic [(LANES_PORT_W*SPECIAL_COORD_W)-1:0] special_global_id_x;
   logic [(LANES_PORT_W*SPECIAL_COORD_W)-1:0] special_global_id_y;
   logic [(LANES_PORT_W*SPECIAL_COORD_W)-1:0] special_group_id_x;
@@ -183,7 +190,9 @@ module simd_core #(
   assign instruction_addr = pc;
   // Debug reads share the register-file read port used by instruction decode.
   // The read data is only contractually valid while the core is not busy.
-  assign rf_read_addr_a = busy ? fit_reg_addr(decoded_ra) : debug_read_addr;
+    assign rf_read_addr_a = busy ?
+        (decoded_uses_branch ? fit_reg_addr(decoded_rd) : fit_reg_addr(decoded_ra)) :
+        debug_read_addr;
   assign rf_read_addr_b = decoded_memory_write ? fit_reg_addr(decoded_rd) : fit_reg_addr(decoded_rb);
   assign debug_read_data = rf_read_data_a;
   assign rf_write_addr = (state == STATE_WAIT_LSU) ? lsu_write_addr_q : fit_reg_addr(decoded_rd);
@@ -204,15 +213,34 @@ module simd_core #(
     end
   endfunction
 
-  function automatic logic [REG_ADDR_PORT_W-1:0] fit_reg_addr(
-      input logic [ISA_REG_ADDR_W-1:0] encoded_addr);
-    begin
+    function automatic logic [REG_ADDR_PORT_W-1:0] fit_reg_addr(
+        input logic [ISA_REG_ADDR_W-1:0] encoded_addr);
+        begin
       fit_reg_addr = '0;
       fit_reg_addr[REG_ADDR_SELECT_W-1:0] = encoded_addr[REG_ADDR_SELECT_W-1:0];
-    end
-  endfunction
+        end
+    endfunction
 
-  assign immediate_value = replicate_immediate(decoded_imm18);
+    function automatic logic [PC_PORT_W-1:0] branch_target(
+        input logic [PC_PORT_W-1:0] base_pc,
+        input logic [ISA_BRANCH_OFFSET_W-1:0] offset
+    );
+        localparam int BRANCH_CALC_W =
+            (PC_PORT_W > ISA_BRANCH_OFFSET_W) ? (PC_PORT_W + 1) : (ISA_BRANCH_OFFSET_W + 1);
+        logic signed [BRANCH_CALC_W-1:0] pc_ext;
+        logic signed [BRANCH_CALC_W-1:0] offset_ext;
+        logic signed [BRANCH_CALC_W-1:0] sum;
+        begin
+            pc_ext = '0;
+            pc_ext[PC_PORT_W-1:0] = base_pc;
+            offset_ext = $signed({{(BRANCH_CALC_W-ISA_BRANCH_OFFSET_W)
+                {offset[ISA_BRANCH_OFFSET_W-1]}}, offset});
+            sum = pc_ext + offset_ext + BRANCH_CALC_W'(1);
+            branch_target = sum[PC_PORT_W-1:0];
+        end
+    endfunction
+
+    assign immediate_value = replicate_immediate(decoded_imm18);
   assign lsu_op = decoded_memory_store16 ? LSU_OP_STORE16 :
                   decoded_memory_write ? LSU_OP_STORE :
                   LSU_OP_LOAD;
@@ -269,24 +297,40 @@ module simd_core #(
       rf_write_data = special_value;
     end else if (decoded_uses_alu) begin
       rf_write_data = alu_result;
+        end
     end
-  end
 
-  instruction_decoder u_instruction_decoder (
-      .instruction(instruction),
+    always_comb begin
+        branch_lane_taken = '0;
+
+        for (int lane = 0; lane < LANES_PORT_W; lane++) begin
+            branch_lane_taken[lane] =
+                rf_read_data_a[(lane*DATA_PORT_W)+:DATA_PORT_W] != '0;
+        end
+    end
+
+    assign branch_any_taken = |(branch_lane_taken & active_mask);
+    assign branch_any_not_taken = |((~branch_lane_taken) & active_mask);
+    assign branch_divergent = branch_any_taken && branch_any_not_taken;
+    assign branch_taken = branch_any_taken && !branch_any_not_taken;
+
+    instruction_decoder u_instruction_decoder (
+        .instruction(instruction),
       .opcode(decoded_opcode),
       .rd(decoded_rd),
       .ra(decoded_ra),
-      .rb(decoded_rb),
-      .imm18(decoded_imm18),
-      .special_reg_id(decoded_special_reg_id),
-      .alu_op(decoded_alu_op),
+        .rb(decoded_rb),
+        .imm18(decoded_imm18),
+        .branch_offset(decoded_branch_offset),
+        .special_reg_id(decoded_special_reg_id),
+        .alu_op(decoded_alu_op),
       .writes_register(decoded_writes_register),
       .uses_immediate(decoded_uses_immediate),
       .uses_special(decoded_uses_special),
-      .uses_alu(decoded_uses_alu),
-      .uses_memory(decoded_uses_memory),
-      .memory_write(decoded_memory_write),
+        .uses_alu(decoded_uses_alu),
+        .uses_memory(decoded_uses_memory),
+        .uses_branch(decoded_uses_branch),
+        .memory_write(decoded_memory_write),
       .memory_store16(decoded_memory_store16),
       .ends_lane(decoded_ends_lane),
       .illegal(decoder_illegal)
@@ -399,15 +443,24 @@ module simd_core #(
           if (instruction_has_error) begin
             state <= STATE_ERROR;
             active_mask <= '0;
-          end else if (decoded_uses_memory) begin
-            if (lsu_start_ready) begin
-              lsu_writes_register_q <= decoded_writes_register;
-              lsu_write_addr_q <= fit_reg_addr(decoded_rd);
-              state <= STATE_WAIT_LSU;
-            end
-          end else if (decoded_ends_lane) begin
-            state <= STATE_DONE;
-            active_mask <= '0;
+                    end else if (decoded_uses_memory) begin
+                        if (lsu_start_ready) begin
+                            lsu_writes_register_q <= decoded_writes_register;
+                            lsu_write_addr_q <= fit_reg_addr(decoded_rd);
+                            state <= STATE_WAIT_LSU;
+                        end
+                    end else if (decoded_uses_branch) begin
+                        if (branch_divergent) begin
+                            state <= STATE_ERROR;
+                            active_mask <= '0;
+                        end else if (branch_taken) begin
+                            pc <= branch_target(pc, decoded_branch_offset);
+                        end else begin
+                            pc <= pc + PC_PORT_W'(1);
+                        end
+                    end else if (decoded_ends_lane) begin
+                        state <= STATE_DONE;
+                        active_mask <= '0;
           end else begin
             pc <= pc + PC_PORT_W'(1);
           end

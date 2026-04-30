@@ -3,6 +3,7 @@ package isa_pkg;
   localparam int ISA_OPCODE_W = 6;
   localparam int ISA_REG_ADDR_W = 4;
   localparam int ISA_IMM18_W = 18;
+  localparam int ISA_BRANCH_OFFSET_W = 22;
   localparam int ISA_SPECIAL_W = 6;
 
   localparam int ISA_OPCODE_MSB = 31;
@@ -15,6 +16,8 @@ package isa_pkg;
   localparam int ISA_RB_LSB = 14;
   localparam int ISA_IMM18_MSB = 17;
   localparam int ISA_IMM18_LSB = 0;
+  localparam int ISA_BRANCH_OFFSET_MSB = 21;
+  localparam int ISA_BRANCH_OFFSET_LSB = 0;
   localparam int ISA_SPECIAL_MSB = 21;
   localparam int ISA_SPECIAL_LSB = 16;
 
@@ -88,6 +91,13 @@ package isa_pkg;
       input logic [ISA_REG_ADDR_W-1:0] ra,
       input logic [ISA_IMM18_W-1:0] offset18);
     isa_m_type = {opcode, rd_rs, ra, offset18};
+  endfunction
+
+  function automatic logic [ISA_WORD_W-1:0] isa_b_type(
+      input logic [ISA_OPCODE_W-1:0] opcode,
+      input logic [ISA_REG_ADDR_W-1:0] pred,
+      input logic [ISA_BRANCH_OFFSET_W-1:0] offset22);
+    isa_b_type = {opcode, pred, offset22};
   endfunction
 
   function automatic logic [ISA_WORD_W-1:0] isa_s_type(

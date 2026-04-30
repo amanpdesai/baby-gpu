@@ -384,8 +384,12 @@ Branch offsets are signed instruction-word offsets relative to the next PC:
 target_pc = pc + 1 + sign_extend(offset22)
 ```
 
-Branches are convergent-only at first. If active lanes disagree, hardware sets
-the divergence error and halts the kernel.
+`pred` names a lane register. For each active lane, a nonzero `R[pred]` means
+"take the branch" and zero means "fall through." Branches are convergent-only:
+if all active lanes take the branch, the PC updates to `target_pc`; if all
+active lanes fall through, the PC advances normally; if active lanes disagree,
+hardware sets the divergence error and halts the kernel. `R0` is therefore a
+valid never-taken predicate.
 
 ## Initial Opcode Map
 
@@ -401,7 +405,7 @@ the divergence error and halts the kernel.
 | `0x07` | `STORE` | M | yes |
 | `0x08` | `STORE16` | M | yes |
 | `0x09` | `CMP` | R | later |
-| `0x0A` | `BRA` | B | later |
+| `0x0A` | `BRA` | B | yes |
 | `0x0B` | `SUB` | R | yes |
 | `0x0C` | `AND` | R | yes |
 | `0x0D` | `OR` | R | yes |
@@ -413,7 +417,7 @@ All unlisted opcodes are illegal.
 
 ## Remaining ISA Decisions
 
-- exact predicate representation for `CMP` and `BRA`
+- exact `CMP` condition encoding and result convention
 - whether to add signed immediates as flags or separate opcodes
 - whether to add `ADDI` before `LOAD`/`STORE`
 - exact illegal-instruction status bit mapping in the programmable core

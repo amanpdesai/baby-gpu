@@ -7,6 +7,7 @@ module tb_instruction_decoder;
   logic [ISA_REG_ADDR_W-1:0] ra;
   logic [ISA_REG_ADDR_W-1:0] rb;
   logic [ISA_IMM18_W-1:0] imm18;
+  logic [ISA_BRANCH_OFFSET_W-1:0] branch_offset;
   logic [ISA_SPECIAL_W-1:0] special_reg_id;
   logic [3:0] alu_op;
   logic writes_register;
@@ -14,6 +15,7 @@ module tb_instruction_decoder;
   logic uses_special;
   logic uses_alu;
   logic uses_memory;
+  logic uses_branch;
   logic memory_write;
   logic memory_store16;
   logic ends_lane;
@@ -26,6 +28,7 @@ module tb_instruction_decoder;
       .ra(ra),
       .rb(rb),
       .imm18(imm18),
+      .branch_offset(branch_offset),
       .special_reg_id(special_reg_id),
       .alu_op(alu_op),
       .writes_register(writes_register),
@@ -33,6 +36,7 @@ module tb_instruction_decoder;
       .uses_special(uses_special),
       .uses_alu(uses_alu),
       .uses_memory(uses_memory),
+      .uses_branch(uses_branch),
       .memory_write(memory_write),
       .memory_store16(memory_store16),
       .ends_lane(ends_lane),
@@ -71,6 +75,31 @@ module tb_instruction_decoder;
     end
   endfunction
 
+  task automatic expect_branch_decode(
+      input logic [ISA_WORD_W-1:0] test_instruction,
+      input logic [ISA_REG_ADDR_W-1:0] exp_pred,
+      input logic [ISA_BRANCH_OFFSET_W-1:0] exp_offset
+  );
+    begin
+      instruction = test_instruction;
+      #1;
+
+      if (opcode !== ISA_OP_BRA) $fatal(1, "branch opcode mismatch");
+      if (rd !== exp_pred) $fatal(1, "branch predicate mismatch");
+      if (branch_offset !== exp_offset) $fatal(1, "branch offset mismatch");
+      if (writes_register !== 1'b0) $fatal(1, "branch writes_register mismatch");
+      if (uses_immediate !== 1'b0) $fatal(1, "branch uses_immediate mismatch");
+      if (uses_special !== 1'b0) $fatal(1, "branch uses_special mismatch");
+      if (uses_alu !== 1'b0) $fatal(1, "branch uses_alu mismatch");
+      if (uses_memory !== 1'b0) $fatal(1, "branch uses_memory mismatch");
+      if (uses_branch !== 1'b1) $fatal(1, "branch uses_branch mismatch");
+      if (memory_write !== 1'b0) $fatal(1, "branch memory_write mismatch");
+      if (memory_store16 !== 1'b0) $fatal(1, "branch memory_store16 mismatch");
+      if (ends_lane !== 1'b0) $fatal(1, "branch ends_lane mismatch");
+      if (illegal !== 1'b0) $fatal(1, "branch illegal mismatch");
+    end
+  endtask
+
   task automatic expect_decode(
       input logic [ISA_WORD_W-1:0] test_instruction,
       input logic [ISA_OPCODE_W-1:0] exp_opcode,
@@ -103,6 +132,7 @@ module tb_instruction_decoder;
     if (uses_special !== exp_uses_special) $fatal(1, "uses_special mismatch");
     if (uses_alu !== exp_uses_alu) $fatal(1, "uses_alu mismatch");
     if (uses_memory !== 1'b0) $fatal(1, "uses_memory default mismatch");
+    if (uses_branch !== 1'b0) $fatal(1, "uses_branch default mismatch");
     if (memory_write !== 1'b0) $fatal(1, "memory_write default mismatch");
     if (memory_store16 !== 1'b0) $fatal(1, "memory_store16 default mismatch");
     if (ends_lane !== exp_ends_lane) $fatal(1, "ends_lane mismatch");
@@ -135,6 +165,7 @@ module tb_instruction_decoder;
     if (uses_special !== 1'b0) $fatal(1, "memory uses_special mismatch");
     if (uses_alu !== 1'b0) $fatal(1, "memory uses_alu mismatch");
     if (uses_memory !== !exp_illegal) $fatal(1, "memory uses_memory mismatch");
+    if (uses_branch !== 1'b0) $fatal(1, "memory uses_branch mismatch");
     if (memory_write !== exp_memory_write) $fatal(1, "memory_write mismatch");
     if (memory_store16 !== exp_memory_store16) $fatal(1, "memory_store16 mismatch");
     if (ends_lane !== 1'b0) $fatal(1, "memory ends_lane mismatch");
@@ -458,8 +489,19 @@ module tb_instruction_decoder;
         1'b0
     );
 
+    expect_branch_decode(
+        isa_pkg::isa_b_type(ISA_OP_BRA, 4'd9, 22'd7),
+        4'd9,
+        22'd7
+    );
+
+    expect_branch_decode(
+        isa_pkg::isa_b_type(ISA_OP_BRA, 4'd2, 22'h3f_ffff),
+        4'd2,
+        22'h3f_ffff
+    );
+
     expect_unimplemented_known_opcode(ISA_OP_CMP);
-    expect_unimplemented_known_opcode(ISA_OP_BRA);
     expect_unimplemented_known_opcode(6'h3F);
 
     $display("tb_instruction_decoder PASS");
