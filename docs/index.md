@@ -11,6 +11,7 @@
 | [memory_model.md](memory_model.md) | Global memory, framebuffer convention, scratchpad/cache plan. |
 | [kernel_execution.md](kernel_execution.md) | Launch flow, scheduler algorithm, kernel tests, implementation order. |
 | [roadmap.md](roadmap.md) | Implementation phases for the unified programmable architecture. |
+| [agent_workflow.md](agent_workflow.md) | Main-thread and subagent workflow, checks, and handoff format. |
 
 ## Existing Foundation Documents
 
