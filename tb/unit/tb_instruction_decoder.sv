@@ -269,6 +269,108 @@ module tb_instruction_decoder;
     );
 
     expect_decode(
+        pack_r_type(ISA_OP_SUB, 4'd1, 4'd2, 4'd3),
+        ISA_OP_SUB,
+        4'd1,
+        4'd2,
+        4'd3,
+        18'h0_c000,
+        6'h08,
+        ISA_ALU_SUB,
+        1'b1,
+        1'b0,
+        1'b0,
+        1'b1,
+        1'b0,
+        1'b0
+    );
+
+    expect_decode(
+        pack_r_type(ISA_OP_AND, 4'd4, 4'd5, 4'd6),
+        ISA_OP_AND,
+        4'd4,
+        4'd5,
+        4'd6,
+        18'h1_8000,
+        6'h15,
+        ISA_ALU_AND,
+        1'b1,
+        1'b0,
+        1'b0,
+        1'b1,
+        1'b0,
+        1'b0
+    );
+
+    expect_decode(
+        pack_r_type(ISA_OP_OR, 4'd7, 4'd8, 4'd9),
+        ISA_OP_OR,
+        4'd7,
+        4'd8,
+        4'd9,
+        18'h2_4000,
+        6'h22,
+        ISA_ALU_OR,
+        1'b1,
+        1'b0,
+        1'b0,
+        1'b1,
+        1'b0,
+        1'b0
+    );
+
+    expect_decode(
+        pack_r_type(ISA_OP_XOR, 4'd10, 4'd11, 4'd12),
+        ISA_OP_XOR,
+        4'd10,
+        4'd11,
+        4'd12,
+        18'h3_0000,
+        6'h2F,
+        ISA_ALU_XOR,
+        1'b1,
+        1'b0,
+        1'b0,
+        1'b1,
+        1'b0,
+        1'b0
+    );
+
+    expect_decode(
+        pack_r_type(ISA_OP_SHL, 4'd13, 4'd14, 4'd15),
+        ISA_OP_SHL,
+        4'd13,
+        4'd14,
+        4'd15,
+        18'h3_c000,
+        6'h3B,
+        ISA_ALU_SHL,
+        1'b1,
+        1'b0,
+        1'b0,
+        1'b1,
+        1'b0,
+        1'b0
+    );
+
+    expect_decode(
+        pack_r_type(ISA_OP_SHR, 4'd3, 4'd4, 4'd5),
+        ISA_OP_SHR,
+        4'd3,
+        4'd4,
+        4'd5,
+        18'h1_4000,
+        6'h11,
+        ISA_ALU_SHR,
+        1'b1,
+        1'b0,
+        1'b0,
+        1'b1,
+        1'b0,
+        1'b0
+    );
+
+    expect_decode(
         pack_r_type(ISA_OP_ADD, 4'd1, 4'd2, 4'd3) | 32'd1,
         ISA_OP_ADD,
         4'd1,
@@ -364,12 +466,6 @@ module tb_instruction_decoder;
 
     expect_unimplemented_known_opcode(ISA_OP_CMP);
     expect_unimplemented_known_opcode(ISA_OP_BRA);
-    expect_unimplemented_known_opcode(ISA_OP_SUB);
-    expect_unimplemented_known_opcode(ISA_OP_AND);
-    expect_unimplemented_known_opcode(ISA_OP_OR);
-    expect_unimplemented_known_opcode(ISA_OP_XOR);
-    expect_unimplemented_known_opcode(ISA_OP_SHL);
-    expect_unimplemented_known_opcode(ISA_OP_SHR);
     expect_unimplemented_known_opcode(6'h3F);
 
     $display("tb_instruction_decoder PASS");

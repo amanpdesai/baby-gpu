@@ -79,6 +79,48 @@ module instruction_decoder (
                 illegal = !r_type_reserved_clear;
             end
 
+            ISA_OP_SUB: begin
+                writes_register = r_type_reserved_clear;
+                uses_alu = r_type_reserved_clear;
+                alu_op = ISA_ALU_SUB;
+                illegal = !r_type_reserved_clear;
+            end
+
+            ISA_OP_AND: begin
+                writes_register = r_type_reserved_clear;
+                uses_alu = r_type_reserved_clear;
+                alu_op = ISA_ALU_AND;
+                illegal = !r_type_reserved_clear;
+            end
+
+            ISA_OP_OR: begin
+                writes_register = r_type_reserved_clear;
+                uses_alu = r_type_reserved_clear;
+                alu_op = ISA_ALU_OR;
+                illegal = !r_type_reserved_clear;
+            end
+
+            ISA_OP_XOR: begin
+                writes_register = r_type_reserved_clear;
+                uses_alu = r_type_reserved_clear;
+                alu_op = ISA_ALU_XOR;
+                illegal = !r_type_reserved_clear;
+            end
+
+            ISA_OP_SHL: begin
+                writes_register = r_type_reserved_clear;
+                uses_alu = r_type_reserved_clear;
+                alu_op = ISA_ALU_SHL;
+                illegal = !r_type_reserved_clear;
+            end
+
+            ISA_OP_SHR: begin
+                writes_register = r_type_reserved_clear;
+                uses_alu = r_type_reserved_clear;
+                alu_op = ISA_ALU_SHR;
+                illegal = !r_type_reserved_clear;
+            end
+
             ISA_OP_LOAD: begin
                 writes_register = r_type_reserved_clear && (rb == '0);
                 uses_memory = r_type_reserved_clear && (rb == '0);

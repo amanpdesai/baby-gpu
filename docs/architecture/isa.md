@@ -142,9 +142,6 @@ Do not implement these until tests need them:
 
 | Instruction | Reason to add |
 | --- | --- |
-| `SUB` | Address differences, loop counters. |
-| `AND`, `OR`, `XOR` | bit packing, masks. |
-| `SHL`, `SHR` | byte addressing and color packing. |
 | `MAD` | common graphics and ML pattern. |
 | `MIN`, `MAX` | clipping and bounds. |
 | `LOAD16`, `LOAD8` | compact data formats. |
@@ -277,12 +274,16 @@ Used by:
 ```text
 ADD
 MUL
-SUB later
-AND/OR/XOR later
+SUB
+AND/OR/XOR
+SHL/SHR
 CMP later
 ```
 
 Reserved bits must be zero initially.
+
+`SHL` and `SHR` are logical shifts. The shift amount comes from `rb[4:0]`, so
+32-bit lanes ignore higher bits of the shift-count source register.
 
 ### I-Type
 
@@ -399,12 +400,12 @@ the divergence error and halts the kernel.
 | `0x08` | `STORE16` | M | after `STORE` |
 | `0x09` | `CMP` | R | later |
 | `0x0A` | `BRA` | B | later |
-| `0x0B` | `SUB` | R | later |
-| `0x0C` | `AND` | R | later |
-| `0x0D` | `OR` | R | later |
-| `0x0E` | `XOR` | R | later |
-| `0x0F` | `SHL` | R | later |
-| `0x10` | `SHR` | R | later |
+| `0x0B` | `SUB` | R | yes |
+| `0x0C` | `AND` | R | yes |
+| `0x0D` | `OR` | R | yes |
+| `0x0E` | `XOR` | R | yes |
+| `0x0F` | `SHL` | R | yes |
+| `0x10` | `SHR` | R | yes |
 
 All unlisted opcodes are illegal.
 
