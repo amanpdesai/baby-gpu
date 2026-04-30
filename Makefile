@@ -1,4 +1,4 @@
-.PHONY: check-tools tool-versions lint formal sim clean
+.PHONY: check-tools tool-versions lint formal sim synth-yosys clean
 
 check-tools:
 	tools/scripts/check_tools.sh
@@ -15,7 +15,11 @@ formal:
 sim:
 	tools/scripts/run_sim.sh
 
+synth-yosys:
+	tools/scripts/synth_yosys.sh
+
 clean:
 	find . -type d -name obj_dir -prune -exec rm -rf {} +
 	find . -type d -name sim_build -prune -exec rm -rf {} +
+	find . -type d -name synth_build -prune -exec rm -rf {} +
 	find . -type f \( -name '*.vcd' -o -name '*.fst' -o -name '*.vvp' \) -delete

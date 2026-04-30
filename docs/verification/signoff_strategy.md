@@ -240,6 +240,7 @@ Current targets:
 make sim
 make lint
 make formal
+make synth-yosys
 make check-tools
 make tool-versions
 ```
@@ -247,7 +248,6 @@ make tool-versions
 Planned targets:
 
 ```text
-make synth-yosys
 make synth-vivado
 make sta
 make formal-core
@@ -258,6 +258,12 @@ make signoff-smoke
 
 These targets should fail loudly on real errors and keep generated artifacts out
 of Git.
+
+`make synth-yosys` is currently a smoke target for Yosys-compatible RTL blocks:
+the fixed-function `gpu_core` path plus package-free programmable/core leaves.
+It intentionally fails on Yosys warnings. The package-based programmable top is
+not yet included because the current open-source frontend path does not handle
+the project's SystemVerilog package usage cleanly.
 
 ## Non-Negotiables
 

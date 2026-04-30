@@ -3,6 +3,7 @@ build/
 out/
 obj_dir/
 sim_build/
+synth_build/
 work/
 
 # Simulation artifacts

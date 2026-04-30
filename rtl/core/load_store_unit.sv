@@ -64,8 +64,6 @@ module load_store_unit #(
     logic [ADDR_W-1:0] req_addr_q;
     logic [DATA_W-1:0] req_wdata_q;
     logic [STRB_W-1:0] req_wmask_q;
-    logic [ADDR_W-1:0] lane_addr_arr [LANES];
-    logic [DATA_W-1:0] lane_wdata_arr [LANES];
     logic [DATA_W-1:0] lane_rdata_arr [LANES];
     logic [LANES-1:0] lane_rvalid_q;
     logic done_q;
@@ -86,11 +84,21 @@ module load_store_unit #(
     genvar gen_lane;
     generate
         for (gen_lane = 0; gen_lane < LANES; gen_lane++) begin : gen_lane_unpack
-            assign lane_addr_arr[gen_lane] = lane_addr_q[gen_lane*ADDR_W +: ADDR_W];
-            assign lane_wdata_arr[gen_lane] = lane_wdata_q[gen_lane*DATA_W +: DATA_W];
             assign lane_rdata[gen_lane*DATA_W +: DATA_W] = lane_rdata_arr[gen_lane];
         end
     endgenerate
+
+    function automatic logic [ADDR_W-1:0] select_lane_addr(
+        input logic [LANE_SEL_W-1:0] lane
+    );
+        select_lane_addr = lane_addr_q[lane*ADDR_W +: ADDR_W];
+    endfunction
+
+    function automatic logic [DATA_W-1:0] select_lane_wdata(
+        input logic [LANE_SEL_W-1:0] lane
+    );
+        select_lane_wdata = lane_wdata_q[lane*DATA_W +: DATA_W];
+    endfunction
 
     function automatic logic [LANE_SEL_W-1:0] first_active_lane(
         input logic [LANES-1:0] mask
@@ -120,8 +128,8 @@ module load_store_unit #(
         curr_addr = '0;
         curr_wdata = '0;
         if (found_lane) begin
-            curr_addr = lane_addr_arr[next_lane];
-            curr_wdata = lane_wdata_arr[next_lane];
+            curr_addr = select_lane_addr(next_lane);
+            curr_wdata = select_lane_wdata(next_lane);
         end
         align_error = 1'b0;
         op_error = 1'b0;

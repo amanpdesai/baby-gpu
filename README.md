@@ -50,12 +50,17 @@ Primary entry points:
 
 ## Current Status
 
-This repository currently contains the project scaffold, design documentation,
-and native VM toolchain checks. RTL implementation comes next.
+The repository contains the portable RTL scaffold, a programmable SIMD core
+path, kernel-level simulations, formal proofs for selected control/datapath
+blocks, and an initial Yosys synthesis smoke target.
 
 ## Toolchain Check
 
 ```text
 make check-tools
 make tool-versions
+make sim
+make lint
+make formal
+make synth-yosys
 ```
