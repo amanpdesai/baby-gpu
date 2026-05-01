@@ -3,6 +3,18 @@
 FPGA bring-up is staged so hardware problems are isolated before the GPU core is
 connected.
 
+Before claiming an FPGA integration milestone, run the optional Vivado synthesis
+smoke:
+
+```text
+VIVADO_PART=<xilinx-part-name> make synth-vivado
+```
+
+This only checks that the portable programmable core path can be parsed and
+synthesized by Vivado for the selected part. Board wrappers, clocks,
+constraints, bitstream generation, and timing closure remain separate bring-up
+steps.
+
 ## Bring-Up Sequence
 
 ```mermaid

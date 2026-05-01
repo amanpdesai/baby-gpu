@@ -41,10 +41,21 @@ make tool-versions
 make lint
 make formal
 make sim
+make synth-yosys
 ```
 
 `make check-tools` should pass before writing RTL. `make lint`, `make formal`,
 and `make sim` are allowed to report that no RTL or no formal jobs exist yet.
+
+Vivado is optional until FPGA-facing milestones. When Vivado is installed, run
+the synthesis smoke with the exact board part:
+
+```text
+VIVADO_PART=<xilinx-part-name> make synth-vivado
+```
+
+The target intentionally requires `VIVADO_PART` instead of guessing the board
+part, so the smoke check does not create false platform claims.
 
 ## Installation Policy
 

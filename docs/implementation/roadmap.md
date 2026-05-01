@@ -121,7 +121,7 @@ speculative GPU features:
 - add block-level formal proofs for decoder, register file, scheduler, LSU, and
   memory-facing protocol behavior
 - add coverage-oriented integration tests for corner kernels
-- add Vivado synthesis smoke before FPGA platform claims
+- run the optional Vivado synthesis smoke before FPGA platform claims
 - keep docs aligned with implemented ISA and kernel behavior
 
 ## First Kernel Milestone: `vector_add`

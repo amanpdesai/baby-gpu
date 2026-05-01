@@ -53,7 +53,9 @@ Primary entry points:
 The repository contains the portable RTL scaffold, a programmable SIMD core
 path, kernel-level simulations, formal proofs for selected control/datapath
 blocks including LSU prep and request/response sequencing, and Yosys synthesis
-smoke coverage for leaf blocks and the integrated programmable core path.
+smoke coverage for leaf blocks and the integrated programmable core path. An
+optional Vivado synthesis smoke target is present for FPGA-facing checks once
+Vivado and the target part name are available.
 
 ## Toolchain Check
 
@@ -64,4 +66,10 @@ make sim
 make lint
 make formal
 make synth-yosys
+```
+
+Optional FPGA synthesis smoke:
+
+```text
+VIVADO_PART=<xilinx-part-name> make synth-vivado
 ```
