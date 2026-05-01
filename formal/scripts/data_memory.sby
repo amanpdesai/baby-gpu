@@ -1,0 +1,14 @@
+[options]
+mode bmc
+depth 10
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv data_memory.sv data_memory_formal.sv
+prep -top data_memory_formal
+
+[files]
+platform/sim/data_memory.sv
+formal/harnesses/data_memory_formal.sv

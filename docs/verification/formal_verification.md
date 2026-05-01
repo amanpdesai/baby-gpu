@@ -61,6 +61,7 @@ flowchart TB
 formal/
   harnesses/
     command_fifo_formal.sv
+    data_memory_formal.sv
     framebuffer_writer_formal.sv
     instruction_decoder_formal.sv
     lane_register_file_formal.sv
@@ -70,6 +71,7 @@ formal/
   scripts/
     run_sby.sh
     command_fifo.sby
+    data_memory.sby
     framebuffer_writer.sby
     instruction_decoder.sby
     lane_register_file.sby

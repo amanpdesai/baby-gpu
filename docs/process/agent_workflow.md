@@ -50,6 +50,8 @@ Current implementation state:
 - formal proofs exist for FIFO, SIMD ALU, framebuffer writer, work scheduler,
   lane register file smoke contracts, special register mux smoke contracts, and
   instruction decoder smoke contracts
+- simulation data memory has bounded formal smoke coverage for byte masks,
+  halfword masks, response backpressure, and readback
 
 Next implementation target:
 

@@ -80,6 +80,7 @@ architecture.
 - predicated 32-bit and 16-bit stores
 - lane register file bounded formal smoke
 - special register mux bounded formal smoke
+- simulation data memory bounded formal smoke
 
 The first programmable GPU path now executes encoded kernels through scheduler,
 core, LSU, and simulation memory.
