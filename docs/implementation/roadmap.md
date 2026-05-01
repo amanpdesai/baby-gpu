@@ -79,6 +79,7 @@ architecture.
 - compare instruction
 - predicated 32-bit and 16-bit stores
 - instruction memory bounded formal smoke
+- register file bounded formal smoke
 - lane register file bounded formal smoke
 - LSU prep bounded formal smoke
 - LSU request/response transition bounded formal smoke

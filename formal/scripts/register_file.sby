@@ -1,0 +1,14 @@
+[options]
+mode bmc
+depth 5
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv register_file.sv register_file_formal.sv
+prep -top register_file_formal
+
+[files]
+rtl/core/register_file.sv
+formal/harnesses/register_file_formal.sv
