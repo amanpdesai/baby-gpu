@@ -86,6 +86,7 @@ architecture.
 - special register mux bounded formal smoke
 - simulation data memory bounded formal smoke
 - integrated programmable core Yosys synthesis smoke
+- programmable-core illegal-instruction integration coverage
 
 The first programmable GPU path now executes encoded kernels through scheduler,
 core, LSU, and simulation memory.
