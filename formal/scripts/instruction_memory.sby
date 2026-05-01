@@ -1,0 +1,14 @@
+[options]
+mode bmc
+depth 9
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -D FORMAL -sv instruction_memory.sv instruction_memory_formal.sv
+prep -top instruction_memory_formal
+
+[files]
+platform/sim/instruction_memory.sv
+formal/harnesses/instruction_memory_formal.sv

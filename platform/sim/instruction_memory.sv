@@ -18,9 +18,20 @@ module instruction_memory #(
 
     logic [WORD_W-1:0] memory [0:DEPTH-1];
 
-    function automatic int addr_to_index(input logic [ADDR_PORT_W-1:0] addr);
-        addr_to_index = int'(addr);
-    endfunction
+  function automatic int addr_to_index(input logic [ADDR_PORT_W-1:0] addr);
+    logic [31:0] extended_addr;
+    extended_addr = '0;
+    extended_addr[ADDR_PORT_W-1:0] = addr;
+    addr_to_index = extended_addr;
+  endfunction
+
+  function automatic logic addr_known(input logic [ADDR_PORT_W-1:0] addr);
+`ifdef FORMAL
+    addr_known = 1'b1;
+`else
+    addr_known = !$isunknown(addr);
+`endif
+  endfunction
 
     initial begin : parameter_checks
         if (WORD_W < 1) begin
@@ -48,22 +59,24 @@ module instruction_memory #(
         end
     end
 
-    always @(posedge clk) begin
-        if (write_en) begin
-            if ($isunknown(write_addr) || (addr_to_index(write_addr) >= DEPTH)) begin
-                $error("instruction_memory write address out of range: 0x%0h", write_addr);
-            end else begin
-                memory[addr_to_index(write_addr)] <= write_data;
-            end
+  always @(posedge clk) begin
+    if (write_en) begin
+      if (!addr_known(write_addr) || (addr_to_index(write_addr) >= DEPTH)) begin
+`ifndef FORMAL
+        $error("instruction_memory write address out of range: 0x%0h", write_addr);
+`endif
+      end else begin
+        memory[addr_to_index(write_addr)] <= write_data;
+      end
         end
     end
 
     // Combinational fetch: instruction and fetch_error reflect fetch_addr in the same delta cycle.
     always_comb begin
-        fetch_instruction = NOP_WORD;
-        fetch_error = 1'b1;
+    fetch_instruction = NOP_WORD;
+    fetch_error = 1'b1;
 
-        if (!$isunknown(fetch_addr) && (addr_to_index(fetch_addr) < DEPTH)) begin
+        if (addr_known(fetch_addr) && (addr_to_index(fetch_addr) < DEPTH)) begin
             fetch_instruction = memory[addr_to_index(fetch_addr)];
             fetch_error = 1'b0;
         end

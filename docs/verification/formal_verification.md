@@ -64,6 +64,7 @@ formal/
     data_memory_formal.sv
     framebuffer_writer_formal.sv
     instruction_decoder_formal.sv
+    instruction_memory_formal.sv
     lane_register_file_formal.sv
     load_store_unit_prep_formal.sv
     simd_alu_formal.sv
@@ -75,6 +76,7 @@ formal/
     data_memory.sby
     framebuffer_writer.sby
     instruction_decoder.sby
+    instruction_memory.sby
     lane_register_file.sby
     load_store_unit_prep.sby
     simd_alu.sby
@@ -134,6 +136,7 @@ Initial formal adoption is already active when:
 - framebuffer writer address and mask proof passes
 - work scheduler proof passes
 - instruction decoder smoke proof passes
+- instruction memory smoke proof passes
 - lane register file smoke proof passes
 - special register mux smoke proof passes
 - simulation data memory smoke proof passes
