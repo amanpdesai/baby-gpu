@@ -52,6 +52,7 @@ gantt
 - native RTL toolchain checks
 - command FIFO
 - command processor
+- command-processor WAIT_IDLE and CLEAR dispatch-busy unit coverage
 - register file
 - clear and rectangle fixed-function smoke engines
 - framebuffer writer

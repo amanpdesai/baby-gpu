@@ -157,6 +157,35 @@ module tb_command_processor;
     send_word(32'h0101_0000);
     check(error_status[1], "bad word count sets sticky error");
 
+    clear_errors = 1'b1;
+    step();
+    clear_errors = 1'b0;
+    check(error_status == 8'h00, "clear_errors clears bad word count");
+
+    clear_busy = 1'b1;
+    send_word(32'h0301_0000);
+    check(busy, "WAIT_IDLE remains busy while draw engine is busy");
+    check(!cmd_ready, "WAIT_IDLE blocks new command words");
+    clear_busy = 1'b0;
+    step();
+    check(!busy, "WAIT_IDLE returns idle when draw engines are idle");
+
+    clear_busy = 1'b1;
+    send_word(32'h0102_0000);
+    cmd_data = 32'h0000_2468;
+    cmd_valid = 1'b1;
+    #1;
+    check(cmd_ready, "CLEAR color word accepted before busy dispatch");
+    step();
+    check(!clear_start, "busy clear engine suppresses same-cycle clear_start");
+    cmd_valid = 1'b0;
+    step();
+    check(error_status[3], "busy clear engine sets dispatch-busy error");
+    check(!clear_start, "busy clear engine suppresses clear_start");
+    clear_busy = 1'b0;
+    #1;
+    check(!busy, "dispatch-busy CLEAR returns command processor idle");
+
     $display("tb_command_processor PASS");
     $finish;
   end
