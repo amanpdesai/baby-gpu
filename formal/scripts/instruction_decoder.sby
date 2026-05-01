@@ -1,0 +1,15 @@
+[options]
+mode bmc
+depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv isa_pkg.sv instruction_decoder.sv instruction_decoder_formal.sv
+prep -top instruction_decoder_formal
+
+[files]
+rtl/common/isa_pkg.sv
+rtl/core/instruction_decoder.sv
+formal/harnesses/instruction_decoder_formal.sv
