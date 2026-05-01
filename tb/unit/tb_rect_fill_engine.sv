@@ -107,6 +107,43 @@ module tb_rect_fill_engine;
     start = 1'b0;
     check(done && !busy && !pixel_valid, "zero-width rect completes as no-op");
 
+    reset = 1'b1;
+    step();
+    reset = 1'b0;
+    step();
+
+    rect_x = 16'd0;
+    rect_y = 16'd0;
+    rect_width = 16'd2;
+    rect_height = 16'd2;
+    rect_color = 16'h55AA;
+    pixel_ready = 1'b1;
+    start = 1'b1;
+    step();
+    start = 1'b0;
+    check(busy && pixel_valid, "rect starts backpressure test");
+    check(pixel_x == 16'd0 && pixel_y == 16'd0, "rect first pixel before stall");
+
+    pixel_ready = 1'b0;
+    repeat (3) begin
+      check(pixel_valid, "rect keeps pixel valid while stalled");
+      check(pixel_x == 16'd0, "rect stalled x remains stable");
+      check(pixel_y == 16'd0, "rect stalled y remains stable");
+      check(pixel_color == 16'h55AA, "rect stalled color remains stable");
+      check(!done, "rect does not finish while first pixel is stalled");
+      step();
+    end
+    check(pixel_valid, "rect keeps pixel valid after final stalled edge");
+    check(pixel_x == 16'd0, "rect final stalled x remains stable");
+    check(pixel_y == 16'd0, "rect final stalled y remains stable");
+    check(pixel_color == 16'h55AA, "rect final stalled color remains stable");
+    check(!done, "rect does not finish after final stalled edge");
+
+    pixel_ready = 1'b1;
+    step();
+    check(pixel_valid && pixel_x == 16'd1 && pixel_y == 16'd0,
+          "rect advances after stalled pixel is accepted");
+
     $display("tb_rect_fill_engine PASS");
     $finish;
   end

@@ -55,6 +55,7 @@ gantt
 - command-processor WAIT_IDLE and CLEAR dispatch-busy unit coverage
 - register file
 - clear and rectangle fixed-function smoke engines
+- rect-fill pixel backpressure unit coverage
 - framebuffer writer
 - RTL simulation runner
 - lint configuration
