@@ -90,6 +90,7 @@ architecture.
 - programmable-core zero-sized launch integration coverage
 - programmable-core convergent branch integration coverage
 - programmable-core divergent branch fault integration coverage
+- programmable-core unaligned memory fault integration coverage
 - programmable-core predicated 32-bit store integration coverage
 
 The first programmable GPU path now executes encoded kernels through scheduler,
