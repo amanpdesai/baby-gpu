@@ -1,0 +1,14 @@
+[options]
+mode bmc
+depth 5
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv lane_register_file.sv lane_register_file_formal.sv
+prep -top lane_register_file_formal
+
+[files]
+rtl/core/lane_register_file.sv
+formal/harnesses/lane_register_file_formal.sv

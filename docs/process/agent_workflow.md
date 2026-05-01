@@ -48,7 +48,7 @@ Current implementation state:
 - CMP, convergent BRA, and predicated stores exist
 - open-source synthesis smoke exists
 - formal proofs exist for FIFO, SIMD ALU, framebuffer writer, work scheduler,
-  and instruction decoder smoke contracts
+  lane register file smoke contracts, and instruction decoder smoke contracts
 
 Next implementation target:
 

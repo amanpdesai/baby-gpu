@@ -78,6 +78,7 @@ architecture.
 - convergent branch support
 - compare instruction
 - predicated 32-bit and 16-bit stores
+- lane register file bounded formal smoke
 
 The first programmable GPU path now executes encoded kernels through scheduler,
 core, LSU, and simulation memory.

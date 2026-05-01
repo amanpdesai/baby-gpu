@@ -63,6 +63,7 @@ formal/
     command_fifo_formal.sv
     framebuffer_writer_formal.sv
     instruction_decoder_formal.sv
+    lane_register_file_formal.sv
     simd_alu_formal.sv
     work_scheduler_formal.sv
   scripts/
@@ -70,6 +71,7 @@ formal/
     command_fifo.sby
     framebuffer_writer.sby
     instruction_decoder.sby
+    lane_register_file.sby
     simd_alu.sby
     work_scheduler.sby
 ```
