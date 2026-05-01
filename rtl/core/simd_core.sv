@@ -1,5 +1,3 @@
-import isa_pkg::*;
-
 module simd_core #(
     parameter int LANES = 4,
     parameter int DATA_W = 32,
@@ -9,7 +7,7 @@ module simd_core #(
     parameter int REGS = 16,
     parameter int REG_ADDR_W = $clog2(REGS),
     localparam int LANES_PORT_W = (LANES < 1) ? 1 : LANES,
-    localparam int DATA_PORT_W = (DATA_W < ISA_IMM18_W) ? ISA_IMM18_W : DATA_W,
+    localparam int DATA_PORT_W = (DATA_W < isa_pkg::ISA_IMM18_W) ? isa_pkg::ISA_IMM18_W : DATA_W,
     localparam int COORD_PORT_W = (COORD_W < 1) ? 1 : COORD_W,
     localparam int ADDR_PORT_W = (ADDR_W < 1) ? 1 : ADDR_W,
     localparam int PC_PORT_W = (PC_W < 1) ? 1 : PC_W,
@@ -26,7 +24,7 @@ module simd_core #(
     output logic error,
 
     output logic [PC_PORT_W-1:0] instruction_addr,
-    input logic [ISA_WORD_W-1:0] instruction,
+    input logic [isa_pkg::ISA_WORD_W-1:0] instruction,
 
     output logic data_req_valid,
     input logic data_req_ready,
@@ -70,7 +68,7 @@ module simd_core #(
     if (LANES < 1) begin
       $fatal(1, "simd_core requires LANES >= 1");
     end
-    if (DATA_W < ISA_IMM18_W) begin
+    if (DATA_W < isa_pkg::ISA_IMM18_W) begin
       $fatal(1, "simd_core requires DATA_W >= ISA_IMM18_W");
     end
     if (COORD_W < 1) begin
@@ -91,7 +89,7 @@ module simd_core #(
     if (REGS < 2) begin
       $fatal(1, "simd_core requires REGS >= 2");
     end
-    if (REG_ADDR_W > ISA_REG_ADDR_W) begin
+    if (REG_ADDR_W > isa_pkg::ISA_REG_ADDR_W) begin
       $fatal(1, "simd_core requires REG_ADDR_W <= ISA_REG_ADDR_W");
     end
     if (REG_ADDR_W < 1) begin
@@ -114,16 +112,16 @@ module simd_core #(
   logic launch_armed;
   logic launch_accept;
 
-  logic [ISA_OPCODE_W-1:0] decoded_opcode;
-  logic [ISA_REG_ADDR_W-1:0] decoded_rd;
-    logic [ISA_REG_ADDR_W-1:0] decoded_ra;
-    logic [ISA_REG_ADDR_W-1:0] decoded_rb;
-    logic [ISA_IMM18_W-1:0] decoded_imm18;
-    logic [ISA_BRANCH_OFFSET_W-1:0] decoded_branch_offset;
-    logic [ISA_CMP_COND_W-1:0] decoded_cmp_op;
-    logic [ISA_SPECIAL_W-1:0] decoded_special_reg_id;
+  logic [isa_pkg::ISA_OPCODE_W-1:0] decoded_opcode;
+  logic [isa_pkg::ISA_REG_ADDR_W-1:0] decoded_rd;
+  logic [isa_pkg::ISA_REG_ADDR_W-1:0] decoded_ra;
+  logic [isa_pkg::ISA_REG_ADDR_W-1:0] decoded_rb;
+  logic [isa_pkg::ISA_IMM18_W-1:0] decoded_imm18;
+  logic [isa_pkg::ISA_BRANCH_OFFSET_W-1:0] decoded_branch_offset;
+  logic [isa_pkg::ISA_CMP_COND_W-1:0] decoded_cmp_op;
+  logic [isa_pkg::ISA_SPECIAL_W-1:0] decoded_special_reg_id;
   localparam int REG_ADDR_SELECT_W =
-      (REG_ADDR_PORT_W > ISA_REG_ADDR_W) ? ISA_REG_ADDR_W : REG_ADDR_PORT_W;
+      (REG_ADDR_PORT_W > isa_pkg::ISA_REG_ADDR_W) ? isa_pkg::ISA_REG_ADDR_W : REG_ADDR_PORT_W;
   localparam int SPECIAL_COORD_W =
       (COORD_PORT_W > DATA_PORT_W) ? DATA_PORT_W : COORD_PORT_W;
   localparam int SPECIAL_ADDR_W =
@@ -131,10 +129,10 @@ module simd_core #(
   logic [3:0] decoded_alu_op;
   logic decoded_writes_register;
   logic decoded_uses_immediate;
-    logic decoded_uses_special;
-    logic decoded_uses_alu;
-    logic decoded_uses_compare;
-    logic decoded_uses_memory;
+  logic decoded_uses_special;
+  logic decoded_uses_alu;
+  logic decoded_uses_compare;
+  logic decoded_uses_memory;
   logic decoded_uses_branch;
   logic decoded_memory_write;
   logic decoded_memory_store16;
@@ -213,7 +211,7 @@ module simd_core #(
           active_mask : '0;
 
   function automatic logic [(LANES_PORT_W*DATA_PORT_W)-1:0] replicate_immediate(
-      input logic [ISA_IMM18_W-1:0] imm);
+      input logic [isa_pkg::ISA_IMM18_W-1:0] imm);
     integer lane;
     begin
       replicate_immediate = '0;
@@ -223,47 +221,48 @@ module simd_core #(
     end
   endfunction
 
-    function automatic logic [REG_ADDR_PORT_W-1:0] fit_reg_addr(
-        input logic [ISA_REG_ADDR_W-1:0] encoded_addr);
-        begin
+  function automatic logic [REG_ADDR_PORT_W-1:0] fit_reg_addr(
+      input logic [isa_pkg::ISA_REG_ADDR_W-1:0] encoded_addr);
+    begin
       fit_reg_addr = '0;
       fit_reg_addr[REG_ADDR_SELECT_W-1:0] = encoded_addr[REG_ADDR_SELECT_W-1:0];
-        end
-    endfunction
+    end
+  endfunction
 
     function automatic logic [PC_PORT_W-1:0] branch_target(
         input logic [PC_PORT_W-1:0] base_pc,
-        input logic [ISA_BRANCH_OFFSET_W-1:0] offset
+        input logic [isa_pkg::ISA_BRANCH_OFFSET_W-1:0] offset
     );
         localparam int BRANCH_CALC_W =
-            (PC_PORT_W > ISA_BRANCH_OFFSET_W) ? (PC_PORT_W + 1) : (ISA_BRANCH_OFFSET_W + 1);
+            (PC_PORT_W > isa_pkg::ISA_BRANCH_OFFSET_W) ? (PC_PORT_W + 1) :
+            (isa_pkg::ISA_BRANCH_OFFSET_W + 1);
         logic signed [BRANCH_CALC_W-1:0] pc_ext;
         logic signed [BRANCH_CALC_W-1:0] offset_ext;
         logic signed [BRANCH_CALC_W-1:0] sum;
         begin
             pc_ext = '0;
             pc_ext[PC_PORT_W-1:0] = base_pc;
-            offset_ext = $signed({{(BRANCH_CALC_W-ISA_BRANCH_OFFSET_W)
-                {offset[ISA_BRANCH_OFFSET_W-1]}}, offset});
+            offset_ext = $signed({{(BRANCH_CALC_W-isa_pkg::ISA_BRANCH_OFFSET_W)
+                {offset[isa_pkg::ISA_BRANCH_OFFSET_W-1]}}, offset});
             sum = pc_ext + offset_ext + BRANCH_CALC_W'(1);
             branch_target = sum[PC_PORT_W-1:0];
         end
     endfunction
 
     function automatic logic [DATA_PORT_W-1:0] eval_compare(
-        input logic [ISA_CMP_COND_W-1:0] cond,
+        input logic [isa_pkg::ISA_CMP_COND_W-1:0] cond,
         input logic [DATA_PORT_W-1:0] operand_a,
         input logic [DATA_PORT_W-1:0] operand_b
     );
         begin
             eval_compare = '0;
             case (cond)
-                ISA_CMP_EQ: eval_compare = DATA_PORT_W'(operand_a == operand_b);
-                ISA_CMP_NE: eval_compare = DATA_PORT_W'(operand_a != operand_b);
-                ISA_CMP_LTU: eval_compare = DATA_PORT_W'(operand_a < operand_b);
-                ISA_CMP_GEU: eval_compare = DATA_PORT_W'(operand_a >= operand_b);
-                ISA_CMP_LTS: eval_compare = DATA_PORT_W'($signed(operand_a) < $signed(operand_b));
-                ISA_CMP_GES: eval_compare = DATA_PORT_W'($signed(operand_a) >= $signed(operand_b));
+                isa_pkg::ISA_CMP_EQ: eval_compare = DATA_PORT_W'(operand_a == operand_b);
+                isa_pkg::ISA_CMP_NE: eval_compare = DATA_PORT_W'(operand_a != operand_b);
+                isa_pkg::ISA_CMP_LTU: eval_compare = DATA_PORT_W'(operand_a < operand_b);
+                isa_pkg::ISA_CMP_GEU: eval_compare = DATA_PORT_W'(operand_a >= operand_b);
+                isa_pkg::ISA_CMP_LTS: eval_compare = DATA_PORT_W'($signed(operand_a) < $signed(operand_b));
+                isa_pkg::ISA_CMP_GES: eval_compare = DATA_PORT_W'($signed(operand_a) >= $signed(operand_b));
                 default: eval_compare = '0;
             endcase
         end
@@ -274,7 +273,7 @@ module simd_core #(
                   decoded_memory_write ? LSU_OP_STORE :
                   LSU_OP_LOAD;
   assign memory_offset = decoded_memory_predicated ?
-      ADDR_PORT_W'(decoded_imm18[ISA_PRED_OFFSET_MSB:ISA_PRED_OFFSET_LSB]) :
+      ADDR_PORT_W'(decoded_imm18[isa_pkg::ISA_PRED_OFFSET_MSB:isa_pkg::ISA_PRED_OFFSET_LSB]) :
       ADDR_PORT_W'(decoded_imm18);
   assign lsu_active_mask = decoded_memory_predicated ?
       (active_mask & memory_predicate_mask) :

@@ -1,5 +1,3 @@
-import isa_pkg::*;
-
 module programmable_core #(
     parameter int LANES = 4,
     parameter int DATA_W = 32,
@@ -9,7 +7,7 @@ module programmable_core #(
     parameter int REGS = 16,
     parameter int REG_ADDR_W = $clog2(REGS),
     localparam int LANES_PORT_W = (LANES < 1) ? 1 : LANES,
-    localparam int DATA_PORT_W = (DATA_W < ISA_IMM18_W) ? ISA_IMM18_W : DATA_W,
+    localparam int DATA_PORT_W = (DATA_W < isa_pkg::ISA_IMM18_W) ? isa_pkg::ISA_IMM18_W : DATA_W,
     localparam int COORD_PORT_W = (COORD_W < 1) ? 1 : COORD_W,
     localparam int ADDR_PORT_W = (ADDR_W < 1) ? 1 : ADDR_W,
     localparam int PC_PORT_W = (PC_W < 1) ? 1 : PC_W,
@@ -28,7 +26,7 @@ module programmable_core #(
     input logic [COORD_PORT_W-1:0] framebuffer_height,
 
     output logic [PC_PORT_W-1:0] instruction_addr,
-    input logic [ISA_WORD_W-1:0] instruction,
+    input logic [isa_pkg::ISA_WORD_W-1:0] instruction,
 
     output logic data_req_valid,
     input logic data_req_ready,

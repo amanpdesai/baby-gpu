@@ -47,6 +47,10 @@ run_synth command_processor \
 run_synth framebuffer_writer \
   rtl/core/framebuffer_writer.sv
 
+run_synth instruction_decoder \
+  rtl/common/isa_pkg.sv \
+  rtl/core/instruction_decoder.sv
+
 run_synth gpu_core \
   rtl/common/gpu_pkg.sv \
   rtl/core/command_fifo.sv \
@@ -63,11 +67,35 @@ run_synth lane_register_file \
 run_synth load_store_unit \
   rtl/core/load_store_unit.sv
 
+run_synth programmable_core \
+  rtl/common/isa_pkg.sv \
+  rtl/core/work_scheduler.sv \
+  rtl/core/instruction_decoder.sv \
+  rtl/core/special_registers.sv \
+  rtl/core/lane_register_file.sv \
+  rtl/core/simd_alu.sv \
+  rtl/core/load_store_unit.sv \
+  rtl/core/simd_core.sv \
+  rtl/core/programmable_core.sv
+
 run_synth register_file \
   rtl/core/register_file.sv
 
 run_synth simd_alu \
   rtl/core/simd_alu.sv
+
+run_synth simd_core \
+  rtl/common/isa_pkg.sv \
+  rtl/core/instruction_decoder.sv \
+  rtl/core/special_registers.sv \
+  rtl/core/lane_register_file.sv \
+  rtl/core/simd_alu.sv \
+  rtl/core/load_store_unit.sv \
+  rtl/core/simd_core.sv
+
+run_synth special_registers \
+  rtl/common/isa_pkg.sv \
+  rtl/core/special_registers.sv
 
 run_synth work_scheduler \
   rtl/core/work_scheduler.sv
