@@ -65,6 +65,7 @@ formal/
     instruction_decoder_formal.sv
     lane_register_file_formal.sv
     simd_alu_formal.sv
+    special_registers_formal.sv
     work_scheduler_formal.sv
   scripts/
     run_sby.sh
@@ -73,6 +74,7 @@ formal/
     instruction_decoder.sby
     lane_register_file.sby
     simd_alu.sby
+    special_registers.sby
     work_scheduler.sby
 ```
 

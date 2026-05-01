@@ -1,0 +1,15 @@
+[options]
+mode bmc
+depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv isa_pkg.sv special_registers.sv special_registers_formal.sv
+prep -top special_registers_formal
+
+[files]
+rtl/common/isa_pkg.sv
+rtl/core/special_registers.sv
+formal/harnesses/special_registers_formal.sv

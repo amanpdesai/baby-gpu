@@ -23,8 +23,6 @@ module special_registers #(
     output logic [(LANES*DATA_W)-1:0] value,
     output logic illegal
 );
-  import isa_pkg::*;
-
   function automatic logic [DATA_W-1:0] fit_coord(input logic [COORD_W-1:0] coord);
     begin
       fit_coord = {{(DATA_W - COORD_W) {1'b0}}, coord};
@@ -43,26 +41,26 @@ module special_registers #(
 
     for (int lane = 0; lane < LANES; lane = lane + 1) begin
       case (special_reg_id)
-        ISA_SR_LANE_ID:
+        isa_pkg::ISA_SR_LANE_ID:
           value[(lane*DATA_W)+:DATA_W] = fit_coord(lane_id[(lane*COORD_W)+:COORD_W]);
-        ISA_SR_GLOBAL_ID_X:
+        isa_pkg::ISA_SR_GLOBAL_ID_X:
           value[(lane*DATA_W)+:DATA_W] = fit_coord(global_id_x[(lane*COORD_W)+:COORD_W]);
-        ISA_SR_GLOBAL_ID_Y:
+        isa_pkg::ISA_SR_GLOBAL_ID_Y:
           value[(lane*DATA_W)+:DATA_W] = fit_coord(global_id_y[(lane*COORD_W)+:COORD_W]);
-        ISA_SR_LINEAR_GLOBAL_ID:
+        isa_pkg::ISA_SR_LINEAR_GLOBAL_ID:
           value[(lane*DATA_W)+:DATA_W] = linear_global_id[(lane*DATA_W)+:DATA_W];
-        ISA_SR_GROUP_ID_X:
+        isa_pkg::ISA_SR_GROUP_ID_X:
           value[(lane*DATA_W)+:DATA_W] = fit_coord(group_id_x[(lane*COORD_W)+:COORD_W]);
-        ISA_SR_GROUP_ID_Y:
+        isa_pkg::ISA_SR_GROUP_ID_Y:
           value[(lane*DATA_W)+:DATA_W] = fit_coord(group_id_y[(lane*COORD_W)+:COORD_W]);
-        ISA_SR_LOCAL_ID_X:
+        isa_pkg::ISA_SR_LOCAL_ID_X:
           value[(lane*DATA_W)+:DATA_W] = fit_coord(local_id_x[(lane*COORD_W)+:COORD_W]);
-        ISA_SR_LOCAL_ID_Y:
+        isa_pkg::ISA_SR_LOCAL_ID_Y:
           value[(lane*DATA_W)+:DATA_W] = fit_coord(local_id_y[(lane*COORD_W)+:COORD_W]);
-        ISA_SR_ARG_BASE: value[(lane*DATA_W)+:DATA_W] = fit_addr(arg_base);
-        ISA_SR_FRAMEBUFFER_BASE: value[(lane*DATA_W)+:DATA_W] = fit_addr(framebuffer_base);
-        ISA_SR_FRAMEBUFFER_WIDTH: value[(lane*DATA_W)+:DATA_W] = fit_coord(framebuffer_width);
-        ISA_SR_FRAMEBUFFER_HEIGHT: value[(lane*DATA_W)+:DATA_W] = fit_coord(framebuffer_height);
+        isa_pkg::ISA_SR_ARG_BASE: value[(lane*DATA_W)+:DATA_W] = fit_addr(arg_base);
+        isa_pkg::ISA_SR_FRAMEBUFFER_BASE: value[(lane*DATA_W)+:DATA_W] = fit_addr(framebuffer_base);
+        isa_pkg::ISA_SR_FRAMEBUFFER_WIDTH: value[(lane*DATA_W)+:DATA_W] = fit_coord(framebuffer_width);
+        isa_pkg::ISA_SR_FRAMEBUFFER_HEIGHT: value[(lane*DATA_W)+:DATA_W] = fit_coord(framebuffer_height);
         default: begin
           illegal = 1'b1;
           value[(lane*DATA_W)+:DATA_W] = '0;
