@@ -167,6 +167,14 @@ module tb_programmable_core_branch_control;
         end
     endtask
 
+    task automatic load_divergent_branch_program();
+        begin
+            write_imem(8'd0, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, ISA_SR_LANE_ID));
+            write_imem(8'd1, isa_pkg::isa_b_type(ISA_OP_BRA, 4'd1, 22'd1));
+            write_imem(8'd2, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+        end
+    endtask
+
     task automatic launch_full_group();
         int cycles;
         begin
@@ -210,6 +218,28 @@ module tb_programmable_core_branch_control;
         end
     endtask
 
+    task automatic wait_kernel_error(input string scenario);
+        int cycles;
+        begin
+            cycles = 0;
+            while (!error) begin
+                check(!done, {scenario, " does not complete successfully"});
+                check(!data_req_valid, {scenario, " issues no memory request"});
+                check(!data_rsp_ready, {scenario, " waits for no memory response"});
+                check(!imem_fetch_error, {scenario, " fetch stays in range"});
+                check(cycles < 120, {scenario, " error timeout"});
+                cycles = cycles + 1;
+                step();
+            end
+
+            check(error, {scenario, " raises error"});
+            check(!done, {scenario, " does not assert done"});
+            check(!launch_ready, {scenario, " blocks new launches"});
+            check(!data_req_valid && !data_rsp_ready, {scenario, " leaves memory idle"});
+            check(!imem_fetch_error, {scenario, " leaves fetch in range"});
+        end
+    endtask
+
     task automatic expect_all_lanes(input logic [DATA_W-1:0] expected, input string scenario);
         begin
             debug_read_addr = 4'd2;
@@ -232,6 +262,11 @@ module tb_programmable_core_branch_control;
         launch_full_group();
         wait_kernel_done("not-taken branch");
         expect_all_lanes(32'd11, "not-taken branch executes fallthrough write");
+
+        reset_dut();
+        load_divergent_branch_program();
+        launch_full_group();
+        wait_kernel_error("divergent branch");
 
         $display("tb_programmable_core_branch_control PASS");
         $finish;
