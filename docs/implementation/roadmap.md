@@ -57,64 +57,65 @@ gantt
 - framebuffer writer
 - RTL simulation runner
 - lint configuration
+- open-source synthesis smoke target
 
 These blocks are now infrastructure for the programmable GPU, not the whole
 architecture.
 
-## Current Architecture Milestone
+## Completed Programmable Core Bring-Up
 
-Document the programmable model before writing more core RTL:
+- programmable architecture documents
+- initial ISA envelope and helpers
+- instruction memory model
+- instruction decoder
+- special register mux
+- lane register file
+- SIMD ALU
+- basic SIMD core
+- 1 core x 4 lane scheduler
+- blocking LSU
+- simulation data memory with byte masks
+- convergent branch support
+- compare instruction
+- predicated 32-bit and 16-bit stores
 
-- [programming_model.md](../architecture/programming_model.md)
-- [isa.md](../architecture/isa.md)
-- [core_architecture.md](../architecture/core_architecture.md)
-- [memory_model.md](../architecture/memory_model.md)
-- [kernel_execution.md](../architecture/kernel_execution.md)
+The first programmable GPU path now executes encoded kernels through scheduler,
+core, LSU, and simulation memory.
 
-Exit criteria:
-
-- initial lane/core shape is explicit
-- initial kernel set is explicit
-- ISA envelope is explicit
-- memory hierarchy sequence is explicit
-- fixed-function blocks have a defined long-term role
-
-## Next RTL Milestone: Minimal Programmable Core
-
-Required blocks:
-
-| Block | Purpose |
-| --- | --- |
-| Lane register file | Private registers per SIMD lane. |
-| SIMD ALU | Execute integer ops across lanes. |
-| Instruction memory model | Feed encoded test programs in simulation. |
-| Decoder/control | Execute the base instruction subset. |
-| Scheduler | Assign 2D work-items to four lanes. |
-| Blocking LSU | Run simple global loads and stores. |
-
-Initial instruction subset:
+Implemented instruction subset:
 
 ```text
 NOP
 END
-MOVI / CONST
+MOVI
 MOVSR
 ADD
+SUB
+AND
+OR
+XOR
+SHL
+SHR
 MUL
+CMP
+BRA
 LOAD
 STORE
+STORE16
+PSTORE
+PSTORE16
 ```
 
-Branching and predicates can wait until `vector_add` works.
+## Current Milestone: Verification and Platform Readiness
 
-Verification gates for this milestone:
+Near-term work should harden the existing programmable path rather than adding
+speculative GPU features:
 
-- unit simulation for each leaf block
-- integration simulation for basic programs
-- formal plan or proof for decoder, register file, scheduler, and LSU
-- lint clean
-- open-source synthesis smoke target tracked
-- Vivado synthesis smoke target before FPGA platform claims
+- add block-level formal proofs for decoder, register file, scheduler, LSU, and
+  memory-facing protocol behavior
+- add coverage-oriented integration tests for corner kernels
+- add Vivado synthesis smoke before FPGA platform claims
+- keep docs aligned with implemented ISA and kernel behavior
 
 ## First Kernel Milestone: `vector_add`
 
@@ -137,11 +138,11 @@ Proves:
 
 Exit criteria:
 
-- deterministic RTL simulation
-- initialized memory fixture
-- expected output comparison
-- timeout on hang
-- zero sticky errors
+- deterministic RTL simulation: done
+- initialized memory fixture: done
+- expected output comparison: done
+- timeout on hang: done
+- zero sticky errors: done
 
 ## Second Kernel Milestone: `framebuffer_gradient`
 
@@ -161,9 +162,9 @@ Proves:
 
 Exit criteria:
 
-- memory comparison passes
+- memory comparison passes: done
 - optional generated image artifact
-- no fixed-function pixel writer required
+- no fixed-function pixel writer required: done
 
 ## Third Kernel Milestone: Bounded Fill
 
@@ -174,27 +175,30 @@ if pixel inside rectangle:
   store color
 ```
 
-This milestone should force a decision about predication or branch divergence.
-Do not quietly add full SIMT masks without documenting and testing them.
+Decision: use no-branch predicated stores before adding divergent branch masks.
+This keeps the shared-PC SIMD core simple while enabling bounded graphics
+kernels.
 
-Acceptable approaches:
+Implemented coverage:
 
-- implement predicated store
-- restrict the first fill kernel to convergent control
-- defer rectangle fill until mask support exists
+- top-left bounded fill using `CMP` + `AND` + `PSTORE16`
+- offset 1x1 fill using lower and upper bounds
+- low-half and high-half RGB565 preservation checks
 
 ## Scaling Lane
 
 Scaling is deliberately staged:
 
 1. single core, four lanes
-2. more lanes per core
-3. per-core scratchpad
-4. memory request IDs
-5. multiple cores
-6. read-only or instruction cache
-7. data cache
-8. divergence masks and reconvergence
+2. harden block formal and protocol coverage
+3. Vivado synthesis and FPGA smoke path
+4. more lanes per core
+5. per-core scratchpad
+6. memory request IDs
+7. multiple cores
+8. read-only or instruction cache
+9. data cache
+10. divergence masks and reconvergence
 
 Do not add caches before the blocking memory model is correct. Do not add
 multiple cores before memory responses have routing identity.

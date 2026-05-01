@@ -46,35 +46,32 @@ flowchart TB
 
 | Block | Proof Goals |
 | --- | --- |
-| `fifo.sv` | no overflow, no underflow, order preservation, reset state. |
-| `skid_buffer.sv` | no data loss, no duplication, valid/ready stability. |
-| `clear_engine.sv` | exactly bounded pixel count, termination, backpressure safety. |
-| `rect_fill_engine.sv` | clipped bounds, no out-of-range pixels, termination. |
+| `command_fifo.sv` | no overflow/underflow and valid reset/protocol behavior. |
+| `simd_alu.sv` | lane-wise arithmetic and logical operation correctness. |
 | `framebuffer_writer.sv` | correct address math and byte masks. |
-| `memory_arbiter.sv` | one grant at a time, no dropped accepted request, eventual service under fairness assumptions. |
-| `command_processor.sv` | legal packet decode, malformed packet error, no draw start with incomplete operands. |
+| `work_scheduler.sv` | launch sequencing, active masks, tail handling, and progress. |
+| `instruction_decoder.sv` | field extraction plus high-risk CMP/PSTORE/unknown-opcode decode contracts. |
+| `lane_register_file.sv` | R0 hardwiring, lane isolation, write enables, and multi-read behavior. |
+| `load_store_unit.sv` | request sequencing, alignment errors, byte masks, and response routing. |
+| `data_memory.sv` | byte-mask writes, read-after-write behavior, and out-of-range errors. |
 
 ## Directory Plan
 
 ```text
 formal/
-  properties/
-    valid_ready_properties.sv
-    fifo_properties.sv
-    command_processor_properties.sv
-    clear_engine_properties.sv
-    rect_fill_engine_properties.sv
-    framebuffer_writer_properties.sv
-    memory_arbiter_properties.sv
   harnesses/
-    fifo_formal.sv
-    clear_engine_formal.sv
-    rect_fill_engine_formal.sv
+    command_fifo_formal.sv
+    framebuffer_writer_formal.sv
+    instruction_decoder_formal.sv
+    simd_alu_formal.sv
+    work_scheduler_formal.sv
   scripts/
     run_sby.sh
-    fifo.sby
-    clear_engine.sby
-    rect_fill_engine.sby
+    command_fifo.sby
+    framebuffer_writer.sby
+    instruction_decoder.sby
+    simd_alu.sby
+    work_scheduler.sby
 ```
 
 ## Open-Source Tool Path
@@ -121,10 +118,19 @@ Formal cover statements should show that important states are reachable:
 
 ## Exit Criteria
 
-Initial formal adoption is successful when:
+Initial formal adoption is already active when:
 
-- reusable valid/ready properties exist
+- `rtk err make formal` runs all committed SymbiYosys jobs
 - FIFO proof passes
-- clear and rectangle engines have safety proofs
-- framebuffer writer address and mask proofs pass
-- formal commands are documented and runnable from `formal/scripts/`
+- SIMD ALU proof passes
+- framebuffer writer address and mask proof passes
+- work scheduler proof passes
+- instruction decoder smoke proof passes
+
+Next exit criteria:
+
+- lane register file proof
+- LSU proof
+- simulation data memory proof
+- programmable-core bounded safety properties where practical
+- bounded proof runtimes suitable for the normal local gate

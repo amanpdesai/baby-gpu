@@ -37,23 +37,33 @@ Current implementation state:
 - framebuffer writer exists
 - lane register file exists
 - SIMD ALU exists
-- ISA encoding has an initial locked envelope
+- special register mux exists
+- instruction memory model exists
+- instruction decoder exists
+- scheduler exists for 1 core x 4 lanes
+- blocking LSU exists
+- programmable core runs simulation kernels
+- `vector_add`, `STORE16`, framebuffer gradient, bounded fill, and offset fill
+  integration tests exist
+- CMP, convergent BRA, and predicated stores exist
+- open-source synthesis smoke exists
+- formal proofs exist for FIFO, SIMD ALU, framebuffer writer, work scheduler,
+  and instruction decoder smoke contracts
 
 Next implementation target:
 
 ```text
-instruction decoder
-special register mux
-basic SIMD core skeleton
+verification hardening
+Vivado synthesis smoke
+FPGA-facing bring-up path
 ```
 
 After that:
 
 ```text
-instruction memory model
-scheduler
-blocking load/store unit
-vector_add kernel simulation
+lane-count scaling experiments
+scratchpad experiment
+memory request IDs before multi-core
 ```
 
 ## Main-Thread Commit Process
@@ -80,11 +90,11 @@ revert work casually.
 Good slice examples:
 
 ```text
-instruction decoder + unit test
-special register mux + unit test
-basic SIMD core + unit test
-LSU request path + unit test
-vector_add integration test
+formal proof for a leaf block
+corner-case integration test
+Vivado synthesis smoke target
+LSU protocol property
+docs alignment after an implemented feature
 ```
 
 Avoid committing broad mixed work such as:
@@ -118,12 +128,10 @@ Every code commit must run:
 ```bash
 rtk make sim
 rtk make lint
-rtk make formal
+rtk err make formal
+rtk make synth-yosys
 rtk git diff --check
 ```
-
-`make formal` may currently report that no SymbiYosys jobs exist. That is an
-acceptable pass until formal jobs are added.
 
 Doc-only commits still run:
 
@@ -136,7 +144,8 @@ When cheap, also run:
 ```bash
 rtk make sim
 rtk make lint
-rtk make formal
+rtk err make formal
+rtk make synth-yosys
 ```
 
 ### 5. Review Scope
@@ -225,102 +234,83 @@ Do not use subagents for:
 
 ## Recommended Parallel Pattern
 
-For the next stage, use this pattern:
+For the current stage, use this pattern:
 
 ```text
 main thread:
-  creates shared interface/package if needed
-  owns final integration and commit
+  owns architecture, branch state, final integration, full gates, commits
 
 subagent A:
-  instruction decoder
+  implement or review a bounded formal proof
 
 subagent B:
-  special register mux
+  implement or review an integration corner test
 
 main thread:
-  reviews A/B
-  integrates basic SIMD core
-  runs full checks
+  resolves review blockers
+  reruns sim/lint/formal/synth
   commits and pushes
 ```
 
 ## Safe Subagent Work Packages
 
-### Instruction Decoder Agent
+### Formal Proof Agent
 
 Ownership:
 
 ```text
-rtl/core/instruction_decoder.sv
-tb/unit/tb_instruction_decoder.sv
+formal/harnesses/<block>_formal.sv
+formal/scripts/<block>.sby
 ```
 
 Scope:
 
-- decode `NOP`
-- decode `END`
-- decode `MOVI`
-- decode `MOVSR`
-- decode `ADD`
-- decode `MUL`
-- emit illegal flag for unknown opcodes
-- extract `rd`, `ra`, `rb`, `imm18`, and special-register ID
-- map ALU instructions to existing `simd_alu` operation values
+- prove one narrow block contract
+- keep solver runtime appropriate for the normal `make formal` gate
+- avoid broad RTL rewrites unless the proof exposes a real bug
+- document residual risks when a proof is intentionally smoke-level
 
 Do not modify:
 
 ```text
-rtl/core/simd_core.sv
-rtl/core/lane_register_file.sv
-rtl/core/simd_alu.sv
-docs/architecture/isa.md
+unrelated RTL
+integration tests
+architecture docs
 ```
-
-If the decoder needs constants, ask main thread to add a shared package first.
 
 Required checks:
 
 ```bash
 rtk make sim
 rtk make lint
-rtk make formal
+rtk err make formal
+rtk make synth-yosys
 rtk git diff --check
 ```
 
-### Special Register Agent
+### Integration Test Agent
 
 Ownership:
 
 ```text
-rtl/core/special_registers.sv
-tb/unit/tb_special_registers.sv
+tb/integration/<test>.sv
 ```
 
 Scope:
 
-- output per-lane selected special-register values
-- support `lane_id`
-- support `global_id_x`
-- support `global_id_y`
-- support `linear_global_id`
-- support `group_id_x`
-- support `group_id_y`
-- support `local_id_x`
-- support `local_id_y`
-- support `arg_base`
-- support `framebuffer_base`
-- support `framebuffer_width`
-- support `framebuffer_height`
-- emit illegal flag for unknown special-register IDs
+- add a deterministic encoded-kernel test
+- initialize memory fixtures explicitly
+- check expected memory contents
+- include timeout and sticky error checks
+- prefer corner cases that can fail for wrong address math, masks, or predicate
+  behavior
 
 Do not modify:
 
 ```text
 rtl/core/simd_core.sv
-rtl/core/lane_register_file.sv
-rtl/core/simd_alu.sv
-docs/architecture/isa.md
+rtl/common/isa_pkg.sv
+rtl/core/instruction_decoder.sv
 ```
 
 Required checks:
@@ -328,52 +318,15 @@ Required checks:
 ```bash
 rtk make sim
 rtk make lint
-rtk make formal
+rtk err make formal
+rtk make synth-yosys
 rtk git diff --check
 ```
 
 ### Main-Thread Integration
 
-After decoder and special-register mux land, main thread owns:
-
-```text
-rtl/core/simd_core.sv
-tb/unit/tb_simd_core_basic.sv
-```
-
-First basic programs:
-
-```text
-MOVI R1, 5
-MOVI R2, 7
-ADD  R3, R1, R2
-END
-```
-
-Expected:
-
-```text
-all lanes R3 = 12
-core done
-no error
-```
-
-Second program:
-
-```text
-MOVSR R1, lane_id
-ADD   R2, R1, R1
-END
-```
-
-Expected:
-
-```text
-lane0 R2 = 0
-lane1 R2 = 2
-lane2 R2 = 4
-lane3 R2 = 6
-```
+The main thread owns shared interfaces, ISA changes, scheduler/core/LSU
+coordination, final review resolution, full checks, commits, and pushes.
 
 ## Subagent Prompt Template
 
