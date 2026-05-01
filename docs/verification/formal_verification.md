@@ -144,9 +144,10 @@ Initial formal adoption is already active when:
 - simulation data memory smoke proof passes
 - LSU prep smoke proof passes
 - LSU request/response sequencing smoke proof passes
+- LSU multi-lane response routing smoke proof passes
 
 Next exit criteria:
 
-- LSU multi-lane response routing proof with bounded scenarios
+- LSU end-to-end multi-request lane scan proof with bounded scenarios
 - programmable-core bounded safety properties where practical
 - bounded proof runtimes suitable for the normal local gate

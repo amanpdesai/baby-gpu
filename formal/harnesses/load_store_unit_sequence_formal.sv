@@ -1,8 +1,8 @@
 module load_store_unit_sequence_checker #(
-    parameter int LANES = 1,
+    parameter int LANES = 3,
     parameter int ADDR_W = 32,
     parameter int DATA_W = 32,
-    parameter int LANE_IDX_W = 1
+    parameter int LANE_IDX_W = 2
 ) (
     input logic clk,
     input logic reset,
@@ -31,14 +31,15 @@ module load_store_unit_sequence_checker #(
     localparam logic [1:0] STATE_REQ = 2'd2;
     localparam logic [1:0] STATE_WAIT_RSP = 2'd3;
 
-    localparam logic [2:0] SCENARIO_RESET = 3'd0;
-    localparam logic [2:0] SCENARIO_REQ_STALL = 3'd1;
-    localparam logic [2:0] SCENARIO_REQ_ACCEPT = 3'd2;
-    localparam logic [2:0] SCENARIO_LOAD_RSP = 3'd3;
-    localparam logic [2:0] SCENARIO_STORE_RSP = 3'd4;
-    localparam logic [2:0] SCENARIO_EMPTY_MASK = 3'd5;
+    localparam logic [3:0] SCENARIO_RESET = 4'd0;
+    localparam logic [3:0] SCENARIO_REQ_STALL = 4'd1;
+    localparam logic [3:0] SCENARIO_REQ_ACCEPT = 4'd2;
+    localparam logic [3:0] SCENARIO_LOAD_RSP = 4'd3;
+    localparam logic [3:0] SCENARIO_STORE_RSP = 4'd4;
+    localparam logic [3:0] SCENARIO_EMPTY_MASK = 4'd5;
+    localparam logic [3:0] SCENARIO_MULTI_LANE_RSP = 4'd6;
 
-    (* anyconst *) logic [2:0] scenario;
+    (* anyconst *) logic [3:0] scenario;
     logic checked_q;
 
     initial begin
@@ -46,7 +47,7 @@ module load_store_unit_sequence_checker #(
     end
 
     always_comb begin
-        assume(scenario <= SCENARIO_EMPTY_MASK);
+        assume(scenario <= SCENARIO_MULTI_LANE_RSP);
 
         if (!checked_q) begin
             case (scenario)
@@ -104,6 +105,20 @@ module load_store_unit_sequence_checker #(
                     assume(!error_q);
                 end
 
+                SCENARIO_MULTI_LANE_RSP: begin
+                    assume(!reset);
+                    assume(state_q == STATE_WAIT_RSP);
+                    assume(op_q == LSU_OP_LOAD);
+                    assume(active_mask_q == 3'b101);
+                    assume(lane_idx_q == 2'd1);
+                    assume(lane_rvalid_q == 3'b001);
+                    assume(lane_rdata[0 +: DATA_W] == 32'h1111_2222);
+                    assume(lane_rdata[DATA_W +: DATA_W] == 32'h0000_0000);
+                    assume(lane_rdata[(2*DATA_W) +: DATA_W] == 32'h0000_0000);
+                    assume(rsp_valid);
+                    assume(rsp_rdata == 32'hDEAD_BEEF);
+                end
+
                 default: begin
                     assume(1'b0);
                 end
@@ -158,6 +173,15 @@ module load_store_unit_sequence_checker #(
                     assert(!req_valid_q);
                 end
 
+                SCENARIO_MULTI_LANE_RSP: begin
+                    assert(state_q == STATE_PREP);
+                    assert(lane_idx_q == 2'd3);
+                    assert(lane_rvalid_q == 3'b101);
+                    assert(lane_rdata[0 +: DATA_W] == 32'h1111_2222);
+                    assert(lane_rdata[DATA_W +: DATA_W] == 32'h0000_0000);
+                    assert(lane_rdata[(2*DATA_W) +: DATA_W] == 32'hDEAD_BEEF);
+                end
+
                 default: begin
                     assert(1'b0);
                 end
@@ -171,6 +195,7 @@ module load_store_unit_sequence_checker #(
         if (checked_q) begin
             cover(scenario == SCENARIO_LOAD_RSP && lane_rvalid_q[0]);
             cover(scenario == SCENARIO_EMPTY_MASK && done_q);
+            cover(scenario == SCENARIO_MULTI_LANE_RSP && lane_rvalid_q[2]);
         end
     end
 endmodule
@@ -204,7 +229,7 @@ bind load_store_unit load_store_unit_sequence_checker #(
 module load_store_unit_sequence_formal (
     input logic clk
 );
-    localparam int LANES = 1;
+    localparam int LANES = 3;
     localparam int ADDR_W = 32;
     localparam int DATA_W = 32;
 
