@@ -48,10 +48,13 @@ Current implementation state:
 - CMP, convergent BRA, and predicated stores exist
 - open-source synthesis smoke exists
 - formal proofs exist for FIFO, SIMD ALU, framebuffer writer, work scheduler,
-  lane register file smoke contracts, special register mux smoke contracts, and
-  instruction decoder smoke contracts
+  lane register file smoke contracts, special register mux smoke contracts,
+  instruction decoder smoke contracts, instruction memory smoke contracts, and
+  LSU prep smoke contracts
 - simulation data memory has bounded formal smoke coverage for byte masks,
   halfword masks, response backpressure, and readback
+- open-source synthesis smoke covers leaf blocks plus the integrated SIMD and
+  programmable core path
 
 Next implementation target:
 
