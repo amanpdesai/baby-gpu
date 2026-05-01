@@ -88,6 +88,7 @@ architecture.
 - integrated programmable core Yosys synthesis smoke
 - programmable-core illegal-instruction integration coverage
 - programmable-core zero-sized launch integration coverage
+- programmable-core convergent branch integration coverage
 
 The first programmable GPU path now executes encoded kernels through scheduler,
 core, LSU, and simulation memory.
