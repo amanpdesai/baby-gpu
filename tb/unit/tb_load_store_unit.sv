@@ -178,6 +178,24 @@ module tb_load_store_unit;
         end
     endtask
 
+    task automatic expect_load_req(
+        input logic [ADDR_W-1:0] exp_addr,
+        input logic [DATA_W-1:0] rsp_data,
+        input string message
+    );
+        begin
+            wait_for_req_valid();
+            check(!req_write, {message, " read"});
+            check(req_addr == exp_addr, {message, " address"});
+            check(req_wmask == 4'b0000, {message, " mask"});
+            req_ready = 1'b1;
+            tick();
+            req_ready = 1'b0;
+            check(rsp_ready, {message, " waits for read response"});
+            send_rsp(rsp_data);
+        end
+    endtask
+
     task automatic test_single_lane_load_response_backpressure;
         begin
             reset_dut();
@@ -202,6 +220,28 @@ module tb_load_store_unit;
             wait_for_done();
             check(lane_rvalid == 4'b0100, "only active load lane writes back");
             check(lane_rdata[2*DATA_W +: DATA_W] == 32'hCAFE_1234, "load response routed to lane");
+        end
+    endtask
+
+    task automatic test_multi_lane_load_order;
+        begin
+            reset_dut();
+            set_lane_addr(0, 32'h0000_0010);
+            set_lane_addr(2, 32'h0000_0020);
+            set_lane_addr(3, 32'h0000_0030);
+            req_ready = 1'b0;
+            start_cmd(OP_LOAD, 4'b1101);
+
+            expect_load_req(32'h0000_0010, 32'hAAAA_0000, "load lane 0");
+            expect_load_req(32'h0000_0020, 32'hBBBB_0002, "load lane 2");
+            expect_load_req(32'h0000_0030, 32'hCCCC_0003, "load lane 3");
+            wait_for_done();
+
+            check(lane_rvalid == 4'b1101, "multi-lane load writes only active lanes");
+            check(lane_rdata[0*DATA_W +: DATA_W] == 32'hAAAA_0000, "lane 0 load response");
+            check(lane_rdata[1*DATA_W +: DATA_W] == 32'h0000_0000, "inactive lane unchanged");
+            check(lane_rdata[2*DATA_W +: DATA_W] == 32'hBBBB_0002, "lane 2 load response");
+            check(lane_rdata[3*DATA_W +: DATA_W] == 32'hCCCC_0003, "lane 3 load response");
         end
     endtask
 
@@ -341,6 +381,7 @@ module tb_load_store_unit;
 
     initial begin
         test_single_lane_load_response_backpressure();
+        test_multi_lane_load_order();
         test_multi_lane_store_order();
         test_inactive_lanes_skipped();
         test_req_payload_stability();
