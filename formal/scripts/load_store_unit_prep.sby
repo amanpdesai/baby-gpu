@@ -1,0 +1,14 @@
+[options]
+mode bmc
+depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv load_store_unit.sv load_store_unit_prep_formal.sv
+prep -top load_store_unit_prep_formal
+
+[files]
+rtl/core/load_store_unit.sv
+formal/harnesses/load_store_unit_prep_formal.sv
