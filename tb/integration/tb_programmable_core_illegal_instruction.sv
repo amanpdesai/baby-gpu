@@ -150,7 +150,10 @@ module tb_programmable_core_illegal_instruction;
         end
     endtask
 
-    task automatic launch_one_group();
+    task automatic launch_kernel(
+        input logic [COORD_W-1:0] launch_grid_x,
+        input logic [COORD_W-1:0] launch_grid_y
+    );
         int cycles;
         begin
             cycles = 0;
@@ -161,8 +164,8 @@ module tb_programmable_core_illegal_instruction;
                 step();
             end
 
-            grid_x = 16'd1;
-            grid_y = 16'd1;
+            grid_x = launch_grid_x;
+            grid_y = launch_grid_y;
             arg_base = 32'h0000_1000;
             framebuffer_base = 32'h0000_2000;
             framebuffer_width = 16'd1;
@@ -170,6 +173,12 @@ module tb_programmable_core_illegal_instruction;
             launch_valid = 1'b1;
             step();
             launch_valid = 1'b0;
+        end
+    endtask
+
+    task automatic launch_one_group();
+        begin
+            launch_kernel(16'd1, 16'd1);
         end
     endtask
 
@@ -204,11 +213,45 @@ module tb_programmable_core_illegal_instruction;
         end
     endtask
 
+    task automatic wait_for_launch_geometry_error(input string scenario);
+        int cycles;
+        begin
+            cycles = 0;
+            while (!error) begin
+                check(!done, {scenario, " does not complete successfully"});
+                check(!data_req_valid, {scenario, " issues no memory request"});
+                check(!data_rsp_ready, {scenario, " waits for no memory response"});
+                check(!imem_fetch_error, {scenario, " fetch stays in range"});
+                check(cycles < 20, {scenario, " error timeout"});
+                cycles = cycles + 1;
+                step();
+            end
+
+            check(error, {scenario, " raises programmable-core error"});
+            check(!done, {scenario, " does not assert done"});
+            check(!launch_ready, {scenario, " blocks new launches"});
+            check(!data_req_valid, {scenario, " keeps memory request idle"});
+            check(!data_rsp_ready, {scenario, " keeps response channel idle"});
+            check(!imem_fetch_error, {scenario, " does not raise fetch error"});
+        end
+    endtask
+
     initial begin
         reset_dut();
         write_imem(8'd0, {6'h3F, 26'd0});
         launch_one_group();
         wait_for_illegal_instruction_error();
+
+        reset_dut();
+        write_imem(8'd0, isa_pkg::isa_r_type(isa_pkg::ISA_OP_END, 4'd0, 4'd0, 4'd0));
+        launch_kernel(16'd0, 16'd1);
+        wait_for_launch_geometry_error("zero grid_x launch");
+
+        reset_dut();
+        write_imem(8'd0, isa_pkg::isa_r_type(isa_pkg::ISA_OP_END, 4'd0, 4'd0, 4'd0));
+        launch_kernel(16'd1, 16'd0);
+        wait_for_launch_geometry_error("zero grid_y launch");
+
         $display("tb_programmable_core_illegal_instruction PASS");
         $finish;
     end
