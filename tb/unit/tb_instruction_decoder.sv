@@ -20,6 +20,7 @@ module tb_instruction_decoder;
   logic uses_branch;
   logic memory_write;
   logic memory_store16;
+  logic memory_predicated;
   logic ends_lane;
   logic illegal;
 
@@ -43,6 +44,7 @@ module tb_instruction_decoder;
       .uses_branch(uses_branch),
       .memory_write(memory_write),
       .memory_store16(memory_store16),
+      .memory_predicated(memory_predicated),
       .ends_lane(ends_lane),
       .illegal(illegal)
   );
@@ -172,6 +174,7 @@ module tb_instruction_decoder;
     if (uses_branch !== 1'b0) $fatal(1, "uses_branch default mismatch");
     if (memory_write !== 1'b0) $fatal(1, "memory_write default mismatch");
     if (memory_store16 !== 1'b0) $fatal(1, "memory_store16 default mismatch");
+    if (memory_predicated !== 1'b0) $fatal(1, "memory_predicated default mismatch");
     if (ends_lane !== exp_ends_lane) $fatal(1, "ends_lane mismatch");
       if (illegal !== exp_illegal) $fatal(1, "illegal mismatch");
   end
@@ -187,6 +190,7 @@ module tb_instruction_decoder;
       input logic exp_writes_register,
       input logic exp_memory_write,
       input logic exp_memory_store16,
+      input logic exp_memory_predicated,
       input logic exp_illegal
   );
   begin
@@ -206,6 +210,7 @@ module tb_instruction_decoder;
     if (uses_branch !== 1'b0) $fatal(1, "memory uses_branch mismatch");
     if (memory_write !== exp_memory_write) $fatal(1, "memory_write mismatch");
     if (memory_store16 !== exp_memory_store16) $fatal(1, "memory_store16 mismatch");
+    if (memory_predicated !== exp_memory_predicated) $fatal(1, "memory_predicated mismatch");
     if (ends_lane !== 1'b0) $fatal(1, "memory ends_lane mismatch");
     if (illegal !== exp_illegal) $fatal(1, "memory illegal mismatch");
   end
@@ -485,6 +490,7 @@ module tb_instruction_decoder;
         1'b1,
         1'b0,
         1'b0,
+        1'b0,
         1'b0
     );
 
@@ -497,6 +503,7 @@ module tb_instruction_decoder;
         18'h1_2345,
         1'b0,
         1'b1,
+        1'b0,
         1'b0,
         1'b0
     );
@@ -511,6 +518,35 @@ module tb_instruction_decoder;
         1'b0,
         1'b1,
         1'b1,
+        1'b0,
+        1'b0
+    );
+
+    expect_memory_decode(
+        isa_pkg::isa_p_type(ISA_OP_PSTORE, 4'd9, 4'd10, 4'd11, 14'h0123),
+        ISA_OP_PSTORE,
+        4'd9,
+        4'd10,
+        4'd11,
+        18'h2_c123,
+        1'b0,
+        1'b1,
+        1'b0,
+        1'b1,
+        1'b0
+    );
+
+    expect_memory_decode(
+        isa_pkg::isa_p_type(ISA_OP_PSTORE16, 4'd12, 4'd13, 4'd14, 14'h3ffe),
+        ISA_OP_PSTORE16,
+        4'd12,
+        4'd13,
+        4'd14,
+        18'h3_bffe,
+        1'b0,
+        1'b1,
+        1'b1,
+        1'b1,
         1'b0
     );
 
@@ -522,6 +558,7 @@ module tb_instruction_decoder;
         4'd15,
         18'h3_ffff,
         1'b1,
+        1'b0,
         1'b0,
         1'b0,
         1'b0

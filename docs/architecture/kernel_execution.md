@@ -201,15 +201,19 @@ if x in rect and y in rect:
   store color
 ```
 
-Initial branch rule creates a problem: different lanes may disagree on the
-rectangle predicate. There are three options:
+The initial branch rule cannot express this directly because different lanes may
+disagree on the rectangle predicate. The near-term path is no-branch predicated
+stores:
 
-1. use a no-branch predicated store once predicates exist
-2. launch only workgroups arranged to avoid divergence
-3. allow this kernel later, after mask support
+```text
+inside = x >= rect_x && x < rect_x + rect_w &&
+         y >= rect_y && y < rect_y + rect_h
+PSTORE16 framebuffer_addr, color, inside
+```
 
-This is a critical design checkpoint. `fill_rect` is a good test, but it should
-not force full divergence too early.
+`PSTORE` and `PSTORE16` let false lanes skip the store without changing the
+shared PC or requiring a divergence stack. Full divergent branch masks remain a
+later scaling feature.
 
 ## Simulation Strategy
 
@@ -242,7 +246,8 @@ Build in this order:
 11. `STORE16`
 12. `framebuffer_gradient` kernel test
 13. `CMP` plus branch behavior
-14. rectangle or bounded graphics kernel
+14. `PSTORE` / `PSTORE16`
+15. rectangle or bounded graphics kernel
 
 This order gives a working programmable machine before adding complex graphics
 or branch behavior.

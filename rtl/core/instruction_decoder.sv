@@ -20,6 +20,7 @@ module instruction_decoder (
     output logic uses_branch,
     output logic memory_write,
     output logic memory_store16,
+    output logic memory_predicated,
     output logic ends_lane,
     output logic illegal
 );
@@ -51,6 +52,7 @@ module instruction_decoder (
         uses_branch = 1'b0;
         memory_write = 1'b0;
         memory_store16 = 1'b0;
+        memory_predicated = 1'b0;
         ends_lane = 1'b0;
         illegal = 1'b0;
 
@@ -143,14 +145,29 @@ module instruction_decoder (
                 memory_write = 1'b1;
             end
 
-            ISA_OP_STORE16: begin
-                uses_immediate = 1'b1;
-                uses_memory = 1'b1;
-                memory_write = 1'b1;
-                memory_store16 = 1'b1;
-            end
+        ISA_OP_STORE16: begin
+          uses_immediate = 1'b1;
+          uses_memory = 1'b1;
+          memory_write = 1'b1;
+          memory_store16 = 1'b1;
+        end
 
-            ISA_OP_CMP: begin
+        ISA_OP_PSTORE: begin
+          uses_immediate = 1'b1;
+          uses_memory = 1'b1;
+          memory_write = 1'b1;
+          memory_predicated = 1'b1;
+        end
+
+        ISA_OP_PSTORE16: begin
+          uses_immediate = 1'b1;
+          uses_memory = 1'b1;
+          memory_write = 1'b1;
+          memory_store16 = 1'b1;
+          memory_predicated = 1'b1;
+        end
+
+        ISA_OP_CMP: begin
                 writes_register = cmp_type_reserved_clear && (cmp_op <= ISA_CMP_GES);
                 uses_compare = cmp_type_reserved_clear && (cmp_op <= ISA_CMP_GES);
                 illegal = !cmp_type_reserved_clear || (cmp_op > ISA_CMP_GES);

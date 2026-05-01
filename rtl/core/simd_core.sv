@@ -135,16 +135,19 @@ module simd_core #(
     logic decoded_uses_alu;
     logic decoded_uses_compare;
     logic decoded_uses_memory;
-    logic decoded_uses_branch;
-    logic decoded_memory_write;
+  logic decoded_uses_branch;
+  logic decoded_memory_write;
   logic decoded_memory_store16;
+  logic decoded_memory_predicated;
   logic decoded_ends_lane;
   logic decoder_illegal;
 
   logic [REG_ADDR_PORT_W-1:0] rf_read_addr_a;
   logic [REG_ADDR_PORT_W-1:0] rf_read_addr_b;
+  logic [REG_ADDR_PORT_W-1:0] rf_read_addr_c;
   logic [(LANES_PORT_W*DATA_PORT_W)-1:0] rf_read_data_a;
   logic [(LANES_PORT_W*DATA_PORT_W)-1:0] rf_read_data_b;
+  logic [(LANES_PORT_W*DATA_PORT_W)-1:0] rf_read_data_c;
   logic [LANES_PORT_W-1:0] rf_write_enable;
   logic [REG_ADDR_PORT_W-1:0] rf_write_addr;
     logic [(LANES_PORT_W*DATA_PORT_W)-1:0] rf_write_data;
@@ -166,7 +169,10 @@ module simd_core #(
   logic [(LANES_PORT_W*32)-1:0] lsu_lane_wdata;
   logic [(LANES_PORT_W*32)-1:0] lsu_lane_rdata;
   logic [LANES_PORT_W-1:0] lsu_lane_rvalid;
-    logic [(LANES_PORT_W*DATA_PORT_W)-1:0] immediate_value;
+  logic [LANES_PORT_W-1:0] lsu_active_mask;
+  logic [LANES_PORT_W-1:0] memory_predicate_mask;
+  logic [ADDR_PORT_W-1:0] memory_offset;
+  logic [(LANES_PORT_W*DATA_PORT_W)-1:0] immediate_value;
     logic [(LANES_PORT_W*DATA_PORT_W)-1:0] lsu_writeback_value;
     logic [LANES_PORT_W-1:0] branch_lane_taken;
     logic branch_any_taken;
@@ -197,6 +203,7 @@ module simd_core #(
         (decoded_uses_branch ? fit_reg_addr(decoded_rd) : fit_reg_addr(decoded_ra)) :
         debug_read_addr;
   assign rf_read_addr_b = decoded_memory_write ? fit_reg_addr(decoded_rd) : fit_reg_addr(decoded_rb);
+  assign rf_read_addr_c = decoded_memory_predicated ? fit_reg_addr(decoded_rb) : '0;
   assign debug_read_data = rf_read_data_a;
   assign rf_write_addr = (state == STATE_WAIT_LSU) ? lsu_write_addr_q : fit_reg_addr(decoded_rd);
   assign instruction_has_error = decoder_illegal || (decoded_uses_special && special_illegal);
@@ -266,7 +273,14 @@ module simd_core #(
   assign lsu_op = decoded_memory_store16 ? LSU_OP_STORE16 :
                   decoded_memory_write ? LSU_OP_STORE :
                   LSU_OP_LOAD;
-  assign lsu_start_valid = (state == STATE_RUN) && decoded_uses_memory && !instruction_has_error;
+  assign memory_offset = decoded_memory_predicated ?
+      ADDR_PORT_W'(decoded_imm18[ISA_PRED_OFFSET_MSB:ISA_PRED_OFFSET_LSB]) :
+      ADDR_PORT_W'(decoded_imm18);
+  assign lsu_active_mask = decoded_memory_predicated ?
+      (active_mask & memory_predicate_mask) :
+      active_mask;
+  assign lsu_start_valid = (state == STATE_RUN) && decoded_uses_memory &&
+      !instruction_has_error && (lsu_active_mask != '0);
 
   always_comb begin
     lsu_lane_addr = '0;
@@ -275,11 +289,13 @@ module simd_core #(
 
     for (int lane = 0; lane < LANES_PORT_W; lane++) begin
       lsu_lane_addr[(lane*ADDR_PORT_W)+:ADDR_PORT_W] =
-          rf_read_data_a[(lane*DATA_PORT_W)+:ADDR_PORT_W] + ADDR_PORT_W'(decoded_imm18);
+          rf_read_data_a[(lane*DATA_PORT_W)+:ADDR_PORT_W] + memory_offset;
       lsu_lane_wdata[(lane*32)+:32] =
           rf_read_data_b[(lane*DATA_PORT_W)+:32];
       lsu_writeback_value[(lane*DATA_PORT_W)+:32] =
           lsu_lane_rdata[(lane*32)+:32];
+      memory_predicate_mask[lane] =
+          rf_read_data_c[(lane*DATA_PORT_W)+:DATA_PORT_W] != '0;
     end
   end
 
@@ -368,8 +384,9 @@ module simd_core #(
         .uses_memory(decoded_uses_memory),
         .uses_branch(decoded_uses_branch),
         .memory_write(decoded_memory_write),
-      .memory_store16(decoded_memory_store16),
-      .ends_lane(decoded_ends_lane),
+        .memory_store16(decoded_memory_store16),
+        .memory_predicated(decoded_memory_predicated),
+        .ends_lane(decoded_ends_lane),
       .illegal(decoder_illegal)
   );
 
@@ -385,6 +402,8 @@ module simd_core #(
       .read_data_a(rf_read_data_a),
       .read_addr_b(rf_read_addr_b),
       .read_data_b(rf_read_data_b),
+      .read_addr_c(rf_read_addr_c),
+      .read_data_c(rf_read_data_c),
       .write_enable(rf_write_enable),
       .write_addr(rf_write_addr),
       .write_data(rf_write_data)
@@ -434,7 +453,7 @@ module simd_core #(
       .start_valid(lsu_start_valid),
       .start_ready(lsu_start_ready),
       .op(lsu_op),
-      .active_mask(active_mask),
+      .active_mask(lsu_active_mask),
       .lane_addr(lsu_lane_addr),
       .lane_wdata(lsu_lane_wdata),
       .busy(),
@@ -481,7 +500,9 @@ module simd_core #(
             state <= STATE_ERROR;
             active_mask <= '0;
                     end else if (decoded_uses_memory) begin
-                        if (lsu_start_ready) begin
+                        if (lsu_active_mask == '0) begin
+                            pc <= pc + PC_PORT_W'(1);
+                        end else if (lsu_start_ready) begin
                             lsu_writes_register_q <= decoded_writes_register;
                             lsu_write_addr_q <= fit_reg_addr(decoded_rd);
                             state <= STATE_WAIT_LSU;

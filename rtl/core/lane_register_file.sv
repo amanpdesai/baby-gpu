@@ -11,6 +11,8 @@ module lane_register_file #(
     output logic [(LANES*DATA_W)-1:0] read_data_a,
     input logic [REG_ADDR_W-1:0] read_addr_b,
     output logic [(LANES*DATA_W)-1:0] read_data_b,
+    input logic [REG_ADDR_W-1:0] read_addr_c,
+    output logic [(LANES*DATA_W)-1:0] read_data_c,
 
     input logic [LANES-1:0] write_enable,
     input logic [REG_ADDR_W-1:0] write_addr,
@@ -26,6 +28,8 @@ module lane_register_file #(
           (read_addr_a == '0) ? '0 : regs[lane][read_addr_a];
       assign read_data_b[(lane*DATA_W)+:DATA_W] =
           (read_addr_b == '0) ? '0 : regs[lane][read_addr_b];
+      assign read_data_c[(lane*DATA_W)+:DATA_W] =
+          (read_addr_c == '0) ? '0 : regs[lane][read_addr_c];
     end
   endgenerate
 

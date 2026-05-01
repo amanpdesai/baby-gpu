@@ -5,6 +5,8 @@ module tb_lane_register_file;
   logic [127:0] read_data_a;
   logic [3:0] read_addr_b;
   logic [127:0] read_data_b;
+  logic [3:0] read_addr_c;
+  logic [127:0] read_data_c;
   logic [3:0] write_enable;
   logic [3:0] write_addr;
   logic [127:0] write_data;
@@ -16,6 +18,8 @@ module tb_lane_register_file;
       .read_data_a(read_data_a),
       .read_addr_b(read_addr_b),
       .read_data_b(read_data_b),
+      .read_addr_c(read_addr_c),
+      .read_data_c(read_data_c),
       .write_enable(write_enable),
       .write_addr(write_addr),
       .write_data(write_data)
@@ -49,6 +53,7 @@ module tb_lane_register_file;
     reset = 1'b1;
     read_addr_a = 4'd0;
     read_addr_b = 4'd1;
+    read_addr_c = 4'd2;
     write_enable = 4'b0000;
     write_addr = 4'd0;
     write_data = '0;
@@ -59,6 +64,7 @@ module tb_lane_register_file;
 
     check(read_data_a == 128'd0, "R0 reads as zero after reset");
     check(read_data_b == 128'd0, "R1 resets to zero across lanes");
+    check(read_data_c == 128'd0, "R2 resets to zero across lanes");
 
     write_addr = 4'd1;
     write_enable = 4'b1111;
@@ -95,9 +101,11 @@ module tb_lane_register_file;
 
     read_addr_a = 4'd1;
     read_addr_b = 4'd2;
+    read_addr_c = 4'd1;
     #1;
     check(lane_word(read_data_a, 3) == 32'h4000_0004, "read port A remains independent");
     check(lane_word(read_data_b, 2) == 32'hCCCC_CCCC, "read port B remains independent");
+    check(lane_word(read_data_c, 0) == 32'h1000_0001, "read port C remains independent");
 
     $display("tb_lane_register_file PASS");
     $finish;

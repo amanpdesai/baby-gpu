@@ -115,6 +115,8 @@ The first implemented ISA should be small:
 | `LOAD` | 32-bit global load. | vector add |
 | `STORE` | 32-bit global store. | vector add |
 | `STORE16` | 16-bit global store. | RGB565 framebuffer |
+| `PSTORE` | Predicate-gated 32-bit global store. | bounded kernels |
+| `PSTORE16` | Predicate-gated 16-bit global store. | bounded graphics |
 
 Memory instructions use M-type field positions:
 
@@ -176,6 +178,8 @@ Initial requirements:
 - `LOAD` reads one 32-bit word
 - `STORE` writes one 32-bit word
 - `STORE16` writes one 16-bit halfword with byte mask
+- `PSTORE` and `PSTORE16` only issue store requests for active lanes whose
+  predicate register is nonzero
 - misaligned 32-bit loads/stores are illegal initially
 - out-of-range access behavior is implementation-defined initially, but tests
   should keep accesses in range
@@ -384,6 +388,33 @@ For `LOAD`, `rd/rs` is the destination register. For `STORE` and `STORE16`,
 Initial memory offsets are unsigned. Signed offsets should be added explicitly
 later if needed.
 
+### P-Type
+
+```text
+31        26 25     22 21     18 17     14 13                 0
++------------+---------+---------+---------+--------------------+
+| opcode     | rs      | ra      | pred    | offset14           |
++------------+---------+---------+---------+--------------------+
+```
+
+Used by:
+
+```text
+PSTORE
+PSTORE16
+```
+
+Address calculation:
+
+```text
+addr = R[ra] + zero_extend(offset14)
+```
+
+`rs` is the source data register. `pred` is a per-lane predicate register.
+For each active lane, the store issues only when `R[pred] != 0`. `R0` is a
+valid never-store predicate. If no active lane passes the predicate, the core
+advances to the next instruction without issuing a memory request.
+
 ### B-Type
 
 ```text
@@ -427,6 +458,8 @@ valid never-taken predicate.
 | `0x0E` | `XOR` | R | yes |
 | `0x0F` | `SHL` | R | yes |
 | `0x10` | `SHR` | R | yes |
+| `0x11` | `PSTORE` | P | yes |
+| `0x12` | `PSTORE16` | P | yes |
 
 All unlisted opcodes are illegal.
 

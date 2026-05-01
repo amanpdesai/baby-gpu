@@ -159,6 +159,19 @@ module tb_simd_core_basic;
     end
   endtask
 
+  task automatic wait_done_without_mem_req(input string message);
+    int timeout;
+    begin
+      timeout = 0;
+      while (!done && !core_error) begin
+        check(!data_req_valid, {message, " issued unexpected memory request"});
+        step();
+        timeout = timeout + 1;
+        check(timeout < 96, {message, " timed out"});
+      end
+    end
+  endtask
+
   task automatic expect_next_mem_req(
       input logic expected_write,
       input logic [31:0] expected_addr,
@@ -175,6 +188,29 @@ module tb_simd_core_basic;
       check(data_req_ready, {message, " request is ready"});
       check(data_req_write == expected_write, {message, " write flag"});
       check(data_req_addr == expected_addr, {message, " address"});
+      step();
+    end
+  endtask
+
+  task automatic expect_next_mem_store(
+      input logic [31:0] expected_addr,
+      input logic [31:0] expected_wdata,
+      input logic [3:0] expected_wmask,
+      input string message);
+    int timeout;
+    begin
+      timeout = 0;
+      while (!data_req_valid) begin
+        step();
+        timeout = timeout + 1;
+        check(timeout < 96, {message, " request timed out"});
+      end
+
+      check(data_req_ready, {message, " request is ready"});
+      check(data_req_write, {message, " write flag"});
+      check(data_req_addr == expected_addr, {message, " address"});
+      check(data_req_wdata == expected_wdata, {message, " write data"});
+      check(data_req_wmask == expected_wmask, {message, " write mask"});
       step();
     end
   endtask
@@ -393,6 +429,86 @@ module tb_simd_core_basic;
     check(lane_word(debug_read_data, 1) == 32'd11, "lane 1 loads its own stored word");
     check(lane_word(debug_read_data, 2) == 32'd12, "lane 2 loads its own stored word");
     check(lane_word(debug_read_data, 3) == 32'd13, "lane 3 loads its own stored word");
+
+    reset = 1'b1;
+    step();
+    reset = 1'b0;
+    launch_active_mask = '1;
+    clear_program();
+    imem[0] = isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, ISA_SR_LANE_ID);
+    imem[1] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd2);
+    imem[2] = isa_pkg::isa_cmp_type(4'd3, 4'd1, 4'd2, ISA_CMP_LTU);
+    imem[3] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd4, 4'd0, 18'd4);
+    imem[4] = isa_pkg::isa_r_type(ISA_OP_MUL, 4'd5, 4'd1, 4'd4);
+    imem[5] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd6, 4'd0, 18'h0_05a5);
+    imem[6] = isa_pkg::isa_p_type(ISA_OP_PSTORE, 4'd6, 4'd5, 4'd3, 14'd64);
+    imem[7] = isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0);
+    pulse_start();
+    expect_next_mem_req(1'b1, 32'd64, "lane 0 PSTORE predicate true");
+    expect_next_mem_req(1'b1, 32'd68, "lane 1 PSTORE predicate true");
+    wait_done_without_mem_req("PSTORE false predicate lanes");
+    check(done && !core_error, "PSTORE skips false predicate lanes");
+
+    reset = 1'b1;
+    step();
+    reset = 1'b0;
+    launch_active_mask = '1;
+    clear_program();
+    imem[0] = isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, ISA_SR_LANE_ID);
+    imem[1] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd0);
+    imem[2] = isa_pkg::isa_cmp_type(4'd3, 4'd1, 4'd2, ISA_CMP_LTU);
+    imem[3] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd4, 4'd0, 18'h0_0123);
+    imem[4] = isa_pkg::isa_p_type(ISA_OP_PSTORE16, 4'd4, 4'd0, 4'd3, 14'd96);
+    imem[5] = isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0);
+    pulse_start();
+    wait_done_without_mem_req("PSTORE16 all-false predicate");
+    check(done && !core_error, "PSTORE16 all-false predicate advances without memory request");
+
+    reset = 1'b1;
+    step();
+    reset = 1'b0;
+    launch_active_mask = '1;
+    clear_program();
+    imem[0] = isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, ISA_SR_LANE_ID);
+    imem[1] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd2);
+    imem[2] = isa_pkg::isa_r_type(ISA_OP_MUL, 4'd5, 4'd1, 4'd2);
+    imem[3] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd3, 4'd0, 18'd1);
+    imem[4] = isa_pkg::isa_cmp_type(4'd4, 4'd1, 4'd3, ISA_CMP_EQ);
+    imem[5] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd6, 4'd0, 18'h0_1234);
+    imem[6] = isa_pkg::isa_p_type(ISA_OP_PSTORE16, 4'd6, 4'd5, 4'd4, 14'd96);
+    imem[7] = isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0);
+    pulse_start();
+    expect_next_mem_store(32'd96, 32'h1234_0000, 4'b1100,
+                          "lane 1 PSTORE16 predicate true high halfword");
+    wait_done();
+    check(done && !core_error, "PSTORE16 positive predicate completes");
+
+    reset = 1'b1;
+    step();
+    reset = 1'b0;
+    launch_active_mask = '1;
+    clear_program();
+    imem[0] = isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, ISA_SR_LANE_ID);
+    imem[1] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd4);
+    imem[2] = isa_pkg::isa_r_type(ISA_OP_MUL, 4'd5, 4'd1, 4'd2);
+    imem[3] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd3, 4'd0, 18'd1);
+    imem[4] = isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd6, 4'd0, 18'h0_0777);
+    imem[5] = isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0);
+    pulse_start();
+    wait_done();
+    check(done && !core_error, "inactive-lane PSTORE prefill completes");
+    step();
+
+    launch_active_mask = 4'b0011;
+    clear_program();
+    imem[0] = isa_pkg::isa_p_type(ISA_OP_PSTORE, 4'd6, 4'd5, 4'd3, 14'd128);
+    imem[1] = isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0);
+    pulse_start();
+    expect_next_mem_req(1'b1, 32'd128, "active lane 0 PSTORE with true predicate");
+    expect_next_mem_req(1'b1, 32'd132, "active lane 1 PSTORE with true predicate");
+    wait_done_without_mem_req("PSTORE inactive lanes with true predicates");
+    check(done && !core_error, "PSTORE ignores inactive lanes with true predicates");
+    launch_active_mask = '1;
 
     reset = 1'b1;
     step();
