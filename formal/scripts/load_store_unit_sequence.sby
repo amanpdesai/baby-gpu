@@ -1,0 +1,19 @@
+[tasks]
+prove
+cover
+
+[options]
+prove: mode prove
+cover: mode cover
+depth 2
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv load_store_unit.sv load_store_unit_sequence_formal.sv
+prep -top load_store_unit_sequence_formal
+
+[files]
+rtl/core/load_store_unit.sv
+formal/harnesses/load_store_unit_sequence_formal.sv

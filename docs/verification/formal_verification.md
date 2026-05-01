@@ -67,6 +67,7 @@ formal/
     instruction_memory_formal.sv
     lane_register_file_formal.sv
     load_store_unit_prep_formal.sv
+    load_store_unit_sequence_formal.sv
     simd_alu_formal.sv
     special_registers_formal.sv
     work_scheduler_formal.sv
@@ -79,6 +80,7 @@ formal/
     instruction_memory.sby
     lane_register_file.sby
     load_store_unit_prep.sby
+    load_store_unit_sequence.sby
     simd_alu.sby
     special_registers.sby
     work_scheduler.sby
@@ -141,9 +143,10 @@ Initial formal adoption is already active when:
 - special register mux smoke proof passes
 - simulation data memory smoke proof passes
 - LSU prep smoke proof passes
+- LSU request/response sequencing smoke proof passes
 
 Next exit criteria:
 
-- LSU request/response sequencing proof with bounded scenarios
+- LSU multi-lane response routing proof with bounded scenarios
 - programmable-core bounded safety properties where practical
 - bounded proof runtimes suitable for the normal local gate

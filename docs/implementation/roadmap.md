@@ -81,6 +81,7 @@ architecture.
 - instruction memory bounded formal smoke
 - lane register file bounded formal smoke
 - LSU prep bounded formal smoke
+- LSU request/response transition bounded formal smoke
 - special register mux bounded formal smoke
 - simulation data memory bounded formal smoke
 - integrated programmable core Yosys synthesis smoke

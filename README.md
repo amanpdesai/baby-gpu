@@ -52,8 +52,8 @@ Primary entry points:
 
 The repository contains the portable RTL scaffold, a programmable SIMD core
 path, kernel-level simulations, formal proofs for selected control/datapath
-blocks, and Yosys synthesis smoke coverage for leaf blocks and the integrated
-programmable core path.
+blocks including LSU prep and request/response sequencing, and Yosys synthesis
+smoke coverage for leaf blocks and the integrated programmable core path.
 
 ## Toolchain Check
 
