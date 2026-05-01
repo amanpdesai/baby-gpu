@@ -66,8 +66,19 @@ module tb_clear_engine;
     check(busy && pixel_valid && pixel_x == 16'd0 && pixel_y == 16'd0, "clear starts at origin");
 
     pixel_ready = 1'b0;
-    step();
-    check(pixel_valid && pixel_x == 16'd0 && pixel_y == 16'd0, "clear holds pixel on stall");
+    repeat (3) begin
+      check(pixel_valid, "clear keeps pixel valid while stalled");
+      check(pixel_x == 16'd0, "clear stalled x remains stable");
+      check(pixel_y == 16'd0, "clear stalled y remains stable");
+      check(pixel_color == 16'h1234, "clear stalled color remains stable");
+      check(!done, "clear does not finish while first pixel is stalled");
+      step();
+    end
+    check(pixel_valid, "clear keeps pixel valid after final stalled edge");
+    check(pixel_x == 16'd0, "clear final stalled x remains stable");
+    check(pixel_y == 16'd0, "clear final stalled y remains stable");
+    check(pixel_color == 16'h1234, "clear final stalled color remains stable");
+    check(!done, "clear does not finish after final stalled edge");
 
     pixel_ready = 1'b1;
     while (!done) begin
