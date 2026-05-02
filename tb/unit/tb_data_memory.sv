@@ -118,8 +118,10 @@ module tb_data_memory;
         transact(1'b0, 8'h00, 32'h00000000, 4'b0000, 32'h1122abcd);
         transact(1'b1, 8'h02, 32'h56780000, 4'b1100, 32'h00000000);
         transact(1'b0, 8'h00, 32'h00000000, 4'b0000, 32'h5678abcd);
+        transact(1'b1, 8'h00, 32'hffff0000, 4'b0000, 32'h00000000);
+        transact(1'b0, 8'h00, 32'h00000000, 4'b0000, 32'h5678abcd);
         if (error) begin
-            $fatal(1, "unexpected error after byte-masked writes");
+            $fatal(1, "unexpected error after masked writes");
         end
 
         reset_dut();

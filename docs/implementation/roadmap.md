@@ -79,7 +79,7 @@ architecture.
 - basic SIMD core
 - 1 core x 4 lane scheduler
 - blocking LSU
-- simulation data memory with byte masks
+- simulation data memory with byte and zero masks
 - convergent branch support
 - compare instruction
 - predicated 32-bit and 16-bit stores
