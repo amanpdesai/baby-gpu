@@ -186,6 +186,31 @@ module tb_command_processor;
     #1;
     check(!busy, "dispatch-busy CLEAR returns command processor idle");
 
+    clear_errors = 1'b1;
+    step();
+    clear_errors = 1'b0;
+    check(error_status == 8'h00, "clear_errors clears clear dispatch-busy");
+
+    rect_busy = 1'b1;
+    send_word(32'h0205_0000);
+    send_word({16'd1, 16'd2});
+    send_word({16'd3, 16'd4});
+    send_word(32'h0000_5A5A);
+
+    cmd_data = 32'h0000_0000;
+    cmd_valid = 1'b1;
+    #1;
+    check(cmd_ready, "RECT reserved word accepted before busy dispatch");
+    step();
+    check(!rect_start, "busy rect engine suppresses same-cycle rect_start");
+    cmd_valid = 1'b0;
+    step();
+    check(error_status[3], "busy rect engine sets dispatch-busy error");
+    check(!rect_start, "busy rect engine suppresses rect_start");
+    rect_busy = 1'b0;
+    #1;
+    check(!busy, "dispatch-busy RECT returns command processor idle");
+
     $display("tb_command_processor PASS");
     $finish;
   end
