@@ -100,6 +100,7 @@ architecture.
 - programmable-core unaligned memory fault integration coverage
 - programmable-core memory backpressure integration coverage
 - programmable-core predicated 32-bit store integration coverage
+- programmable-core predicated STORE16 masked-fault integration coverage
 
 The first programmable GPU path now executes encoded kernels through scheduler,
 core, LSU, and simulation memory.
