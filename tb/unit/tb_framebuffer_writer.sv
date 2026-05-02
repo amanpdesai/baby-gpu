@@ -14,6 +14,9 @@ module tb_framebuffer_writer;
   logic [31:0] mem_req_addr;
   logic [31:0] mem_req_wdata;
   logic [3:0] mem_req_wmask;
+  logic [31:0] stalled_addr;
+  logic [31:0] stalled_wdata;
+  logic [3:0] stalled_wmask;
 
   framebuffer_writer dut (
       .pixel_valid(pixel_valid),
@@ -70,6 +73,20 @@ module tb_framebuffer_writer;
     mem_req_ready = 1'b0;
     #1;
     check(mem_req_valid && !pixel_ready, "writer backpressures valid in-bounds pixel");
+    stalled_addr = mem_req_addr;
+    stalled_wdata = mem_req_wdata;
+    stalled_wmask = mem_req_wmask;
+    #1;
+    check(mem_req_valid && !pixel_ready, "writer remains stalled while memory is not ready");
+    check(mem_req_addr == stalled_addr, "writer stalled address remains stable");
+    check(mem_req_wdata == stalled_wdata, "writer stalled write data remains stable");
+    check(mem_req_wmask == stalled_wmask, "writer stalled write mask remains stable");
+    mem_req_ready = 1'b1;
+    #1;
+    check(mem_req_valid && pixel_ready, "writer handshakes stalled pixel when memory becomes ready");
+    check(mem_req_addr == stalled_addr, "writer accepted address matches stalled payload");
+    check(mem_req_wdata == stalled_wdata, "writer accepted write data matches stalled payload");
+    check(mem_req_wmask == stalled_wmask, "writer accepted write mask matches stalled payload");
 
     mem_req_ready = 1'b0;
     pixel_x = 16'd7;

@@ -58,6 +58,7 @@ gantt
 - clear-engine pixel backpressure unit coverage
 - rect-fill pixel backpressure unit coverage
 - framebuffer writer
+- framebuffer-writer memory backpressure unit coverage
 - RTL simulation runner
 - lint configuration
 - open-source synthesis smoke target
