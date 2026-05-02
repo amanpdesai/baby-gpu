@@ -59,7 +59,7 @@ gantt
 - clear-engine bounded formal smoke
 - rect-fill clipping, no-op, busy-start, and pixel backpressure unit coverage
 - framebuffer writer
-- framebuffer-writer memory backpressure unit coverage
+- framebuffer-writer base/stride, clipping, and memory backpressure unit coverage
 - RTL simulation runner
 - lint configuration
 - open-source synthesis smoke target

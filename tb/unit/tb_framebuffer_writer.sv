@@ -70,6 +70,29 @@ module tb_framebuffer_writer;
     check(mem_req_wdata == 32'hABCD_0000, "high-lane pixel write data");
     check(mem_req_wmask == 4'b1100, "high-lane write mask");
 
+    fb_base = 32'd4;
+    stride_bytes = 32'd16;
+    pixel_x = 16'd2;
+    pixel_y = 16'd1;
+    pixel_color = 16'h1357;
+    #1;
+    check(mem_req_valid && pixel_ready, "writer accepts nonzero-base low-lane pixel");
+    check(mem_req_addr == 32'd24, "nonzero-base low-lane aligned address");
+    check(mem_req_wdata == 32'h0000_1357, "nonzero-base low-lane write data");
+    check(mem_req_wmask == 4'b0011, "nonzero-base low-lane write mask");
+
+    fb_base = 32'd2;
+    pixel_x = 16'd0;
+    pixel_y = 16'd1;
+    pixel_color = 16'h2468;
+    #1;
+    check(mem_req_valid && pixel_ready, "writer accepts nonzero-base high-lane pixel");
+    check(mem_req_addr == 32'd16, "nonzero-base high-lane aligned address");
+    check(mem_req_wdata == 32'h2468_0000, "nonzero-base high-lane write data");
+    check(mem_req_wmask == 4'b1100, "nonzero-base high-lane write mask");
+
+    fb_base = 32'd0;
+    stride_bytes = 32'd8;
     mem_req_ready = 1'b0;
     #1;
     check(mem_req_valid && !pixel_ready, "writer backpressures valid in-bounds pixel");
@@ -93,6 +116,11 @@ module tb_framebuffer_writer;
     pixel_y = 16'd0;
     #1;
     check(!mem_req_valid && pixel_ready, "writer drops out-of-bounds pixels without stalling");
+
+    pixel_x = 16'd0;
+    pixel_y = 16'd3;
+    #1;
+    check(!mem_req_valid && pixel_ready, "writer drops out-of-bounds y pixels without stalling");
 
     $display("tb_framebuffer_writer PASS");
     $finish;
