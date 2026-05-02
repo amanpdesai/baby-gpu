@@ -1,0 +1,14 @@
+[options]
+mode prove
+depth 12
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv clear_engine.sv clear_engine_formal.sv
+prep -top clear_engine_formal
+
+[files]
+rtl/draw_units/clear_engine.sv
+formal/harnesses/clear_engine_formal.sv
