@@ -592,6 +592,8 @@ module tb_instruction_decoder;
                           4'd3, 4'd4, 4'd5, 3'h6, 1'b1);
     expect_compare_decode(isa_pkg::isa_cmp_type(4'd3, 4'd4, 4'd5, ISA_CMP_EQ) | 32'd8,
                           4'd3, 4'd4, 4'd5, ISA_CMP_EQ, 1'b1);
+    expect_compare_decode(isa_pkg::isa_cmp_type(4'd6, 4'd7, 4'd8, ISA_CMP_GES) | 32'h0000_2000,
+                          4'd6, 4'd7, 4'd8, ISA_CMP_GES, 1'b1);
     expect_unimplemented_known_opcode(6'h3F);
 
     $display("tb_instruction_decoder PASS");
