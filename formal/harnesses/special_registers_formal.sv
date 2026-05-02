@@ -119,4 +119,8 @@ module special_registers_formal (
             end
         end
     endgenerate
+
+    always_comb begin
+        cover(special_reg_id == 6'h3f && illegal && value == '0);
+    end
 endmodule
