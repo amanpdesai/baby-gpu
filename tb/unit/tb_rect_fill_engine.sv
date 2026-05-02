@@ -107,6 +107,32 @@ module tb_rect_fill_engine;
     start = 1'b0;
     check(done && !busy && !pixel_valid, "zero-width rect completes as no-op");
 
+    rect_width = 16'd2;
+    rect_height = 16'd0;
+    start = 1'b1;
+    step();
+    start = 1'b0;
+    check(done && !busy && !pixel_valid, "zero-height rect completes as no-op");
+    check(!error, "zero-height no-op does not set error");
+
+    rect_x = 16'd4;
+    rect_y = 16'd0;
+    rect_width = 16'd1;
+    rect_height = 16'd1;
+    start = 1'b1;
+    step();
+    start = 1'b0;
+    check(done && !busy && !pixel_valid, "out-of-bounds x rect completes as no-op");
+    check(!error, "out-of-bounds x no-op does not set error");
+
+    rect_x = 16'd0;
+    rect_y = 16'd4;
+    start = 1'b1;
+    step();
+    start = 1'b0;
+    check(done && !busy && !pixel_valid, "out-of-bounds y rect completes as no-op");
+    check(!error, "out-of-bounds y no-op does not set error");
+
     reset = 1'b1;
     step();
     reset = 1'b0;
@@ -125,6 +151,14 @@ module tb_rect_fill_engine;
     check(pixel_x == 16'd0 && pixel_y == 16'd0, "rect first pixel before stall");
 
     pixel_ready = 1'b0;
+    start = 1'b1;
+    step();
+    start = 1'b0;
+    check(error, "start while rect is busy sets error");
+    check(busy && pixel_valid, "busy-start error keeps rect active");
+    check(pixel_x == 16'd0 && pixel_y == 16'd0, "busy-start error keeps current x/y");
+    check(pixel_color == 16'h55AA, "busy-start error keeps current color");
+
     repeat (3) begin
       check(pixel_valid, "rect keeps pixel valid while stalled");
       check(pixel_x == 16'd0, "rect stalled x remains stable");

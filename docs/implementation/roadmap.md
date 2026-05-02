@@ -57,7 +57,7 @@ gantt
 - clear and rectangle fixed-function smoke engines
 - clear-engine pixel backpressure unit coverage
 - clear-engine bounded formal smoke
-- rect-fill pixel backpressure unit coverage
+- rect-fill clipping, no-op, busy-start, and pixel backpressure unit coverage
 - framebuffer writer
 - framebuffer-writer memory backpressure unit coverage
 - RTL simulation runner
