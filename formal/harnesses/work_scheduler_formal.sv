@@ -107,6 +107,14 @@ module work_scheduler_formal (
       assert(!launch_ready || (!busy && !done && !error));
       assert(!(busy && launch_valid && launch_ready));
 
+      if ($past(error) && !$past(reset)) begin
+        assert(error);
+        assert(!busy);
+        assert(!done);
+        assert(!launch_ready);
+        assert(!core_launch_valid);
+      end
+
       if ($past(core_launch_valid && !core_launch_ready) && !$past(reset)) begin
         assert(core_launch_valid);
         assert(core_launch_active_mask == $past(core_launch_active_mask));
@@ -128,5 +136,6 @@ module work_scheduler_formal (
     cover(past_valid && !reset && launch_valid && launch_ready);
     cover(past_valid && !reset && core_launch_valid && !core_launch_ready);
     cover(past_valid && !reset && core_launch_valid && (core_launch_active_mask != '0));
+    cover(past_valid && !reset && error && !busy && !done && !launch_ready && !core_launch_valid);
   end
 endmodule

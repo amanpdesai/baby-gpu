@@ -87,6 +87,7 @@ architecture.
 - instruction memory bounded formal smoke
 - register file bounded formal smoke
 - lane register file bounded formal smoke
+- work-scheduler sticky-error bounded formal smoke
 - LSU prep bounded formal smoke
 - LSU request/response transition bounded formal smoke
 - LSU multi-lane response routing bounded formal smoke
