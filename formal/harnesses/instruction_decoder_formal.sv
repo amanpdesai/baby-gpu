@@ -88,4 +88,20 @@ module instruction_decoder_formal (
             assert(!memory_write && !memory_store16 && !memory_predicated);
         end
     end
+
+    always_comb begin
+        cover(opcode == isa_pkg::ISA_OP_CMP &&
+              !cmp_reserved_clear &&
+              illegal &&
+              !writes_register &&
+              !uses_compare &&
+              !uses_memory &&
+              !uses_branch);
+        cover(opcode == isa_pkg::ISA_OP_CMP &&
+              cmp_reserved_clear &&
+              (cmp_op == isa_pkg::ISA_CMP_GES) &&
+              !illegal &&
+              writes_register &&
+              uses_compare);
+    end
 endmodule
