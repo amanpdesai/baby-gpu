@@ -99,6 +99,7 @@ architecture.
 - programmable-core divergent branch fault integration coverage
 - programmable-core unaligned memory fault integration coverage
 - programmable-core memory backpressure integration coverage
+- programmable-core STORE16 memory backpressure integration coverage
 - programmable-core predicated 32-bit store integration coverage
 - programmable-core predicated STORE16 masked-fault integration coverage
 - programmable-core all-false predicated STORE16 skip integration coverage

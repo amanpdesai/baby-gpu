@@ -271,7 +271,9 @@ module tb_programmable_core_memory_backpressure;
         write_imem(8'd1, isa_pkg::isa_m_type(ISA_OP_LOAD, 4'd2, 4'd1, 18'd0));
         write_imem(8'd2, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd3, 4'd0, 18'd32));
         write_imem(8'd3, isa_pkg::isa_m_type(ISA_OP_STORE, 4'd2, 4'd3, 18'd0));
-        write_imem(8'd4, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+        write_imem(8'd4, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd4, 4'd0, 18'd34));
+        write_imem(8'd5, isa_pkg::isa_m_type(ISA_OP_STORE16, 4'd2, 4'd4, 18'd0));
+        write_imem(8'd6, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
 
         launch_kernel();
 
@@ -279,6 +281,8 @@ module tb_programmable_core_memory_backpressure;
         respond_after_stall(LOAD_DATA, 4, "LOAD");
         expect_request_with_stall(1'b1, 32'd32, LOAD_DATA, 4'hF, 2, "STORE");
         respond_after_stall(32'h0000_0000, 3, "STORE");
+        expect_request_with_stall(1'b1, 32'd32, 32'hBABE_0000, 4'hC, 4, "STORE16");
+        respond_after_stall(32'h0000_0000, 2, "STORE16");
         wait_done();
 
         debug_read_addr = 4'd2;
