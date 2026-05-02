@@ -48,9 +48,10 @@ Current implementation state:
 - CMP, convergent BRA, and predicated stores exist
 - open-source synthesis smoke exists
 - formal proofs exist for FIFO, clear engine, SIMD ALU, framebuffer writer,
-  work scheduler, lane register file smoke contracts, special register mux
-  smoke contracts, instruction decoder smoke contracts, instruction memory
-  smoke contracts, and LSU prep smoke contracts
+  work scheduler smoke and sticky-error contracts, lane register file smoke
+  contracts, special register mux smoke and illegal-ID cover, instruction
+  decoder smoke contracts, instruction memory smoke contracts, and LSU prep
+  smoke contracts
 - simulation data memory has bounded formal smoke coverage for byte masks,
   halfword masks, response backpressure, and readback
 - open-source synthesis smoke covers leaf blocks plus the integrated SIMD and
@@ -397,15 +398,18 @@ Example:
 
 ```text
 Current branch: main
-Latest commit: 6080e90 rtl: add SIMD lane datapath blocks
+Latest commit: 4714441 sim: cover illegal cmp reserved path
 Working tree status: clean, synced with origin/main
-Checks last run: make sim, make lint, make formal, git diff --check
+Checks last run: make sim, make lint, make formal, make synth-yosys, git diff --check
 Architecture direction: unified programmable tiny GPU, 1 core x 4 lanes
 Implemented modules: FIFO, command processor, register file, fixed smoke
-engines, framebuffer writer, lane register file, SIMD ALU
-Next planned slice: instruction decoder + special register mux
-Known risks: no instruction fetch/scheduler/LSU yet; fixed-function engines are
-bring-up infrastructure only
+engines, framebuffer writer, instruction memory, instruction decoder, special
+register mux, lane register file, SIMD ALU, scheduler, LSU, simulation memory,
+programmable core
+Next planned slice: keep hardening programmable-core integration and formal
+protocol coverage before FPGA/Vivado bring-up
+Known risks: no caches, scratchpad, multi-core routing IDs, DDR/video platform
+integration, or Vivado board timing closure yet
 ```
 
 ## PR Strategy
