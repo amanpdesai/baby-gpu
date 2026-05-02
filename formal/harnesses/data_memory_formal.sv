@@ -116,5 +116,10 @@ module data_memory_formal (
             assert(!error);
             assert(rsp_rdata == 32'h5678_CC44);
         end
+
+        cover(past_valid && (cycle_q == 4'd2) && rsp_valid && !req_ready &&
+              !error && (rsp_rdata == '0));
+        cover(past_valid && (cycle_q == 4'd8) && rsp_valid && !error &&
+              (rsp_rdata == 32'h5678_CC44));
     end
 endmodule
