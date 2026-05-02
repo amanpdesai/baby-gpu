@@ -395,6 +395,32 @@ module tb_work_scheduler;
     end
   endtask
 
+  task automatic test_core_error_propagates;
+    begin
+      reset_duts();
+      launch_main(8'd4, 8'd1, 16'h5A00);
+      expect_group_header(4'b1111, 16'h5A00);
+      accept_group();
+
+      core_error = 1'b1;
+      step();
+      core_error = 1'b0;
+      #1;
+
+      check(error && !busy && !done, "core error enters scheduler error state");
+      check(!launch_ready && !core_launch_valid,
+            "scheduler error state rejects launch and issues no group");
+
+      launch_grid_x = 8'd1;
+      launch_grid_y = 8'd1;
+      launch_arg_base = 16'hBEEF;
+      launch_valid = 1'b1;
+      #1;
+      check(!launch_ready && error, "core error state remains sticky until reset");
+      launch_valid = 1'b0;
+    end
+  endtask
+
   task automatic test_launch_while_busy_rejected;
     begin
       reset_duts();
@@ -435,6 +461,7 @@ module tb_work_scheduler;
     test_backpressure_stability();
     test_zero_grid_error();
     test_unsupported_dimension_error();
+    test_core_error_propagates();
     test_launch_while_busy_rejected();
 
     $display("tb_work_scheduler PASS");

@@ -78,6 +78,7 @@ architecture.
 - SIMD ALU
 - basic SIMD core
 - 1 core x 4 lane scheduler
+- work-scheduler core-error propagation unit coverage
 - blocking LSU
 - simulation data memory with byte and zero masks
 - convergent branch support
