@@ -243,6 +243,11 @@ module tb_programmable_core_illegal_instruction;
         wait_for_illegal_instruction_error();
 
         reset_dut();
+        write_imem(8'd0, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, 6'h3F));
+        launch_one_group();
+        wait_for_illegal_instruction_error();
+
+        reset_dut();
         write_imem(8'd0, isa_pkg::isa_r_type(isa_pkg::ISA_OP_END, 4'd0, 4'd0, 4'd0));
         launch_kernel(16'd0, 16'd1);
         wait_for_launch_geometry_error("zero grid_x launch");
