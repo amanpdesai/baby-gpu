@@ -364,6 +364,27 @@ module tb_load_store_unit;
         end
     endtask
 
+    task automatic test_masked_lanes_do_not_fault;
+        begin
+            reset_dut();
+            set_lane_addr(0, 32'h0000_0200);
+            set_lane_addr(1, 32'h0000_0201);
+            set_lane_addr(2, 32'h0000_0202);
+            set_lane_addr(3, 32'h0000_0203);
+            set_lane_wdata(0, 32'h0000_1111);
+            set_lane_wdata(2, 32'h0000_2222);
+            req_ready = 1'b1;
+
+            start_cmd(OP_STORE16, 4'b0101);
+            expect_store_req(32'h0000_0200, 32'h0000_1111, 4'b0011,
+                             "masked odd lane does not fault before low-half store16");
+            expect_store_req(32'h0000_0200, 32'h2222_0000, 4'b1100,
+                             "masked odd lane does not fault before high-half store16");
+            wait_for_done();
+            check(!error, "masked odd-address lanes do not set LSU error");
+        end
+    endtask
+
     task automatic test_store16_masks;
         begin
             reset_dut();
@@ -388,6 +409,7 @@ module tb_load_store_unit;
         test_start_rejected_while_busy();
         test_unaligned_32_bit_error();
         test_store16_odd_address_error();
+        test_masked_lanes_do_not_fault();
         test_store16_masks();
         $display("tb_load_store_unit PASS");
         $finish;

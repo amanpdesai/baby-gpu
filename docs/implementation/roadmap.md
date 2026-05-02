@@ -89,6 +89,7 @@ architecture.
 - LSU prep bounded formal smoke
 - LSU request/response transition bounded formal smoke
 - LSU multi-lane response routing bounded formal smoke
+- LSU masked-lane fault suppression unit coverage
 - special register mux bounded formal smoke
 - simulation data memory bounded formal smoke
 - integrated programmable core Yosys synthesis smoke
