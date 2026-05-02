@@ -162,6 +162,28 @@ module tb_command_processor;
     clear_errors = 1'b0;
     check(error_status == 8'h00, "clear_errors clears bad word count");
 
+    send_word(32'h0205_0000);
+    send_word({16'd7, 16'd8});
+    send_word({16'd9, 16'd10});
+    send_word(32'h0000_ABCD);
+    cmd_data = 32'h0000_0001;
+    cmd_valid = 1'b1;
+    #1;
+    check(cmd_ready, "RECT reserved word with nonzero bits is accepted");
+    step();
+    cmd_valid = 1'b0;
+    step();
+    check(error_status[2], "RECT nonzero reserved word sets bad-reserved error");
+    check(rect_start && rect_color == 16'hABCD, "RECT reserved-word error still dispatches rectangle");
+    rect_done = 1'b1;
+    step();
+    rect_done = 1'b0;
+
+    clear_errors = 1'b1;
+    step();
+    clear_errors = 1'b0;
+    check(error_status == 8'h00, "clear_errors clears rect reserved error");
+
     clear_busy = 1'b1;
     send_word(32'h0301_0000);
     check(busy, "WAIT_IDLE remains busy while draw engine is busy");

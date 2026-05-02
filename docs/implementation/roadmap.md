@@ -52,7 +52,7 @@ gantt
 - native RTL toolchain checks
 - command FIFO
 - command processor
-- command-processor WAIT_IDLE plus CLEAR/RECT dispatch-busy unit coverage
+- command-processor WAIT_IDLE, RECT reserved-field, and CLEAR/RECT dispatch-busy unit coverage
 - register file
 - clear and rectangle fixed-function smoke engines
 - clear-engine pixel backpressure unit coverage
