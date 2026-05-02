@@ -49,9 +49,10 @@ Current implementation state:
 - open-source synthesis smoke exists
 - formal proofs exist for FIFO, clear engine, SIMD ALU, framebuffer writer,
   work scheduler smoke and sticky-error contracts, lane register file smoke
-  contracts, special register mux smoke and illegal-ID cover, instruction
-  decoder smoke contracts, instruction memory smoke contracts, and LSU prep
-  smoke contracts
+  contracts, special register mux smoke, instruction decoder smoke contracts,
+  instruction memory smoke contracts, and LSU prep smoke contracts
+- bounded formal covers exist for special-register illegal IDs and instruction
+  decoder CMP edge reachability
 - simulation data memory has bounded formal smoke coverage for byte masks,
   halfword masks, response backpressure, and readback
 - open-source synthesis smoke covers leaf blocks plus the integrated SIMD and

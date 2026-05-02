@@ -95,6 +95,8 @@ architecture.
 - LSU masked-lane fault suppression unit coverage
 - special register mux bounded formal smoke
 - special register mux illegal-ID bounded formal cover
+- instruction decoder CMP reserved-field and highest-valid-CMP bounded formal
+  cover
 - simulation data memory bounded formal smoke
 - integrated programmable core Yosys synthesis smoke
 - programmable-core illegal-instruction integration coverage
