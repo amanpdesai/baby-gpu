@@ -168,6 +168,17 @@ module tb_programmable_core_branch_control;
         end
     endtask
 
+    task automatic load_r0_branch_program();
+        begin
+            write_imem(8'd0, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd0, 4'd0, 18'd1));
+            write_imem(8'd1, isa_pkg::isa_b_type(ISA_OP_BRA, 4'd0, 22'd2));
+            write_imem(8'd2, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd33));
+            write_imem(8'd3, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+            write_imem(8'd4, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd44));
+            write_imem(8'd5, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+        end
+    endtask
+
     task automatic load_divergent_branch_program();
         begin
             write_imem(8'd0, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, ISA_SR_LANE_ID));
@@ -285,6 +296,12 @@ module tb_programmable_core_branch_control;
         launch_full_group();
         wait_kernel_done("not-taken branch");
         expect_all_lanes(32'd11, "not-taken branch executes fallthrough write");
+
+        reset_dut();
+        load_r0_branch_program();
+        launch_full_group();
+        wait_kernel_done("R0 branch predicate");
+        expect_all_lanes(32'd33, "R0 branch predicate never takes branch");
 
         reset_dut();
         load_backward_branch_program();
