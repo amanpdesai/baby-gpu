@@ -36,6 +36,7 @@ Required Version 1 scenarios:
 | Clipped rectangle | Only visible pixels change. |
 | WAIT_IDLE | Command stream stalls until writes drain. |
 | Malformed command | Sticky error bit set, no illegal writes. |
+| Programmable branch control | Convergent taken/not-taken branches, signed backward offsets, R0 never-taken predicates, and divergent faults are observed. |
 
 ## Code Coverage
 

@@ -57,7 +57,9 @@ register mux, LSU prep, and request/response sequencing, draw-unit corner
 coverage for command/clear/rectangle/framebuffer paths, and Yosys synthesis
 smoke coverage for leaf blocks and the integrated programmable core path.
 Illegal instruction, illegal special-register, branch, memory, and predicated
-store integration tests cover the current programmable path. An optional Vivado
+store integration tests cover the current programmable path, including
+convergent taken/not-taken branches, signed backward branches, R0 predicates,
+and divergent branch faults. An optional Vivado
 synthesis smoke target is present for FPGA-facing checks once Vivado and the
 target part name are available.
 

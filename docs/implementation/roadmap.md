@@ -101,7 +101,8 @@ architecture.
 - programmable-core illegal special-register integration coverage
 - programmable-core CMP reserved-bit illegal integration coverage
 - programmable-core zero-sized launch integration coverage
-- programmable-core convergent branch integration coverage
+- programmable-core convergent, signed backward, and R0 predicate branch
+  integration coverage
 - programmable-core divergent branch fault integration coverage
 - programmable-core unaligned memory fault integration coverage
 - programmable-core memory backpressure integration coverage
