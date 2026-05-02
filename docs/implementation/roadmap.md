@@ -97,7 +97,7 @@ architecture.
 - special register mux illegal-ID bounded formal cover
 - instruction decoder CMP reserved-field and highest-valid-CMP bounded formal
   cover
-- simulation data memory bounded formal smoke
+- simulation data memory bounded formal smoke and scenario reachability covers
 - integrated programmable core Yosys synthesis smoke
 - programmable-core illegal-instruction integration coverage
 - programmable-core illegal special-register integration coverage

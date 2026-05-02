@@ -53,8 +53,8 @@ Current implementation state:
   instruction memory smoke contracts, and LSU prep smoke contracts
 - bounded formal covers exist for special-register illegal IDs and instruction
   decoder CMP edge reachability
-- simulation data memory has bounded formal smoke coverage for byte masks,
-  halfword masks, response backpressure, and readback
+- simulation data memory has bounded formal smoke coverage plus reachability
+  covers for byte masks, halfword masks, response backpressure, and readback
 - open-source synthesis smoke covers leaf blocks plus the integrated SIMD and
   programmable core path
 

@@ -53,7 +53,7 @@ flowchart TB
 | `instruction_decoder.sv` | field extraction, high-risk CMP/PSTORE/unknown-opcode decode contracts, and CMP edge reachability covers. |
 | `lane_register_file.sv` | R0 hardwiring, lane isolation, write enables, and multi-read behavior. |
 | `load_store_unit.sv` | request sequencing, alignment errors, byte masks, and response routing. |
-| `data_memory.sv` | byte-mask writes, read-after-write behavior, and out-of-range errors. |
+| `data_memory.sv` | byte-mask writes, read-after-write behavior, out-of-range errors, and scenario reachability covers. |
 
 ## Directory Plan
 
@@ -141,7 +141,7 @@ Initial formal adoption is already active when:
 - instruction memory smoke proof passes
 - lane register file smoke proof passes
 - special register mux smoke proof passes
-- simulation data memory smoke proof passes
+- simulation data memory smoke proof and cover tasks pass
 - LSU prep smoke proof passes
 - LSU request/response sequencing smoke proof passes
 - LSU multi-lane response routing smoke proof passes
