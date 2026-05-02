@@ -5,7 +5,7 @@ module tb_programmable_core_branch_control;
     localparam int DATA_W = 32;
     localparam int COORD_W = 16;
     localparam int ADDR_W = 32;
-    localparam int PC_W = 8;
+    localparam int PC_W = 24;
     localparam int REGS = 16;
     localparam int REG_ADDR_W = $clog2(REGS);
     localparam int IMEM_ADDR_W = PC_W;
@@ -78,7 +78,8 @@ module tb_programmable_core_branch_control;
 
     instruction_memory #(
         .WORD_W(ISA_WORD_W),
-        .ADDR_W(IMEM_ADDR_W)
+        .ADDR_W(IMEM_ADDR_W),
+        .DEPTH(16)
     ) imem (
         .clk(clk),
         .write_en(imem_write_en),
@@ -175,6 +176,18 @@ module tb_programmable_core_branch_control;
         end
     endtask
 
+    task automatic load_backward_branch_program();
+        begin
+            write_imem(8'd0, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd1, 4'd0, 18'd3));
+            write_imem(8'd1, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd1));
+            write_imem(8'd2, isa_pkg::isa_r_type(ISA_OP_SUB, 4'd1, 4'd1, 4'd2));
+            write_imem(8'd3, isa_pkg::isa_cmp_type(4'd3, 4'd1, 4'd0, ISA_CMP_NE));
+            write_imem(8'd4, isa_pkg::isa_b_type(ISA_OP_BRA, 4'd3, 22'h3f_fffd));
+            write_imem(8'd5, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd4, 4'd0, 18'd99));
+            write_imem(8'd6, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+        end
+    endtask
+
     task automatic launch_full_group();
         int cycles;
         begin
@@ -240,13 +253,23 @@ module tb_programmable_core_branch_control;
         end
     endtask
 
-    task automatic expect_all_lanes(input logic [DATA_W-1:0] expected, input string scenario);
+    task automatic expect_all_lanes_reg(
+        input logic [REG_ADDR_W-1:0] reg_addr,
+        input logic [DATA_W-1:0] expected,
+        input string scenario
+    );
         begin
-            debug_read_addr = 4'd2;
+            debug_read_addr = reg_addr;
             #1;
             for (int lane = 0; lane < LANES; lane++) begin
                 check(lane_data(lane) == expected, {scenario, " lane result"});
             end
+        end
+    endtask
+
+    task automatic expect_all_lanes(input logic [DATA_W-1:0] expected, input string scenario);
+        begin
+            expect_all_lanes_reg(4'd2, expected, scenario);
         end
     endtask
 
@@ -262,6 +285,13 @@ module tb_programmable_core_branch_control;
         launch_full_group();
         wait_kernel_done("not-taken branch");
         expect_all_lanes(32'd11, "not-taken branch executes fallthrough write");
+
+        reset_dut();
+        load_backward_branch_program();
+        launch_full_group();
+        wait_kernel_done("backward branch loop");
+        expect_all_lanes_reg(4'd1, 32'd0, "backward branch decrements loop counter");
+        expect_all_lanes_reg(4'd4, 32'd99, "backward branch reaches post-loop write");
 
         reset_dut();
         load_divergent_branch_program();
