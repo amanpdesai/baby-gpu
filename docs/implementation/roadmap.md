@@ -99,6 +99,7 @@ architecture.
 - integrated programmable core Yosys synthesis smoke
 - programmable-core illegal-instruction integration coverage
 - programmable-core illegal special-register integration coverage
+- programmable-core CMP reserved-bit illegal integration coverage
 - programmable-core zero-sized launch integration coverage
 - programmable-core convergent branch integration coverage
 - programmable-core divergent branch fault integration coverage
