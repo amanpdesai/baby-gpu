@@ -280,6 +280,34 @@ module tb_programmable_core_pstore_predicate;
         end
     endtask
 
+    task automatic run_kernel_expect_no_data_request(input string label);
+        int cycles;
+        begin
+            @(negedge clk);
+            launch_valid = 1'b1;
+            check(launch_ready, {label, " launch accepted"});
+            step();
+            @(negedge clk);
+            launch_valid = 1'b0;
+
+            cycles = 0;
+            while (!core_done && cycles < 80) begin
+                check(!core_error, {label, " core error remains clear while running"});
+                check(!mem_error, {label, " data memory error remains clear while running"});
+                check(!imem_fetch_error, {label, " instruction fetch error remains clear while running"});
+                check(!core_req_valid, {label, " issues no data request"});
+                step();
+                cycles++;
+            end
+
+            check(core_done, {label, " completed"});
+            check(!core_error, {label, " completed without sticky error"});
+            check(!mem_error, {label, " completed without memory error"});
+            check(!imem_fetch_error, {label, " completed without fetch error"});
+            check(!core_busy, {label, " returned idle"});
+        end
+    endtask
+
     initial begin
         reset = 1'b1;
         launch_valid = 1'b0;
@@ -320,6 +348,17 @@ module tb_programmable_core_pstore_predicate;
         write_imem(8'd7, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
 
         run_kernel();
+
+        mem_expect_word(STORE_BASE + 32'd0, 32'h0000_05A5);
+        mem_expect_word(STORE_BASE + 32'd4, 32'h0000_05A5);
+        mem_expect_word(STORE_BASE + 32'd8, 32'hCCCC_CCCC);
+        mem_expect_word(STORE_BASE + 32'd12, 32'hDDDD_DDDD);
+
+        write_imem(8'd0, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd6, 4'd0, 18'h1_2345));
+        write_imem(8'd1, isa_pkg::isa_p_type(ISA_OP_PSTORE, 4'd6, 4'd0, 4'd0, 14'd64));
+        write_imem(8'd2, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+
+        run_kernel_expect_no_data_request("R0-predicated PSTORE");
 
         mem_expect_word(STORE_BASE + 32'd0, 32'h0000_05A5);
         mem_expect_word(STORE_BASE + 32'd4, 32'h0000_05A5);
