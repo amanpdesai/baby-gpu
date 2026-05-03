@@ -1,6 +1,7 @@
 import isa_pkg::*;
 
 module tb_programmable_core_pstore_predicate;
+    import kernel_asm_pkg::*;
     localparam int LANES = 4;
     localparam int DATA_W = 32;
     localparam int COORD_W = 16;
@@ -338,14 +339,14 @@ module tb_programmable_core_pstore_predicate;
         mem_write_word(STORE_BASE + 32'd8, 32'hCCCC_CCCC);
         mem_write_word(STORE_BASE + 32'd12, 32'hDDDD_DDDD);
 
-        write_imem(8'd0, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, ISA_SR_LANE_ID));
-        write_imem(8'd1, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd2));
-        write_imem(8'd2, isa_pkg::isa_cmp_type(4'd3, 4'd1, 4'd2, ISA_CMP_LTU));
-        write_imem(8'd3, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd4, 4'd0, 18'd4));
-        write_imem(8'd4, isa_pkg::isa_r_type(ISA_OP_MUL, 4'd5, 4'd1, 4'd4));
-        write_imem(8'd5, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd6, 4'd0, 18'h0_05A5));
-        write_imem(8'd6, isa_pkg::isa_p_type(ISA_OP_PSTORE, 4'd6, 4'd5, 4'd3, 14'd64));
-        write_imem(8'd7, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+        write_imem(8'd0, kgpu_movsr(4'd1, ISA_SR_LANE_ID));
+        write_imem(8'd1, kgpu_movi(4'd2, 18'd2));
+        write_imem(8'd2, kgpu_cmp(4'd3, 4'd1, 4'd2, ISA_CMP_LTU));
+        write_imem(8'd3, kgpu_movi(4'd4, 18'd4));
+        write_imem(8'd4, kgpu_mul(4'd5, 4'd1, 4'd4));
+        write_imem(8'd5, kgpu_movi(4'd6, 18'h0_05A5));
+        write_imem(8'd6, kgpu_pstore(4'd6, 4'd5, 4'd3, 14'd64));
+        write_imem(8'd7, kgpu_end());
 
         run_kernel();
 
@@ -354,9 +355,9 @@ module tb_programmable_core_pstore_predicate;
         mem_expect_word(STORE_BASE + 32'd8, 32'hCCCC_CCCC);
         mem_expect_word(STORE_BASE + 32'd12, 32'hDDDD_DDDD);
 
-        write_imem(8'd0, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd6, 4'd0, 18'h1_2345));
-        write_imem(8'd1, isa_pkg::isa_p_type(ISA_OP_PSTORE, 4'd6, 4'd0, 4'd0, 14'd64));
-        write_imem(8'd2, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+        write_imem(8'd0, kgpu_movi(4'd6, 18'h1_2345));
+        write_imem(8'd1, kgpu_pstore(4'd6, 4'd0, 4'd0, 14'd64));
+        write_imem(8'd2, kgpu_end());
 
         run_kernel_expect_no_data_request("R0-predicated PSTORE");
 

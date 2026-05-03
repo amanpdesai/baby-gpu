@@ -1,6 +1,7 @@
 import isa_pkg::*;
 
 module tb_programmable_core_offset_fill;
+    import kernel_asm_pkg::*;
     localparam int LANES = 4;
     localparam int DATA_W = 32;
     localparam int COORD_W = 16;
@@ -291,29 +292,29 @@ module tb_programmable_core_offset_fill;
 
     task automatic load_offset_fill_program;
         begin
-            write_imem(8'd0, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, ISA_SR_GLOBAL_ID_Y));
-            write_imem(8'd1, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd2, ISA_SR_FRAMEBUFFER_WIDTH));
-            write_imem(8'd2, isa_pkg::isa_r_type(ISA_OP_MUL, 4'd3, 4'd1, 4'd2));
-            write_imem(8'd3, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd4, ISA_SR_GLOBAL_ID_X));
-            write_imem(8'd4, isa_pkg::isa_r_type(ISA_OP_ADD, 4'd3, 4'd3, 4'd4));
-            write_imem(8'd5, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd5, 4'd0, 18'd2));
-            write_imem(8'd6, isa_pkg::isa_r_type(ISA_OP_MUL, 4'd3, 4'd3, 4'd5));
-            write_imem(8'd7, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd6, ISA_SR_FRAMEBUFFER_BASE));
-            write_imem(8'd8, isa_pkg::isa_r_type(ISA_OP_ADD, 4'd7, 4'd6, 4'd3));
-            write_imem(8'd9, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd8, 4'd0, 18'(FILL_COLOR)));
-            write_imem(8'd10, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd9, 4'd0, 18'(RECT_X)));
-            write_imem(8'd11, isa_pkg::isa_cmp_type(4'd10, 4'd4, 4'd9, ISA_CMP_GEU));
-            write_imem(8'd12, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd9, 4'd0, 18'(RECT_X + RECT_WIDTH)));
-            write_imem(8'd13, isa_pkg::isa_cmp_type(4'd11, 4'd4, 4'd9, ISA_CMP_LTU));
-            write_imem(8'd14, isa_pkg::isa_r_type(ISA_OP_AND, 4'd10, 4'd10, 4'd11));
-            write_imem(8'd15, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd9, 4'd0, 18'(RECT_Y)));
-            write_imem(8'd16, isa_pkg::isa_cmp_type(4'd11, 4'd1, 4'd9, ISA_CMP_GEU));
-            write_imem(8'd17, isa_pkg::isa_r_type(ISA_OP_AND, 4'd10, 4'd10, 4'd11));
-            write_imem(8'd18, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd9, 4'd0, 18'(RECT_Y + RECT_HEIGHT)));
-            write_imem(8'd19, isa_pkg::isa_cmp_type(4'd11, 4'd1, 4'd9, ISA_CMP_LTU));
-            write_imem(8'd20, isa_pkg::isa_r_type(ISA_OP_AND, 4'd10, 4'd10, 4'd11));
-            write_imem(8'd21, isa_pkg::isa_p_type(ISA_OP_PSTORE16, 4'd8, 4'd7, 4'd10, 14'd0));
-            write_imem(8'd22, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+            write_imem(8'd0, kgpu_movsr(4'd1, ISA_SR_GLOBAL_ID_Y));
+            write_imem(8'd1, kgpu_movsr(4'd2, ISA_SR_FRAMEBUFFER_WIDTH));
+            write_imem(8'd2, kgpu_mul(4'd3, 4'd1, 4'd2));
+            write_imem(8'd3, kgpu_movsr(4'd4, ISA_SR_GLOBAL_ID_X));
+            write_imem(8'd4, kgpu_add(4'd3, 4'd3, 4'd4));
+            write_imem(8'd5, kgpu_movi(4'd5, 18'd2));
+            write_imem(8'd6, kgpu_mul(4'd3, 4'd3, 4'd5));
+            write_imem(8'd7, kgpu_movsr(4'd6, ISA_SR_FRAMEBUFFER_BASE));
+            write_imem(8'd8, kgpu_add(4'd7, 4'd6, 4'd3));
+            write_imem(8'd9, kgpu_movi(4'd8, 18'(FILL_COLOR)));
+            write_imem(8'd10, kgpu_movi(4'd9, 18'(RECT_X)));
+            write_imem(8'd11, kgpu_cmp(4'd10, 4'd4, 4'd9, ISA_CMP_GEU));
+            write_imem(8'd12, kgpu_movi(4'd9, 18'(RECT_X + RECT_WIDTH)));
+            write_imem(8'd13, kgpu_cmp(4'd11, 4'd4, 4'd9, ISA_CMP_LTU));
+            write_imem(8'd14, kgpu_and(4'd10, 4'd10, 4'd11));
+            write_imem(8'd15, kgpu_movi(4'd9, 18'(RECT_Y)));
+            write_imem(8'd16, kgpu_cmp(4'd11, 4'd1, 4'd9, ISA_CMP_GEU));
+            write_imem(8'd17, kgpu_and(4'd10, 4'd10, 4'd11));
+            write_imem(8'd18, kgpu_movi(4'd9, 18'(RECT_Y + RECT_HEIGHT)));
+            write_imem(8'd19, kgpu_cmp(4'd11, 4'd1, 4'd9, ISA_CMP_LTU));
+            write_imem(8'd20, kgpu_and(4'd10, 4'd10, 4'd11));
+            write_imem(8'd21, kgpu_pstore16(4'd8, 4'd7, 4'd10, 14'd0));
+            write_imem(8'd22, kgpu_end());
         end
     endtask
 
