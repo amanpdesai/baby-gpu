@@ -105,6 +105,8 @@ architecture.
 - programmable-core illegal special-register integration coverage
 - programmable-core CMP reserved-bit illegal integration coverage
 - programmable-core zero-sized launch integration coverage
+- testbench-only kernel mnemonic helper package for reducing hand-encoded
+  integration-test programs
 - programmable-core convergent, signed backward, and R0 predicate branch
   integration coverage
 - programmable-core divergent branch fault integration coverage
