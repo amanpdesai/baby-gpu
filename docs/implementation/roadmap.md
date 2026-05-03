@@ -111,6 +111,7 @@ architecture.
 - programmable-core memory backpressure integration coverage
 - programmable-core STORE16 memory backpressure integration coverage
 - programmable-core predicated 32-bit store integration coverage
+- programmable-core R0-predicated 32-bit store no-op integration coverage
 - programmable-core predicated STORE16 masked-fault integration coverage
 - programmable-core all-false predicated STORE16 skip integration coverage
 
