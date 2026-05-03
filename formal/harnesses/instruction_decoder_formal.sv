@@ -24,6 +24,7 @@ module instruction_decoder_formal (
     logic illegal;
 
     logic cmp_reserved_clear;
+    logic known_opcode;
 
     instruction_decoder dut (
         .instruction(instruction),
@@ -51,6 +52,26 @@ module instruction_decoder_formal (
     );
 
     assign cmp_reserved_clear = instruction[13:isa_pkg::ISA_CMP_COND_W] == '0;
+    assign known_opcode =
+        (opcode == isa_pkg::ISA_OP_NOP) ||
+        (opcode == isa_pkg::ISA_OP_END) ||
+        (opcode == isa_pkg::ISA_OP_MOVI) ||
+        (opcode == isa_pkg::ISA_OP_MOVSR) ||
+        (opcode == isa_pkg::ISA_OP_ADD) ||
+        (opcode == isa_pkg::ISA_OP_MUL) ||
+        (opcode == isa_pkg::ISA_OP_LOAD) ||
+        (opcode == isa_pkg::ISA_OP_STORE) ||
+        (opcode == isa_pkg::ISA_OP_STORE16) ||
+        (opcode == isa_pkg::ISA_OP_CMP) ||
+        (opcode == isa_pkg::ISA_OP_BRA) ||
+        (opcode == isa_pkg::ISA_OP_SUB) ||
+        (opcode == isa_pkg::ISA_OP_AND) ||
+        (opcode == isa_pkg::ISA_OP_OR) ||
+        (opcode == isa_pkg::ISA_OP_XOR) ||
+        (opcode == isa_pkg::ISA_OP_SHL) ||
+        (opcode == isa_pkg::ISA_OP_SHR) ||
+        (opcode == isa_pkg::ISA_OP_PSTORE) ||
+        (opcode == isa_pkg::ISA_OP_PSTORE16);
 
     always_comb begin
         assert(opcode == instruction[isa_pkg::ISA_OPCODE_MSB:isa_pkg::ISA_OPCODE_LSB]);
@@ -83,9 +104,11 @@ module instruction_decoder_formal (
             assert(memory_write && memory_store16 && memory_predicated);
         end
 
-        if (opcode == 6'h3f) begin
+        if (!known_opcode) begin
             assert(illegal && !writes_register && !uses_memory && !uses_branch);
+            assert(!uses_immediate && !uses_special && !uses_alu && !uses_compare);
             assert(!memory_write && !memory_store16 && !memory_predicated);
+            assert(!ends_lane);
         end
     end
 
