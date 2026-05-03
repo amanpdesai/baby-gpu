@@ -89,6 +89,7 @@ architecture.
 - lane register file bounded formal smoke
 - work-scheduler sticky-error bounded formal smoke
 - LSU prep bounded formal smoke
+- LSU invalid-op containment unit coverage and bounded prep formal scenario
 - LSU request/response transition bounded formal smoke
 - LSU multi-lane response routing bounded formal smoke
 - LSU empty active-mask unit coverage
