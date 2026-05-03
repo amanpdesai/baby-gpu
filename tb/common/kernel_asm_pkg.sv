@@ -39,6 +39,46 @@ package kernel_asm_pkg;
     kgpu_mul = isa_r_type(ISA_OP_MUL, rd, ra, rb);
   endfunction
 
+  function automatic logic [ISA_WORD_W-1:0] kgpu_and(
+      input logic [ISA_REG_ADDR_W-1:0] rd,
+      input logic [ISA_REG_ADDR_W-1:0] ra,
+      input logic [ISA_REG_ADDR_W-1:0] rb
+  );
+    kgpu_and = isa_r_type(ISA_OP_AND, rd, ra, rb);
+  endfunction
+
+  function automatic logic [ISA_WORD_W-1:0] kgpu_or(
+      input logic [ISA_REG_ADDR_W-1:0] rd,
+      input logic [ISA_REG_ADDR_W-1:0] ra,
+      input logic [ISA_REG_ADDR_W-1:0] rb
+  );
+    kgpu_or = isa_r_type(ISA_OP_OR, rd, ra, rb);
+  endfunction
+
+  function automatic logic [ISA_WORD_W-1:0] kgpu_xor(
+      input logic [ISA_REG_ADDR_W-1:0] rd,
+      input logic [ISA_REG_ADDR_W-1:0] ra,
+      input logic [ISA_REG_ADDR_W-1:0] rb
+  );
+    kgpu_xor = isa_r_type(ISA_OP_XOR, rd, ra, rb);
+  endfunction
+
+  function automatic logic [ISA_WORD_W-1:0] kgpu_shl(
+      input logic [ISA_REG_ADDR_W-1:0] rd,
+      input logic [ISA_REG_ADDR_W-1:0] ra,
+      input logic [ISA_REG_ADDR_W-1:0] rb
+  );
+    kgpu_shl = isa_r_type(ISA_OP_SHL, rd, ra, rb);
+  endfunction
+
+  function automatic logic [ISA_WORD_W-1:0] kgpu_shr(
+      input logic [ISA_REG_ADDR_W-1:0] rd,
+      input logic [ISA_REG_ADDR_W-1:0] ra,
+      input logic [ISA_REG_ADDR_W-1:0] rb
+  );
+    kgpu_shr = isa_r_type(ISA_OP_SHR, rd, ra, rb);
+  endfunction
+
   function automatic logic [ISA_WORD_W-1:0] kgpu_cmp(
       input logic [ISA_REG_ADDR_W-1:0] rd,
       input logic [ISA_REG_ADDR_W-1:0] ra,
