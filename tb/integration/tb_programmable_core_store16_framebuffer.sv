@@ -1,6 +1,8 @@
 import isa_pkg::*;
 
 module tb_programmable_core_store16_framebuffer;
+  import kernel_asm_pkg::*;
+
   localparam int LANES = 4;
   localparam int DATA_W = 32;
   localparam int COORD_W = 16;
@@ -274,16 +276,16 @@ module tb_programmable_core_store16_framebuffer;
 
   task automatic load_store16_program();
     begin
-      write_imem(8'd0, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, ISA_SR_LINEAR_GLOBAL_ID));
-      write_imem(8'd1, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd2));
-      write_imem(8'd2, isa_pkg::isa_r_type(ISA_OP_MUL, 4'd1, 4'd1, 4'd2));
-      write_imem(8'd3, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd3, ISA_SR_FRAMEBUFFER_BASE));
-      write_imem(8'd4, isa_pkg::isa_r_type(ISA_OP_ADD, 4'd4, 4'd3, 4'd1));
-      write_imem(8'd5, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd5, ISA_SR_LINEAR_GLOBAL_ID));
-      write_imem(8'd6, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd6, 4'd0, 18'h50));
-      write_imem(8'd7, isa_pkg::isa_r_type(ISA_OP_ADD, 4'd5, 4'd5, 4'd6));
-      write_imem(8'd8, isa_pkg::isa_m_type(ISA_OP_STORE16, 4'd5, 4'd4, 18'd0));
-      write_imem(8'd9, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+      write_imem(8'd0, kgpu_movsr(4'd1, ISA_SR_LINEAR_GLOBAL_ID));
+      write_imem(8'd1, kgpu_movi(4'd2, 18'd2));
+      write_imem(8'd2, kgpu_mul(4'd1, 4'd1, 4'd2));
+      write_imem(8'd3, kgpu_movsr(4'd3, ISA_SR_FRAMEBUFFER_BASE));
+      write_imem(8'd4, kgpu_add(4'd4, 4'd3, 4'd1));
+      write_imem(8'd5, kgpu_movsr(4'd5, ISA_SR_LINEAR_GLOBAL_ID));
+      write_imem(8'd6, kgpu_movi(4'd6, 18'h50));
+      write_imem(8'd7, kgpu_add(4'd5, 4'd5, 4'd6));
+      write_imem(8'd8, kgpu_store16(4'd5, 4'd4, 18'd0));
+      write_imem(8'd9, kgpu_end());
     end
   endtask
 
