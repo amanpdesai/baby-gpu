@@ -45,7 +45,8 @@ Current implementation state:
 - programmable core runs simulation kernels
 - `vector_add`, `STORE16`, framebuffer gradient, bounded fill, and offset fill
   integration tests exist
-- a testbench-only kernel mnemonic helper package exists for integration tests
+- normal integration-test kernels use the testbench-only kernel mnemonic helper
+  package; malformed illegal-instruction fixtures may still use raw encodings
 - CMP, convergent BRA, and predicated stores exist
 - open-source synthesis smoke exists
 - formal proofs exist for FIFO, clear engine, SIMD ALU, framebuffer writer,

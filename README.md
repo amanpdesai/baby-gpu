@@ -59,11 +59,12 @@ smoke coverage for leaf blocks and the integrated programmable core path.
 Illegal instruction, illegal special-register, branch, memory, and predicated
 store integration tests cover the current programmable path, including
 convergent taken/not-taken branches, signed backward branches, R0 predicates,
-and divergent branch faults. A testbench-only kernel mnemonic helper package
-reduces hand-encoded simulation programs; it is not a full assembler or C
-toolchain. An optional Vivado
-synthesis smoke target is present for FPGA-facing checks once Vivado and the
-target part name are available.
+and divergent branch faults. Normal integration-test kernels now use a
+testbench-only mnemonic helper package instead of raw ISA constructors;
+malformed illegal-instruction fixtures still hand-build invalid encodings on
+purpose. The helper package is not a full assembler or C toolchain. An optional
+Vivado synthesis smoke target is present for FPGA-facing checks once Vivado and
+the target part name are available.
 
 ## Toolchain Check
 
