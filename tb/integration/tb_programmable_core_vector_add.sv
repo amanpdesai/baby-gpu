@@ -1,4 +1,5 @@
 import isa_pkg::*;
+`include "tb/common/kernel_program_loader.svh"
 
 module tb_programmable_core_vector_add;
   import kernel_asm_pkg::*;
@@ -279,21 +280,23 @@ module tb_programmable_core_vector_add;
   endtask
 
   task automatic load_vector_add_program();
+    logic [ISA_WORD_W-1:0] kernel_words [0:13];
     begin
-      write_imem(8'd0, kgpu_movsr(4'd1, ISA_SR_LINEAR_GLOBAL_ID));
-      write_imem(8'd1, kgpu_movi(4'd2, 18'd4));
-      write_imem(8'd2, kgpu_mul(4'd1, 4'd1, 4'd2));
-      write_imem(8'd3, kgpu_movi(4'd3, A_BASE[17:0]));
-      write_imem(8'd4, kgpu_add(4'd4, 4'd3, 4'd1));
-      write_imem(8'd5, kgpu_load(4'd5, 4'd4, 18'd0));
-      write_imem(8'd6, kgpu_movi(4'd3, B_BASE[17:0]));
-      write_imem(8'd7, kgpu_add(4'd4, 4'd3, 4'd1));
-      write_imem(8'd8, kgpu_load(4'd6, 4'd4, 18'd0));
-      write_imem(8'd9, kgpu_add(4'd7, 4'd5, 4'd6));
-      write_imem(8'd10, kgpu_movi(4'd3, C_BASE[17:0]));
-      write_imem(8'd11, kgpu_add(4'd4, 4'd3, 4'd1));
-      write_imem(8'd12, kgpu_store(4'd7, 4'd4, 18'd0));
-      write_imem(8'd13, kgpu_end());
+      kernel_words[0] = kgpu_movsr(4'd1, ISA_SR_LINEAR_GLOBAL_ID);
+      kernel_words[1] = kgpu_movi(4'd2, 18'd4);
+      kernel_words[2] = kgpu_mul(4'd1, 4'd1, 4'd2);
+      kernel_words[3] = kgpu_movi(4'd3, A_BASE[17:0]);
+      kernel_words[4] = kgpu_add(4'd4, 4'd3, 4'd1);
+      kernel_words[5] = kgpu_load(4'd5, 4'd4, 18'd0);
+      kernel_words[6] = kgpu_movi(4'd3, B_BASE[17:0]);
+      kernel_words[7] = kgpu_add(4'd4, 4'd3, 4'd1);
+      kernel_words[8] = kgpu_load(4'd6, 4'd4, 18'd0);
+      kernel_words[9] = kgpu_add(4'd7, 4'd5, 4'd6);
+      kernel_words[10] = kgpu_movi(4'd3, C_BASE[17:0]);
+      kernel_words[11] = kgpu_add(4'd4, 4'd3, 4'd1);
+      kernel_words[12] = kgpu_store(4'd7, 4'd4, 18'd0);
+      kernel_words[13] = kgpu_end();
+      `KGPU_LOAD_PROGRAM(kernel_words)
     end
   endtask
 
