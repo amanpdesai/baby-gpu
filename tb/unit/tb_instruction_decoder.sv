@@ -241,6 +241,48 @@ module tb_instruction_decoder;
     end
   endtask
 
+  function automatic logic is_assigned_opcode(
+      input logic [ISA_OPCODE_W-1:0] test_opcode
+  );
+    begin
+      case (test_opcode)
+        ISA_OP_NOP,
+        ISA_OP_END,
+        ISA_OP_MOVI,
+        ISA_OP_MOVSR,
+        ISA_OP_ADD,
+        ISA_OP_MUL,
+        ISA_OP_LOAD,
+        ISA_OP_STORE,
+        ISA_OP_STORE16,
+        ISA_OP_CMP,
+        ISA_OP_BRA,
+        ISA_OP_SUB,
+        ISA_OP_AND,
+        ISA_OP_OR,
+        ISA_OP_XOR,
+        ISA_OP_SHL,
+        ISA_OP_SHR,
+        ISA_OP_PSTORE,
+        ISA_OP_PSTORE16: is_assigned_opcode = 1'b1;
+        default: is_assigned_opcode = 1'b0;
+      endcase
+    end
+  endfunction
+
+  task automatic expect_unassigned_opcode_space;
+    int unsigned opcode_index;
+    logic [ISA_OPCODE_W-1:0] test_opcode;
+    begin
+      for (opcode_index = 0; opcode_index < (1 << ISA_OPCODE_W); opcode_index++) begin
+        test_opcode = opcode_index[ISA_OPCODE_W-1:0];
+        if (!is_assigned_opcode(test_opcode)) begin
+          expect_unimplemented_known_opcode(test_opcode);
+        end
+      end
+    end
+  endtask
+
   initial begin
     expect_decode(
         pack_r_type(ISA_OP_NOP, 4'd0, 4'd0, 4'd0),
@@ -594,7 +636,7 @@ module tb_instruction_decoder;
                           4'd3, 4'd4, 4'd5, ISA_CMP_EQ, 1'b1);
     expect_compare_decode(isa_pkg::isa_cmp_type(4'd6, 4'd7, 4'd8, ISA_CMP_GES) | 32'h0000_2000,
                           4'd6, 4'd7, 4'd8, ISA_CMP_GES, 1'b1);
-    expect_unimplemented_known_opcode(6'h3F);
+    expect_unassigned_opcode_space();
 
     $display("tb_instruction_decoder PASS");
     $finish;
