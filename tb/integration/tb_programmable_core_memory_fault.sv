@@ -1,6 +1,7 @@
 import isa_pkg::*;
 
 module tb_programmable_core_memory_fault;
+    import kernel_asm_pkg::*;
     localparam int LANES = 4;
     localparam int DATA_W = 32;
     localparam int COORD_W = 16;
@@ -196,10 +197,10 @@ module tb_programmable_core_memory_fault;
         reset = 1'b0;
         step();
 
-        write_imem(8'd0, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd1, 4'd0, 18'd1));
-        write_imem(8'd1, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'h0_1234));
-        write_imem(8'd2, isa_pkg::isa_m_type(ISA_OP_STORE, 4'd2, 4'd1, 18'd0));
-        write_imem(8'd3, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+        write_imem(8'd0, kgpu_movi(4'd1, 18'd1));
+        write_imem(8'd1, kgpu_movi(4'd2, 18'h0_1234));
+        write_imem(8'd2, kgpu_store(4'd2, 4'd1, 18'd0));
+        write_imem(8'd3, kgpu_end());
 
         launch_kernel();
         wait_memory_fault();

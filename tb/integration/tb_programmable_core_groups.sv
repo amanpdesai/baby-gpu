@@ -1,6 +1,7 @@
 import isa_pkg::*;
 
 module tb_programmable_core_groups;
+  import kernel_asm_pkg::*;
   localparam int LANES = 4;
   localparam int DATA_W = 32;
   localparam int COORD_W = 16;
@@ -182,10 +183,10 @@ module tb_programmable_core_groups;
     imem_write_data = '0;
 
     step();
-    write_imem(8'd0, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, ISA_SR_LINEAR_GLOBAL_ID));
-    write_imem(8'd1, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd2, ISA_SR_GLOBAL_ID_X));
-    write_imem(8'd2, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd3, ISA_SR_GLOBAL_ID_Y));
-    write_imem(8'd3, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+    write_imem(8'd0, kgpu_movsr(4'd1, ISA_SR_LINEAR_GLOBAL_ID));
+    write_imem(8'd1, kgpu_movsr(4'd2, ISA_SR_GLOBAL_ID_X));
+    write_imem(8'd2, kgpu_movsr(4'd3, ISA_SR_GLOBAL_ID_Y));
+    write_imem(8'd3, kgpu_end());
 
     reset = 1'b0;
     step();

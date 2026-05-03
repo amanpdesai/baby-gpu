@@ -1,6 +1,7 @@
 import isa_pkg::*;
 
 module tb_programmable_core_illegal_instruction;
+    import kernel_asm_pkg::*;
     localparam int LANES = 4;
     localparam int DATA_W = 32;
     localparam int COORD_W = 16;
@@ -254,12 +255,12 @@ module tb_programmable_core_illegal_instruction;
         wait_for_illegal_instruction_error();
 
         reset_dut();
-        write_imem(8'd0, isa_pkg::isa_r_type(isa_pkg::ISA_OP_END, 4'd0, 4'd0, 4'd0));
+        write_imem(8'd0, kgpu_end());
         launch_kernel(16'd0, 16'd1);
         wait_for_launch_geometry_error("zero grid_x launch");
 
         reset_dut();
-        write_imem(8'd0, isa_pkg::isa_r_type(isa_pkg::ISA_OP_END, 4'd0, 4'd0, 4'd0));
+        write_imem(8'd0, kgpu_end());
         launch_kernel(16'd1, 16'd0);
         wait_for_launch_geometry_error("zero grid_y launch");
 

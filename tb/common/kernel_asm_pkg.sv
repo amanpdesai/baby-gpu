@@ -23,18 +23,26 @@ package kernel_asm_pkg;
     kgpu_movsr = isa_s_type(ISA_OP_MOVSR, rd, special_reg_id);
   endfunction
 
-  function automatic logic [ISA_WORD_W-1:0] kgpu_add(
-      input logic [ISA_REG_ADDR_W-1:0] rd,
-      input logic [ISA_REG_ADDR_W-1:0] ra,
-      input logic [ISA_REG_ADDR_W-1:0] rb
-  );
-    kgpu_add = isa_r_type(ISA_OP_ADD, rd, ra, rb);
-  endfunction
+    function automatic logic [ISA_WORD_W-1:0] kgpu_add(
+        input logic [ISA_REG_ADDR_W-1:0] rd,
+        input logic [ISA_REG_ADDR_W-1:0] ra,
+        input logic [ISA_REG_ADDR_W-1:0] rb
+    );
+        kgpu_add = isa_r_type(ISA_OP_ADD, rd, ra, rb);
+    endfunction
 
-  function automatic logic [ISA_WORD_W-1:0] kgpu_mul(
-      input logic [ISA_REG_ADDR_W-1:0] rd,
-      input logic [ISA_REG_ADDR_W-1:0] ra,
-      input logic [ISA_REG_ADDR_W-1:0] rb
+    function automatic logic [ISA_WORD_W-1:0] kgpu_sub(
+        input logic [ISA_REG_ADDR_W-1:0] rd,
+        input logic [ISA_REG_ADDR_W-1:0] ra,
+        input logic [ISA_REG_ADDR_W-1:0] rb
+    );
+        kgpu_sub = isa_r_type(ISA_OP_SUB, rd, ra, rb);
+    endfunction
+
+    function automatic logic [ISA_WORD_W-1:0] kgpu_mul(
+        input logic [ISA_REG_ADDR_W-1:0] rd,
+        input logic [ISA_REG_ADDR_W-1:0] ra,
+        input logic [ISA_REG_ADDR_W-1:0] rb
   );
     kgpu_mul = isa_r_type(ISA_OP_MUL, rd, ra, rb);
   endfunction

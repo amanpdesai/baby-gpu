@@ -1,6 +1,7 @@
 import isa_pkg::*;
 
 module tb_programmable_core_memory_backpressure;
+    import kernel_asm_pkg::*;
     localparam int LANES = 4;
     localparam int DATA_W = 32;
     localparam int COORD_W = 16;
@@ -267,13 +268,13 @@ module tb_programmable_core_memory_backpressure;
         reset = 1'b0;
         step();
 
-        write_imem(8'd0, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd1, 4'd0, 18'd16));
-        write_imem(8'd1, isa_pkg::isa_m_type(ISA_OP_LOAD, 4'd2, 4'd1, 18'd0));
-        write_imem(8'd2, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd3, 4'd0, 18'd32));
-        write_imem(8'd3, isa_pkg::isa_m_type(ISA_OP_STORE, 4'd2, 4'd3, 18'd0));
-        write_imem(8'd4, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd4, 4'd0, 18'd34));
-        write_imem(8'd5, isa_pkg::isa_m_type(ISA_OP_STORE16, 4'd2, 4'd4, 18'd0));
-        write_imem(8'd6, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+        write_imem(8'd0, kgpu_movi(4'd1, 18'd16));
+        write_imem(8'd1, kgpu_load(4'd2, 4'd1, 18'd0));
+        write_imem(8'd2, kgpu_movi(4'd3, 18'd32));
+        write_imem(8'd3, kgpu_store(4'd2, 4'd3, 18'd0));
+        write_imem(8'd4, kgpu_movi(4'd4, 18'd34));
+        write_imem(8'd5, kgpu_store16(4'd2, 4'd4, 18'd0));
+        write_imem(8'd6, kgpu_end());
 
         launch_kernel();
 

@@ -1,6 +1,7 @@
 import isa_pkg::*;
 
 module tb_programmable_core_branch_control;
+    import kernel_asm_pkg::*;
     localparam int LANES = 4;
     localparam int DATA_W = 32;
     localparam int COORD_W = 16;
@@ -159,43 +160,43 @@ module tb_programmable_core_branch_control;
 
     task automatic load_branch_program(input logic predicate);
         begin
-            write_imem(8'd0, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd1, 4'd0, {17'd0, predicate}));
-            write_imem(8'd1, isa_pkg::isa_b_type(ISA_OP_BRA, 4'd1, 22'd2));
-            write_imem(8'd2, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd11));
-            write_imem(8'd3, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
-            write_imem(8'd4, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd22));
-            write_imem(8'd5, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+            write_imem(8'd0, kgpu_movi(4'd1, {17'd0, predicate}));
+            write_imem(8'd1, kgpu_bra(4'd1, 22'd2));
+            write_imem(8'd2, kgpu_movi(4'd2, 18'd11));
+            write_imem(8'd3, kgpu_end());
+            write_imem(8'd4, kgpu_movi(4'd2, 18'd22));
+            write_imem(8'd5, kgpu_end());
         end
     endtask
 
     task automatic load_r0_branch_program();
         begin
-            write_imem(8'd0, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd0, 4'd0, 18'd1));
-            write_imem(8'd1, isa_pkg::isa_b_type(ISA_OP_BRA, 4'd0, 22'd2));
-            write_imem(8'd2, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd33));
-            write_imem(8'd3, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
-            write_imem(8'd4, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd44));
-            write_imem(8'd5, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+            write_imem(8'd0, kgpu_movi(4'd0, 18'd1));
+            write_imem(8'd1, kgpu_bra(4'd0, 22'd2));
+            write_imem(8'd2, kgpu_movi(4'd2, 18'd33));
+            write_imem(8'd3, kgpu_end());
+            write_imem(8'd4, kgpu_movi(4'd2, 18'd44));
+            write_imem(8'd5, kgpu_end());
         end
     endtask
 
     task automatic load_divergent_branch_program();
         begin
-            write_imem(8'd0, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, ISA_SR_LANE_ID));
-            write_imem(8'd1, isa_pkg::isa_b_type(ISA_OP_BRA, 4'd1, 22'd1));
-            write_imem(8'd2, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+            write_imem(8'd0, kgpu_movsr(4'd1, ISA_SR_LANE_ID));
+            write_imem(8'd1, kgpu_bra(4'd1, 22'd1));
+            write_imem(8'd2, kgpu_end());
         end
     endtask
 
     task automatic load_backward_branch_program();
         begin
-            write_imem(8'd0, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd1, 4'd0, 18'd3));
-            write_imem(8'd1, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd2, 4'd0, 18'd1));
-            write_imem(8'd2, isa_pkg::isa_r_type(ISA_OP_SUB, 4'd1, 4'd1, 4'd2));
-            write_imem(8'd3, isa_pkg::isa_cmp_type(4'd3, 4'd1, 4'd0, ISA_CMP_NE));
-            write_imem(8'd4, isa_pkg::isa_b_type(ISA_OP_BRA, 4'd3, 22'h3f_fffd));
-            write_imem(8'd5, isa_pkg::isa_i_type(ISA_OP_MOVI, 4'd4, 4'd0, 18'd99));
-            write_imem(8'd6, isa_pkg::isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
+            write_imem(8'd0, kgpu_movi(4'd1, 18'd3));
+            write_imem(8'd1, kgpu_movi(4'd2, 18'd1));
+            write_imem(8'd2, kgpu_sub(4'd1, 4'd1, 4'd2));
+            write_imem(8'd3, kgpu_cmp(4'd3, 4'd1, 4'd0, ISA_CMP_NE));
+            write_imem(8'd4, kgpu_bra(4'd3, 22'h3f_fffd));
+            write_imem(8'd5, kgpu_movi(4'd4, 18'd99));
+            write_imem(8'd6, kgpu_end());
         end
     endtask
 
