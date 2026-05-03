@@ -21,10 +21,12 @@ module load_store_unit_sequence_checker #(
     input logic error_q,
     input logic req_ready,
     input logic rsp_valid,
+    input logic rsp_ready,
     input logic [DATA_W-1:0] rsp_rdata
 );
     localparam logic [1:0] LSU_OP_LOAD = 2'd0;
     localparam logic [1:0] LSU_OP_STORE = 2'd1;
+    localparam logic [1:0] LSU_OP_INVALID = 2'd3;
 
     localparam logic [1:0] STATE_IDLE = 2'd0;
     localparam logic [1:0] STATE_PREP = 2'd1;
@@ -38,6 +40,7 @@ module load_store_unit_sequence_checker #(
     localparam logic [3:0] SCENARIO_STORE_RSP = 4'd4;
     localparam logic [3:0] SCENARIO_EMPTY_MASK = 4'd5;
     localparam logic [3:0] SCENARIO_MULTI_LANE_RSP = 4'd6;
+    localparam logic [3:0] SCENARIO_INVALID_OP = 4'd7;
 
     (* anyconst *) logic [3:0] scenario;
     logic checked_q;
@@ -47,7 +50,7 @@ module load_store_unit_sequence_checker #(
     end
 
     always_comb begin
-        assume(scenario <= SCENARIO_MULTI_LANE_RSP);
+        assume(scenario <= SCENARIO_INVALID_OP);
 
         if (!checked_q) begin
             case (scenario)
@@ -119,6 +122,18 @@ module load_store_unit_sequence_checker #(
                     assume(rsp_rdata == 32'hDEAD_BEEF);
                 end
 
+                SCENARIO_INVALID_OP: begin
+                    assume(!reset);
+                    assume(state_q == STATE_PREP);
+                    assume(op_q == LSU_OP_INVALID);
+                    assume(active_mask_q == {{(LANES-1){1'b0}}, 1'b1});
+                    assume(lane_idx_q == '0);
+                    assume(!req_valid_q);
+                    assume(!error_q);
+                    assume(req_ready);
+                    assume(rsp_valid);
+                end
+
                 default: begin
                     assume(1'b0);
                 end
@@ -182,6 +197,15 @@ module load_store_unit_sequence_checker #(
                     assert(lane_rdata[(2*DATA_W) +: DATA_W] == 32'hDEAD_BEEF);
                 end
 
+                SCENARIO_INVALID_OP: begin
+                    assert(state_q == STATE_IDLE);
+                    assert(error_q);
+                    assert(!done_q);
+                    assert(!req_valid_q);
+                    assert(!rsp_ready);
+                    assert(lane_rvalid_q == '0);
+                end
+
                 default: begin
                     assert(1'b0);
                 end
@@ -196,6 +220,7 @@ module load_store_unit_sequence_checker #(
             cover(scenario == SCENARIO_LOAD_RSP && lane_rvalid_q[0]);
             cover(scenario == SCENARIO_EMPTY_MASK && done_q);
             cover(scenario == SCENARIO_MULTI_LANE_RSP && lane_rvalid_q[2]);
+            cover(scenario == SCENARIO_INVALID_OP && error_q && !req_valid_q);
         end
     end
 endmodule
@@ -223,6 +248,7 @@ bind load_store_unit load_store_unit_sequence_checker #(
     .error_q(error_q),
     .req_ready(req_ready),
     .rsp_valid(rsp_valid),
+    .rsp_ready(rsp_ready),
     .rsp_rdata(rsp_rdata)
 );
 
