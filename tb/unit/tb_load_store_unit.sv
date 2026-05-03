@@ -6,6 +6,7 @@ module tb_load_store_unit;
     localparam logic [1:0] OP_LOAD = 2'd0;
     localparam logic [1:0] OP_STORE = 2'd1;
     localparam logic [1:0] OP_STORE16 = 2'd2;
+    localparam logic [1:0] OP_INVALID = 2'd3;
 
     logic clk;
     logic reset;
@@ -367,6 +368,23 @@ module tb_load_store_unit;
         end
     endtask
 
+    task automatic test_invalid_op_error;
+        begin
+            reset_dut();
+            set_lane_addr(0, 32'h0000_0180);
+            set_lane_wdata(0, 32'hFACE_CAFE);
+            req_ready = 1'b1;
+            start_cmd(OP_INVALID, 4'b0001);
+            tick();
+            check(error, "invalid LSU op flags error");
+            check(!done, "invalid LSU op does not signal done");
+            check(!req_valid, "invalid LSU op issues no request");
+            check(!rsp_ready, "invalid LSU op waits for no response");
+            check(lane_rvalid == 4'b0000, "invalid LSU op produces no load write enables");
+            check(start_ready, "invalid LSU op returns to idle");
+        end
+    endtask
+
     task automatic test_masked_lanes_do_not_fault;
         begin
             reset_dut();
@@ -412,6 +430,7 @@ module tb_load_store_unit;
         test_start_rejected_while_busy();
         test_unaligned_32_bit_error();
         test_store16_odd_address_error();
+        test_invalid_op_error();
         test_masked_lanes_do_not_fault();
         test_store16_masks();
         $display("tb_load_store_unit PASS");

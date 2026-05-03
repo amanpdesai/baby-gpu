@@ -27,12 +27,13 @@ module load_store_unit_prep_checker #(
 );
     localparam logic [1:0] OP_STORE = 2'd1;
     localparam logic [1:0] OP_STORE16 = 2'd2;
+    localparam logic [1:0] OP_INVALID = 2'd3;
     localparam logic [1:0] STATE_PREP = 2'd1;
 
     (* anyconst *) logic [2:0] scenario;
 
     always_comb begin
-        assume(scenario <= 3'd5);
+        assume(scenario <= 3'd6);
         assume(state_q == STATE_PREP);
         assume(lane_idx_q == '0);
         assume(done_q == 1'b0);
@@ -74,6 +75,12 @@ module load_store_unit_prep_checker #(
                 assume(active_mask_q == 1'b1);
                 assume(lane_addr_q == 32'h0000_0101);
                 assume(lane_wdata_q == 32'h0000_9876);
+            end
+            3'd5: begin
+                assume(op_q == OP_INVALID);
+                assume(active_mask_q == 1'b1);
+                assume(lane_addr_q == 32'h0000_0180);
+                assume(lane_wdata_q == 32'hFACE_CAFE);
             end
             default: begin
                 assume(op_q == OP_STORE);
@@ -123,6 +130,13 @@ module load_store_unit_prep_checker #(
         end
 
         if (scenario == 3'd5) begin
+            assert(found_lane);
+            assert(!align_error);
+            assert(op_error);
+            assert(prepared_wmask == '0);
+        end
+
+        if (scenario == 3'd6) begin
             assert(!found_lane);
             assert(!align_error);
             assert(!op_error);
