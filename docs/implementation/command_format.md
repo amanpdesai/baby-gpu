@@ -73,6 +73,9 @@ LAUNCH_FLAGS
 
 The command processor must reject or report:
 
+- unknown command opcodes
+- malformed `LAUNCH_KERNEL` word count
+- nonzero reserved command fields
 - launch while busy
 - zero grid dimensions
 - unsupported group dimensions
