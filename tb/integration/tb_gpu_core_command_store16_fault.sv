@@ -3,8 +3,10 @@ import isa_pkg::*;
 module tb_gpu_core_command_store16_fault;
   import kernel_asm_pkg::*;
   `include "tb/common/gpu_core_command_driver.svh"
+  `include "tb/common/kernel_program_loader.svh"
 
   localparam int MEM_WORDS = 8;
+  localparam int IMEM_ADDR_W = 8;
   localparam logic [7:0] ERR_PROGRAMMABLE = 8'h20;
 
   logic clk;
@@ -97,6 +99,17 @@ module tb_gpu_core_command_store16_fault;
   end
   endtask
 
+  task automatic load_store16_fault_program(input logic [31:0] addr);
+    logic [ISA_WORD_W-1:0] kernel_words [0:3];
+    begin
+      kernel_words[0] = kgpu_movi(4'd1, 18'(addr[17:0]));
+      kernel_words[1] = kgpu_movi(4'd2, 18'h02A5B);
+      kernel_words[2] = kgpu_store16(4'd2, 4'd1, 18'd0);
+      kernel_words[3] = kgpu_end();
+      `KGPU_LOAD_PROGRAM(kernel_words)
+    end
+  endtask
+
   initial begin
     clk = 1'b0;
     reset = 1'b1;
@@ -117,10 +130,7 @@ module tb_gpu_core_command_store16_fault;
     reset = 1'b0;
     step();
 
-    write_imem(8'd0, kgpu_movi(4'd1, 18'd1));
-    write_imem(8'd1, kgpu_movi(4'd2, 18'h02A5B));
-    write_imem(8'd2, kgpu_store16(4'd2, 4'd1, 18'd0));
-    write_imem(8'd3, kgpu_end());
+    load_store16_fault_program(32'h0000_0001);
 
     configure_launch(32'h0000_0000, 32'h0000_0001, 32'h0000_0001, 32'h0000_0000);
 
@@ -137,10 +147,7 @@ module tb_gpu_core_command_store16_fault;
     wait_error_clear(20, "soft reset clears programmable fault status");
 
     mem_req_seen = 1'b0;
-    write_imem(8'd0, kgpu_movi(4'd1, 18'd0));
-    write_imem(8'd1, kgpu_movi(4'd2, 18'h02A5B));
-    write_imem(8'd2, kgpu_store16(4'd2, 4'd1, 18'd0));
-    write_imem(8'd3, kgpu_end());
+    load_store16_fault_program(32'h0000_0000);
 
     configure_launch(32'h0000_0000, 32'h0000_0001, 32'h0000_0001, 32'h0000_0000);
 

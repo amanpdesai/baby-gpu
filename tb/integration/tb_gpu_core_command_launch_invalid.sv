@@ -3,6 +3,9 @@ import isa_pkg::*;
 module tb_gpu_core_command_launch_invalid;
   import kernel_asm_pkg::*;
   `include "tb/common/gpu_core_command_driver.svh"
+  `include "tb/common/kernel_program_loader.svh"
+
+  localparam int IMEM_ADDR_W = 8;
 
   logic clk;
   logic reset;
@@ -97,6 +100,14 @@ module tb_gpu_core_command_launch_invalid;
   end
   endtask
 
+  task automatic load_empty_kernel_program;
+    logic [ISA_WORD_W-1:0] kernel_words [0:0];
+    begin
+      kernel_words[0] = kgpu_end();
+      `KGPU_LOAD_PROGRAM(kernel_words)
+    end
+  endtask
+
   initial begin
     clk = 1'b0;
     reset = 1'b1;
@@ -114,7 +125,7 @@ module tb_gpu_core_command_launch_invalid;
     reset = 1'b0;
     step();
 
-    write_imem(8'd0, kgpu_end());
+    load_empty_kernel_program();
 
     configure_launch(32'h0000_0000, 32'h0000_0000, 32'h0000_0001, 32'h0000_0000);
     wait_idle(40, "zero-grid launch registers drain");

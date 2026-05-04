@@ -3,8 +3,10 @@ import isa_pkg::*;
 module tb_gpu_core_command_store16_kernel;
   import kernel_asm_pkg::*;
   `include "tb/common/gpu_core_command_driver.svh"
+  `include "tb/common/kernel_program_loader.svh"
 
   localparam int MEM_WORDS = 16;
+  localparam int IMEM_ADDR_W = 8;
   localparam logic [15:0] COLOR = 16'h2A5B;
 
   logic clk;
@@ -96,6 +98,21 @@ module tb_gpu_core_command_store16_kernel;
     end
   endfunction
 
+  task automatic load_store16_kernel_program;
+    logic [ISA_WORD_W-1:0] kernel_words [0:7];
+    begin
+      kernel_words[0] = kgpu_movsr(4'd1, ISA_SR_LINEAR_GLOBAL_ID);
+      kernel_words[1] = kgpu_movi(4'd2, 18'd2);
+      kernel_words[2] = kgpu_mul(4'd3, 4'd1, 4'd2);
+      kernel_words[3] = kgpu_movsr(4'd4, ISA_SR_FRAMEBUFFER_BASE);
+      kernel_words[4] = kgpu_add(4'd5, 4'd4, 4'd3);
+      kernel_words[5] = kgpu_movi(4'd6, 18'(COLOR));
+      kernel_words[6] = kgpu_store16(4'd6, 4'd5, 18'd0);
+      kernel_words[7] = kgpu_end();
+      `KGPU_LOAD_PROGRAM(kernel_words)
+    end
+  endtask
+
   initial begin
     clk = 1'b0;
     reset = 1'b1;
@@ -115,14 +132,7 @@ module tb_gpu_core_command_store16_kernel;
     reset = 1'b0;
     step();
 
-    write_imem(8'd0, kgpu_movsr(4'd1, ISA_SR_LINEAR_GLOBAL_ID));
-    write_imem(8'd1, kgpu_movi(4'd2, 18'd2));
-    write_imem(8'd2, kgpu_mul(4'd3, 4'd1, 4'd2));
-    write_imem(8'd3, kgpu_movsr(4'd4, ISA_SR_FRAMEBUFFER_BASE));
-    write_imem(8'd4, kgpu_add(4'd5, 4'd4, 4'd3));
-    write_imem(8'd5, kgpu_movi(4'd6, 18'(COLOR)));
-    write_imem(8'd6, kgpu_store16(4'd6, 4'd5, 18'd0));
-    write_imem(8'd7, kgpu_end());
+    load_store16_kernel_program();
 
     set_reg(KGPU_REG_FB_BASE, 32'h0000_0000);
     configure_launch(32'h0000_0000, 32'h0000_0004, 32'h0000_0001, 32'h0000_0000);
