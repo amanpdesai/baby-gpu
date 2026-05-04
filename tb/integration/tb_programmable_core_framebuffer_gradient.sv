@@ -1,4 +1,5 @@
 import isa_pkg::*;
+`include "tb/common/kernel_program_loader.svh"
 
 module tb_programmable_core_framebuffer_gradient;
   import kernel_asm_pkg::*;
@@ -283,23 +284,25 @@ module tb_programmable_core_framebuffer_gradient;
   endtask
 
   task automatic load_gradient_program();
+    logic [ISA_WORD_W-1:0] kernel_words [0:15];
     begin
-      write_imem(8'd0, kgpu_movsr(4'd1, ISA_SR_GLOBAL_ID_Y));
-      write_imem(8'd1, kgpu_movsr(4'd2, ISA_SR_FRAMEBUFFER_WIDTH));
-      write_imem(8'd2, kgpu_mul(4'd3, 4'd1, 4'd2));
-      write_imem(8'd3, kgpu_movsr(4'd4, ISA_SR_GLOBAL_ID_X));
-      write_imem(8'd4, kgpu_add(4'd3, 4'd3, 4'd4));
-      write_imem(8'd5, kgpu_movi(4'd5, 18'd2));
-      write_imem(8'd6, kgpu_mul(4'd3, 4'd3, 4'd5));
-      write_imem(8'd7, kgpu_movsr(4'd6, ISA_SR_FRAMEBUFFER_BASE));
-      write_imem(8'd8, kgpu_add(4'd7, 4'd6, 4'd3));
-      write_imem(8'd9, kgpu_movi(4'd8, 18'd16));
-      write_imem(8'd10, kgpu_mul(4'd1, 4'd1, 4'd8));
-      write_imem(8'd11, kgpu_movi(4'd8, 18'h60));
-      write_imem(8'd12, kgpu_add(4'd8, 4'd8, 4'd4));
-      write_imem(8'd13, kgpu_add(4'd8, 4'd8, 4'd1));
-      write_imem(8'd14, kgpu_store16(4'd8, 4'd7, 18'd0));
-      write_imem(8'd15, kgpu_end());
+      kernel_words[0] = kgpu_movsr(4'd1, ISA_SR_GLOBAL_ID_Y);
+      kernel_words[1] = kgpu_movsr(4'd2, ISA_SR_FRAMEBUFFER_WIDTH);
+      kernel_words[2] = kgpu_mul(4'd3, 4'd1, 4'd2);
+      kernel_words[3] = kgpu_movsr(4'd4, ISA_SR_GLOBAL_ID_X);
+      kernel_words[4] = kgpu_add(4'd3, 4'd3, 4'd4);
+      kernel_words[5] = kgpu_movi(4'd5, 18'd2);
+      kernel_words[6] = kgpu_mul(4'd3, 4'd3, 4'd5);
+      kernel_words[7] = kgpu_movsr(4'd6, ISA_SR_FRAMEBUFFER_BASE);
+      kernel_words[8] = kgpu_add(4'd7, 4'd6, 4'd3);
+      kernel_words[9] = kgpu_movi(4'd8, 18'd16);
+      kernel_words[10] = kgpu_mul(4'd1, 4'd1, 4'd8);
+      kernel_words[11] = kgpu_movi(4'd8, 18'h60);
+      kernel_words[12] = kgpu_add(4'd8, 4'd8, 4'd4);
+      kernel_words[13] = kgpu_add(4'd8, 4'd8, 4'd1);
+      kernel_words[14] = kgpu_store16(4'd8, 4'd7, 18'd0);
+      kernel_words[15] = kgpu_end();
+      `KGPU_LOAD_PROGRAM(kernel_words)
     end
   endtask
 
