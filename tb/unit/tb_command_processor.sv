@@ -200,6 +200,43 @@ module tb_command_processor;
     step();
     check(!launch_start, "LAUNCH_KERNEL start pulse clears after one cycle");
 
+    launch_busy = 1'b1;
+    cmd_data = 32'h0301_0000;
+    cmd_valid = 1'b1;
+    #1;
+    check(cmd_ready, "WAIT_IDLE accepts while launch path is busy");
+    step();
+
+    cmd_data = 32'h1003_0000;
+    repeat (3) begin
+      #1;
+      check(!cmd_ready, "WAIT_IDLE blocks following command while launch path is busy");
+      check(!reg_write_valid, "WAIT_IDLE emits no register write while blocked");
+      step();
+    end
+
+    launch_busy = 1'b0;
+    step();
+    #1;
+    check(!reg_write_valid, "WAIT_IDLE drain edge emits no register write");
+    check(cmd_ready, "command after WAIT_IDLE is accepted after launch path idles");
+    step();
+
+    cmd_data = 32'h0000_0054;
+    #1;
+    check(cmd_ready, "SET_REGISTER address after WAIT_IDLE accepted");
+    step();
+
+    cmd_data = 32'h0000_0240;
+    #1;
+    check(cmd_ready, "SET_REGISTER data after WAIT_IDLE accepted");
+    step();
+    cmd_valid = 1'b0;
+    step();
+    check(reg_write_valid, "SET_REGISTER behind WAIT_IDLE retires after launch path idles");
+    check(reg_write_addr == 32'h0000_0054, "WAIT_IDLE preserves queued register address");
+    check(reg_write_data == 32'h0000_0240, "WAIT_IDLE preserves queued register data");
+
     send_word(32'h2002_0000);
     check(!launch_start, "bad-count LAUNCH_KERNEL does not start");
     send_word(32'h0000_CAFE);
