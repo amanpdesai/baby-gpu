@@ -32,6 +32,16 @@ module tb_gpu_core_command_vector_add;
   logic mem_rsp_valid;
   logic mem_rsp_ready;
   logic [31:0] mem_rsp_rdata;
+  logic [2:0] mem_stall_phase;
+  logic pending_valid;
+  logic pending_write;
+  logic [31:0] pending_addr;
+  logic [31:0] pending_wdata;
+  logic [3:0] pending_wmask;
+  logic [31:0] pending_rdata;
+  logic [1:0] pending_delay;
+  logic saw_req_stall;
+  logic saw_rsp_delay;
   logic [31:0] memory [0:MEM_WORDS-1];
   int i;
 
@@ -63,7 +73,8 @@ module tb_gpu_core_command_vector_add;
       .mem_rsp_rdata(mem_rsp_rdata)
   );
 
-  assign mem_req_ready = !mem_rsp_valid || mem_rsp_ready;
+  assign mem_req_ready = !pending_valid && (!mem_rsp_valid || mem_rsp_ready) &&
+                         (mem_stall_phase != 3'd2);
 
   always #5 clk = ~clk;
 
@@ -71,27 +82,63 @@ module tb_gpu_core_command_vector_add;
     if (reset) begin
       mem_rsp_valid <= 1'b0;
       mem_rsp_rdata <= '0;
+      mem_stall_phase <= '0;
+      pending_valid <= 1'b0;
+      pending_write <= 1'b0;
+      pending_addr <= '0;
+      pending_wdata <= '0;
+      pending_wmask <= '0;
+      pending_rdata <= '0;
+      pending_delay <= '0;
+      saw_req_stall <= 1'b0;
+      saw_rsp_delay <= 1'b0;
     end else begin
-      if (mem_req_valid && mem_req_ready) begin
-        mem_rsp_valid <= 1'b1;
-        mem_rsp_rdata <= mem_req_write ? '0 : memory[mem_req_addr[31:2]];
+      mem_stall_phase <= mem_stall_phase + 3'd1;
 
-        if (mem_req_write) begin
-          if (mem_req_wmask[0]) begin
-            memory[mem_req_addr[31:2]][7:0] <= mem_req_wdata[7:0];
-          end
-          if (mem_req_wmask[1]) begin
-            memory[mem_req_addr[31:2]][15:8] <= mem_req_wdata[15:8];
-          end
-          if (mem_req_wmask[2]) begin
-            memory[mem_req_addr[31:2]][23:16] <= mem_req_wdata[23:16];
-          end
-          if (mem_req_wmask[3]) begin
-            memory[mem_req_addr[31:2]][31:24] <= mem_req_wdata[31:24];
+      if (mem_req_valid && !mem_req_ready) begin
+        saw_req_stall <= 1'b1;
+      end
+      if (pending_valid && pending_delay != 2'd0) begin
+        saw_rsp_delay <= 1'b1;
+      end
+
+      if (mem_rsp_valid && mem_rsp_ready) begin
+        mem_rsp_valid <= 1'b0;
+      end
+
+      if (pending_valid) begin
+        if (pending_delay != 2'd0) begin
+          pending_delay <= pending_delay - 2'd1;
+        end else if (!mem_rsp_valid || mem_rsp_ready) begin
+          pending_valid <= 1'b0;
+          mem_rsp_valid <= 1'b1;
+          mem_rsp_rdata <= pending_rdata;
+
+          if (pending_write) begin
+            if (pending_wmask[0]) begin
+              memory[pending_addr[31:2]][7:0] <= pending_wdata[7:0];
+            end
+            if (pending_wmask[1]) begin
+              memory[pending_addr[31:2]][15:8] <= pending_wdata[15:8];
+            end
+            if (pending_wmask[2]) begin
+              memory[pending_addr[31:2]][23:16] <= pending_wdata[23:16];
+            end
+            if (pending_wmask[3]) begin
+              memory[pending_addr[31:2]][31:24] <= pending_wdata[31:24];
+            end
           end
         end
-      end else if (mem_rsp_valid && mem_rsp_ready) begin
-        mem_rsp_valid <= 1'b0;
+      end
+
+      if (mem_req_valid && mem_req_ready) begin
+        pending_valid <= 1'b1;
+        pending_write <= mem_req_write;
+        pending_addr <= mem_req_addr;
+        pending_wdata <= mem_req_wdata;
+        pending_wmask <= mem_req_wmask;
+        pending_rdata <= mem_req_write ? '0 : memory[mem_req_addr[31:2]];
+        pending_delay <= mem_req_write ? 2'd1 : 2'd2;
       end
     end
   end
@@ -229,6 +276,8 @@ module tb_gpu_core_command_vector_add;
     wait_idle();
 
     check(error_status == 8'h00, "command vector_add completes without error");
+    check(saw_req_stall, "command vector_add observes memory request backpressure");
+    check(saw_rsp_delay, "command vector_add observes delayed memory responses");
     for (i = 0; i < ELEMENTS; i = i + 1) begin
       check(memory[C_BASE[31:2] + i] == (32'd1100 + 32'(i * 4)),
             "command vector_add output matches");
