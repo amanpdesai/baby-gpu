@@ -125,6 +125,8 @@ architecture.
   programmable core, LSU, and top-level memory response path
 - command-driven `gpu_core` vector_add smoke through launch registers,
   argument-block loads, global input loads, and global output stores
+- command-driven `gpu_core` odd-address STORE16 fault smoke through
+  host-visible programmable error status
 
 The first programmable GPU path now executes encoded kernels through scheduler,
 core, LSU, and simulation memory.
