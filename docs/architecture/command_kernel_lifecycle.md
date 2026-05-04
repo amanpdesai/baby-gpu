@@ -160,6 +160,8 @@ Implemented coverage for this lifecycle is intentionally narrow:
   memory
 - command-driven invalid-launch rejection through real `gpu_core` launch
   registers for zero grid, unsupported group size, and nonzero flags
+- command-driven soft reset while a kernel is stalled on memory, followed by
+  successful relaunch
 - command-driven odd-address `STORE16` fault visibility
 - command-driven soft-reset recovery after the `STORE16` fault
 

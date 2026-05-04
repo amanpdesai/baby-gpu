@@ -131,6 +131,8 @@ architecture.
   barrier smoke while a kernel is stalled on memory
 - command-driven `gpu_core` invalid-launch rejection through real launch
   registers
+- command-driven `gpu_core` soft reset while a kernel is stalled on memory,
+  followed by successful relaunch
 - command-driven `gpu_core` odd-address STORE16 fault smoke through
   host-visible programmable error status
 - command-driven `gpu_core` soft-reset recovery after programmable STORE16
@@ -186,6 +188,7 @@ Current lifecycle/ABI coverage:
   `vector_add`
 - launch-while-busy dispatch rejection and WAIT_IDLE barrier smoke
 - invalid-launch rejection through real `gpu_core` launch registers
+- active-kernel soft reset and relaunch while memory response is held
 - host-visible odd-address `STORE16` fault
 - soft-reset recovery after the `STORE16` fault
 
