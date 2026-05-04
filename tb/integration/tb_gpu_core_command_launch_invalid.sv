@@ -89,12 +89,15 @@ module tb_gpu_core_command_launch_invalid;
     int timeout;
   begin
     launch_kernel();
+    check(!dut.u_command_processor.launch_start, "invalid launch does not pulse command launch_start");
     timeout = 0;
     while ((error_status & KGPU_ERR_LAUNCH_INVALID) == 8'h00) begin
       check(timeout < 20, message);
+      check(!dut.u_command_processor.launch_start, "invalid launch keeps command launch_start low");
       timeout = timeout + 1;
       step();
     end
+    check(!dut.u_command_processor.launch_start, "invalid launch never starts programmable core");
     check(error_status == KGPU_ERR_LAUNCH_INVALID, message);
     wait_idle(20, "invalid launch returns idle");
   end
@@ -124,10 +127,21 @@ module tb_gpu_core_command_launch_invalid;
     expect_invalid_launch("zero GRID_X sets launch-invalid");
     reset_errors();
 
+    configure_launch(32'h0000_0000, 32'h0000_0001, 32'h0000_0000, 32'h0000_0000);
+    wait_idle(40, "zero-grid-y launch registers drain");
+    expect_invalid_launch("zero GRID_Y sets launch-invalid");
+    reset_errors();
+
     configure_1d_launch(32'h0000_0001, 32'h0000_0000);
     set_reg(KGPU_REG_GROUP_SIZE_X, 32'h0000_0008);
     wait_idle(40, "unsupported-group launch registers drain");
     expect_invalid_launch("unsupported GROUP_SIZE_X sets launch-invalid");
+    reset_errors();
+
+    configure_1d_launch(32'h0000_0001, 32'h0000_0000);
+    set_reg(KGPU_REG_GROUP_SIZE_Y, 32'h0000_0002);
+    wait_idle(40, "unsupported-group-y launch registers drain");
+    expect_invalid_launch("unsupported GROUP_SIZE_Y sets launch-invalid");
     reset_errors();
 
     configure_1d_launch(32'h0000_0001, 32'h0000_0000);
