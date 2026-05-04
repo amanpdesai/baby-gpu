@@ -113,6 +113,35 @@ module tb_command_processor;
     end
   endtask
 
+  task automatic clear_error_status;
+    begin
+      clear_errors = 1'b1;
+      step();
+      clear_errors = 1'b0;
+      check(error_status == 8'h00, "clear_errors clears sticky command errors");
+    end
+  endtask
+
+  task automatic restore_valid_launch_config;
+    begin
+      launch_grid_x = 16'd8;
+      launch_grid_y = 16'd2;
+      launch_group_size_x = 16'd4;
+      launch_group_size_y = 16'd1;
+      launch_flags = 32'h0000_0000;
+    end
+  endtask
+
+  task automatic expect_invalid_launch(input string message);
+    begin
+      send_word(32'h2001_0000);
+      check(!launch_start, message);
+      check(error_status[4], "invalid launch config sets launch-invalid error");
+      clear_error_status();
+      restore_valid_launch_config();
+    end
+  endtask
+
   initial begin
     clk = 1'b0;
     reset = 1'b1;
@@ -250,36 +279,22 @@ module tb_command_processor;
     send_word(32'h2001_0001);
     check(!launch_start, "reserved-flag LAUNCH_KERNEL does not start");
     check(error_status[2], "reserved-flag LAUNCH_KERNEL sets bad-reserved error");
-    clear_errors = 1'b1;
-    step();
-    clear_errors = 1'b0;
+    clear_error_status();
 
     launch_grid_x = 16'd0;
-    send_word(32'h2001_0000);
-    check(!launch_start, "zero-grid LAUNCH_KERNEL does not start");
-    check(error_status[4], "zero-grid LAUNCH_KERNEL sets launch-invalid error");
-    launch_grid_x = 16'd8;
-    clear_errors = 1'b1;
-    step();
-    clear_errors = 1'b0;
+    expect_invalid_launch("zero-grid-x LAUNCH_KERNEL does not start");
+
+    launch_grid_y = 16'd0;
+    expect_invalid_launch("zero-grid-y LAUNCH_KERNEL does not start");
 
     launch_group_size_x = 16'd8;
-    send_word(32'h2001_0000);
-    check(!launch_start, "unsupported-group LAUNCH_KERNEL does not start");
-    check(error_status[4], "unsupported-group LAUNCH_KERNEL sets launch-invalid error");
-    launch_group_size_x = 16'd4;
-    clear_errors = 1'b1;
-    step();
-    clear_errors = 1'b0;
+    expect_invalid_launch("unsupported-group-x LAUNCH_KERNEL does not start");
+
+    launch_group_size_y = 16'd2;
+    expect_invalid_launch("unsupported-group-y LAUNCH_KERNEL does not start");
 
     launch_flags = 32'h0000_0001;
-    send_word(32'h2001_0000);
-    check(!launch_start, "unsupported-flags LAUNCH_KERNEL does not start");
-    check(error_status[4], "unsupported-flags LAUNCH_KERNEL sets launch-invalid error");
-    launch_flags = 32'h0000_0000;
-    clear_errors = 1'b1;
-    step();
-    clear_errors = 1'b0;
+    expect_invalid_launch("unsupported-flags LAUNCH_KERNEL does not start");
 
     launch_busy = 1'b1;
     send_word(32'h2001_0000);
