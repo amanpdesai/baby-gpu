@@ -158,6 +158,8 @@ Implemented coverage for this lifecycle is intentionally narrow:
 - command-driven launch-while-busy dispatch rejection
 - `WAIT_IDLE` barrier behavior while a command-launched kernel is stalled on
   memory
+- command-driven invalid-launch rejection through real `gpu_core` launch
+  registers for zero grid, unsupported group size, and nonzero flags
 - command-driven odd-address `STORE16` fault visibility
 - command-driven soft-reset recovery after the `STORE16` fault
 
