@@ -162,15 +162,7 @@ module tb_gpu_core_command_vector_add;
   endtask
 
   initial begin
-    clk = 1'b0;
-    reset = 1'b1;
-    enable = 1'b1;
-    clear_errors = 1'b0;
-    cmd_valid = 1'b0;
-    cmd_data = '0;
-    imem_write_en = 1'b0;
-    imem_write_addr = '0;
-    imem_write_data = '0;
+    init_command_driver();
     mem_rsp_valid = 1'b0;
     mem_rsp_rdata = '0;
 
@@ -195,7 +187,7 @@ module tb_gpu_core_command_vector_add;
     memory[C_BASE[31:2] + ELEMENTS] = 32'hBEEF_0006;
     memory[C_BASE[31:2] + ELEMENTS + 1] = 32'hBEEF_0007;
 
-    configure_launch(32'h0000_0000, 32'(ELEMENTS), 32'h0000_0001, ARG_BASE);
+    configure_1d_launch(32'(ELEMENTS), ARG_BASE);
 
     launch_kernel();
     send_word(KGPU_CMD_WAIT_IDLE);

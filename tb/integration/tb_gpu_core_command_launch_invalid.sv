@@ -109,15 +109,7 @@ module tb_gpu_core_command_launch_invalid;
   endtask
 
   initial begin
-    clk = 1'b0;
-    reset = 1'b1;
-    enable = 1'b1;
-    clear_errors = 1'b0;
-    cmd_valid = 1'b0;
-    cmd_data = '0;
-    imem_write_en = 1'b0;
-    imem_write_addr = '0;
-    imem_write_data = '0;
+    init_command_driver();
     mem_rsp_valid = 1'b0;
     mem_rsp_rdata = '0;
 
@@ -132,19 +124,19 @@ module tb_gpu_core_command_launch_invalid;
     expect_invalid_launch("zero GRID_X sets launch-invalid");
     reset_errors();
 
-    configure_launch(32'h0000_0000, 32'h0000_0001, 32'h0000_0001, 32'h0000_0000);
+    configure_1d_launch(32'h0000_0001, 32'h0000_0000);
     set_reg(KGPU_REG_GROUP_SIZE_X, 32'h0000_0008);
     wait_idle(40, "unsupported-group launch registers drain");
     expect_invalid_launch("unsupported GROUP_SIZE_X sets launch-invalid");
     reset_errors();
 
-    configure_launch(32'h0000_0000, 32'h0000_0001, 32'h0000_0001, 32'h0000_0000);
+    configure_1d_launch(32'h0000_0001, 32'h0000_0000);
     set_reg(KGPU_REG_LAUNCH_FLAGS, 32'h0000_0001);
     wait_idle(40, "launch-flags registers drain");
     expect_invalid_launch("nonzero LAUNCH_FLAGS sets launch-invalid");
     reset_errors();
 
-    configure_launch(32'h0000_0000, 32'h0000_0001, 32'h0000_0001, 32'h0000_0000);
+    configure_1d_launch(32'h0000_0001, 32'h0000_0000);
     wait_idle(40, "valid launch registers drain");
     launch_kernel();
     send_word(KGPU_CMD_WAIT_IDLE);

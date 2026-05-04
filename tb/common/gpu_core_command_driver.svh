@@ -23,6 +23,20 @@ localparam logic [7:0] KGPU_ERR_DISPATCH_BUSY = 8'h08;
 localparam logic [7:0] KGPU_ERR_LAUNCH_INVALID = 8'h10;
 localparam logic [7:0] KGPU_ERR_PROGRAMMABLE = 8'h20;
 
+task automatic init_command_driver;
+begin
+  clk = 1'b0;
+  reset = 1'b1;
+  enable = 1'b1;
+  clear_errors = 1'b0;
+  cmd_valid = 1'b0;
+  cmd_data = '0;
+  imem_write_en = 1'b0;
+  imem_write_addr = '0;
+  imem_write_data = '0;
+end
+endtask
+
 task automatic step;
 begin
   @(posedge clk);
@@ -83,6 +97,13 @@ begin
   set_reg(KGPU_REG_GROUP_SIZE_Y, 32'h0000_0001);
   set_reg(KGPU_REG_ARG_BASE, arg_base);
   set_reg(KGPU_REG_LAUNCH_FLAGS, 32'h0000_0000);
+end
+endtask
+
+task automatic configure_1d_launch(input logic [31:0] grid_x,
+                                   input logic [31:0] arg_base);
+begin
+  configure_launch(32'h0000_0000, grid_x, 32'h0000_0001, arg_base);
 end
 endtask
 

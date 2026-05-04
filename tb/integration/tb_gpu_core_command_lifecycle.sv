@@ -132,15 +132,7 @@ module tb_gpu_core_command_lifecycle;
   endtask
 
   initial begin
-    clk = 1'b0;
-    reset = 1'b1;
-    enable = 1'b1;
-    clear_errors = 1'b0;
-    cmd_valid = 1'b0;
-    cmd_data = '0;
-    imem_write_en = 1'b0;
-    imem_write_addr = '0;
-    imem_write_data = '0;
+    init_command_driver();
     mem_rsp_valid = 1'b0;
     mem_rsp_rdata = '0;
     hold_rsp = 1'b0;
@@ -159,7 +151,7 @@ module tb_gpu_core_command_lifecycle;
     load_stalling_load_program();
 
     hold_rsp = 1'b1;
-    configure_launch(32'h0000_0000, 32'h0000_0001, 32'h0000_0001, 32'h0000_0000);
+    configure_1d_launch(32'h0000_0001, 32'h0000_0000);
     launch_kernel();
     wait_for_mem_req();
 
