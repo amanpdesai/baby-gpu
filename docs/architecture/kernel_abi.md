@@ -111,6 +111,8 @@ Current ABI coverage includes:
 - nonzero command-driven `PROGRAM_BASE` as an instruction-word offset
 - launch snapshot stability for `ARG_BASE` while the host rewrites launch
   registers during an active stalled kernel
+- launch snapshot stability for `GRID_X` and `GRID_Y` while the host rewrites
+  launch registers during an active stalled kernel
 - memory request stall and delayed response smoke in command-driven
   `vector_add`
 - `STORE16` odd-address fault visibility through host-visible error status

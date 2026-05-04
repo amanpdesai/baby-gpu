@@ -193,6 +193,8 @@ Current lifecycle/ABI coverage:
   `vector_add`
 - launch-while-busy dispatch rejection and WAIT_IDLE barrier smoke
 - `ARG_BASE` launch snapshot behavior while a command-driven kernel is stalled
+- `GRID_X`/`GRID_Y` launch snapshot behavior while a command-driven kernel is
+  stalled
 - invalid-launch rejection through real `gpu_core` launch registers
 - active-kernel soft reset and relaunch while memory response is held
 - host-visible odd-address `STORE16` fault
