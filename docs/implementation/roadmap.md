@@ -52,7 +52,8 @@ gantt
 - native RTL toolchain checks
 - command FIFO
 - command processor
-- command-processor WAIT_IDLE, RECT reserved-field, and CLEAR/RECT dispatch-busy unit coverage
+- command-processor WAIT_IDLE, RECT reserved-field, CLEAR/RECT dispatch-busy,
+  and LAUNCH_KERNEL validation/latch unit coverage
 - register file
 - clear and rectangle fixed-function smoke engines
 - clear-engine pixel backpressure unit coverage
@@ -118,6 +119,8 @@ architecture.
 - programmable-core R0-predicated 32-bit store no-op integration coverage
 - programmable-core predicated STORE16 masked-fault integration coverage
 - programmable-core all-false predicated STORE16 skip integration coverage
+- command-driven launch register plumbing through `gpu_core` with
+  LAUNCH_KERNEL latch smoke coverage
 
 The first programmable GPU path now executes encoded kernels through scheduler,
 core, LSU, and simulation memory.

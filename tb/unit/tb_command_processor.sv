@@ -18,6 +18,22 @@ module tb_command_processor;
   logic [15:0] rect_color;
   logic rect_busy;
   logic rect_done;
+  logic launch_start;
+  logic launch_busy;
+  logic [31:0] launch_program_base;
+  logic [15:0] launch_grid_x;
+  logic [15:0] launch_grid_y;
+  logic [15:0] launch_group_size_x;
+  logic [15:0] launch_group_size_y;
+  logic [31:0] launch_arg_base;
+  logic [31:0] launch_flags;
+  logic [31:0] launch_program_base_latched;
+  logic [15:0] launch_grid_x_latched;
+  logic [15:0] launch_grid_y_latched;
+  logic [15:0] launch_group_size_x_latched;
+  logic [15:0] launch_group_size_y_latched;
+  logic [31:0] launch_arg_base_latched;
+  logic [31:0] launch_flags_latched;
   logic reg_write_valid;
   logic [31:0] reg_write_addr;
   logic [31:0] reg_write_data;
@@ -44,6 +60,22 @@ module tb_command_processor;
       .rect_color(rect_color),
       .rect_busy(rect_busy),
       .rect_done(rect_done),
+      .launch_start(launch_start),
+      .launch_busy(launch_busy),
+      .launch_program_base(launch_program_base),
+      .launch_grid_x(launch_grid_x),
+      .launch_grid_y(launch_grid_y),
+      .launch_group_size_x(launch_group_size_x),
+      .launch_group_size_y(launch_group_size_y),
+      .launch_arg_base(launch_arg_base),
+      .launch_flags(launch_flags),
+      .launch_program_base_latched(launch_program_base_latched),
+      .launch_grid_x_latched(launch_grid_x_latched),
+      .launch_grid_y_latched(launch_grid_y_latched),
+      .launch_group_size_x_latched(launch_group_size_x_latched),
+      .launch_group_size_y_latched(launch_group_size_y_latched),
+      .launch_arg_base_latched(launch_arg_base_latched),
+      .launch_flags_latched(launch_flags_latched),
       .reg_write_valid(reg_write_valid),
       .reg_write_addr(reg_write_addr),
       .reg_write_data(reg_write_data),
@@ -92,6 +124,14 @@ module tb_command_processor;
     clear_done = 1'b0;
     rect_busy = 1'b0;
     rect_done = 1'b0;
+    launch_busy = 1'b0;
+    launch_program_base = 32'h0000_0020;
+    launch_grid_x = 16'd8;
+    launch_grid_y = 16'd2;
+    launch_group_size_x = 16'd4;
+    launch_group_size_y = 16'd1;
+    launch_arg_base = 32'h0000_0100;
+    launch_flags = 32'h0000_0000;
 
     step();
     reset = 1'b0;
@@ -147,6 +187,72 @@ module tb_command_processor;
     check(reg_write_addr == 32'h0000_0010, "SET_REGISTER captures address");
     check(reg_write_data == 32'h0000_0001, "SET_REGISTER captures data");
 
+    send_word(32'h2001_0000);
+    check(launch_start, "LAUNCH_KERNEL emits one-cycle start");
+    check(launch_program_base_latched == 32'h0000_0020, "LAUNCH_KERNEL latches program base");
+    check(launch_grid_x_latched == 16'd8, "LAUNCH_KERNEL latches grid x");
+    check(launch_grid_y_latched == 16'd2, "LAUNCH_KERNEL latches grid y");
+    check(launch_group_size_x_latched == 16'd4, "LAUNCH_KERNEL latches group size x");
+    check(launch_group_size_y_latched == 16'd1, "LAUNCH_KERNEL latches group size y");
+    check(launch_arg_base_latched == 32'h0000_0100, "LAUNCH_KERNEL latches arg base");
+    check(launch_flags_latched == 32'h0000_0000, "LAUNCH_KERNEL latches launch flags");
+    check(error_status == 8'h00, "valid LAUNCH_KERNEL leaves errors clear");
+    step();
+    check(!launch_start, "LAUNCH_KERNEL start pulse clears after one cycle");
+
+    send_word(32'h2002_0000);
+    check(!launch_start, "bad-count LAUNCH_KERNEL does not start");
+    send_word(32'h0000_CAFE);
+    check(error_status[1], "bad-count LAUNCH_KERNEL sets bad-word-count error");
+    send_word(32'h0001_0000);
+    check(error_status[1] && !launch_start, "bad-count LAUNCH_KERNEL skip realigns next command");
+    clear_errors = 1'b1;
+    step();
+    clear_errors = 1'b0;
+
+    send_word(32'h2001_0001);
+    check(!launch_start, "reserved-flag LAUNCH_KERNEL does not start");
+    check(error_status[2], "reserved-flag LAUNCH_KERNEL sets bad-reserved error");
+    clear_errors = 1'b1;
+    step();
+    clear_errors = 1'b0;
+
+    launch_grid_x = 16'd0;
+    send_word(32'h2001_0000);
+    check(!launch_start, "zero-grid LAUNCH_KERNEL does not start");
+    check(error_status[4], "zero-grid LAUNCH_KERNEL sets launch-invalid error");
+    launch_grid_x = 16'd8;
+    clear_errors = 1'b1;
+    step();
+    clear_errors = 1'b0;
+
+    launch_group_size_x = 16'd8;
+    send_word(32'h2001_0000);
+    check(!launch_start, "unsupported-group LAUNCH_KERNEL does not start");
+    check(error_status[4], "unsupported-group LAUNCH_KERNEL sets launch-invalid error");
+    launch_group_size_x = 16'd4;
+    clear_errors = 1'b1;
+    step();
+    clear_errors = 1'b0;
+
+    launch_flags = 32'h0000_0001;
+    send_word(32'h2001_0000);
+    check(!launch_start, "unsupported-flags LAUNCH_KERNEL does not start");
+    check(error_status[4], "unsupported-flags LAUNCH_KERNEL sets launch-invalid error");
+    launch_flags = 32'h0000_0000;
+    clear_errors = 1'b1;
+    step();
+    clear_errors = 1'b0;
+
+    launch_busy = 1'b1;
+    send_word(32'h2001_0000);
+    check(!launch_start, "busy LAUNCH_KERNEL does not start");
+    check(error_status[3], "busy LAUNCH_KERNEL sets dispatch-busy error");
+    launch_busy = 1'b0;
+    clear_errors = 1'b1;
+    step();
+    clear_errors = 1'b0;
+
     send_word(32'h5501_0000);
     check(error_status[0], "unknown opcode sets sticky error");
     clear_errors = 1'b1;
@@ -191,6 +297,14 @@ module tb_command_processor;
     clear_busy = 1'b0;
     step();
     check(!busy, "WAIT_IDLE returns idle when draw engines are idle");
+
+    launch_busy = 1'b1;
+    send_word(32'h0301_0000);
+    check(busy, "WAIT_IDLE remains busy while launch engine is busy");
+    check(!cmd_ready, "WAIT_IDLE blocks new command words during launch busy");
+    launch_busy = 1'b0;
+    step();
+    check(!busy, "WAIT_IDLE returns idle when launch engine is idle");
 
     clear_busy = 1'b1;
     send_word(32'h0102_0000);

@@ -46,6 +46,22 @@ module gpu_core #(
   logic combined_reset;
   logic combined_clear_errors;
   logic [ADDR_W-1:0] register_stride_bytes;
+  logic [ADDR_W-1:0] register_launch_program_base;
+  logic [COORD_W-1:0] register_launch_grid_x;
+  logic [COORD_W-1:0] register_launch_grid_y;
+  logic [COORD_W-1:0] register_launch_group_size_x;
+  logic [COORD_W-1:0] register_launch_group_size_y;
+  logic [ADDR_W-1:0] register_launch_arg_base;
+  logic [DATA_W-1:0] register_launch_flags;
+  logic launch_start;
+  logic launch_busy;
+  logic [DATA_W-1:0] launch_program_base_latched;
+  logic [COORD_W-1:0] launch_grid_x_latched;
+  logic [COORD_W-1:0] launch_grid_y_latched;
+  logic [COORD_W-1:0] launch_group_size_x_latched;
+  logic [COORD_W-1:0] launch_group_size_y_latched;
+  logic [DATA_W-1:0] launch_arg_base_latched;
+  logic [DATA_W-1:0] launch_flags_latched;
 
   logic clear_start;
   logic [COLOR_W-1:0] clear_color;
@@ -86,6 +102,7 @@ module gpu_core #(
   assign combined_clear_errors = clear_errors || register_clear_errors;
   assign combined_reset = reset || register_soft_reset;
   assign register_stride_bytes = ADDR_W'(register_fb_width) << 1;
+  assign launch_busy = 1'b0;
   assign busy = cp_busy || !fifo_empty;
   assign error_status = cp_error_status | {clear_error, rect_error, 6'b000000};
 
@@ -114,13 +131,13 @@ module gpu_core #(
       .fb_width(register_fb_width),
       .fb_height(register_fb_height),
       .fb_format(register_fb_format),
-      .launch_program_base(),
-      .launch_grid_x(),
-      .launch_grid_y(),
-      .launch_group_size_x(),
-      .launch_group_size_y(),
-      .launch_arg_base(),
-      .launch_flags()
+      .launch_program_base(register_launch_program_base),
+      .launch_grid_x(register_launch_grid_x),
+      .launch_grid_y(register_launch_grid_y),
+      .launch_group_size_x(register_launch_group_size_x),
+      .launch_group_size_y(register_launch_group_size_y),
+      .launch_arg_base(register_launch_arg_base),
+      .launch_flags(register_launch_flags)
   );
 
   command_fifo #(
@@ -165,6 +182,22 @@ module gpu_core #(
       .rect_color(rect_color),
       .rect_busy(rect_busy),
       .rect_done(rect_done),
+      .launch_start(launch_start),
+      .launch_busy(launch_busy),
+      .launch_program_base(DATA_W'(register_launch_program_base)),
+      .launch_grid_x(register_launch_grid_x),
+      .launch_grid_y(register_launch_grid_y),
+      .launch_group_size_x(register_launch_group_size_x),
+      .launch_group_size_y(register_launch_group_size_y),
+      .launch_arg_base(DATA_W'(register_launch_arg_base)),
+      .launch_flags(register_launch_flags),
+      .launch_program_base_latched(launch_program_base_latched),
+      .launch_grid_x_latched(launch_grid_x_latched),
+      .launch_grid_y_latched(launch_grid_y_latched),
+      .launch_group_size_x_latched(launch_group_size_x_latched),
+      .launch_group_size_y_latched(launch_group_size_y_latched),
+      .launch_arg_base_latched(launch_arg_base_latched),
+      .launch_flags_latched(launch_flags_latched),
       .reg_write_valid(reg_write_valid),
       .reg_write_addr(reg_write_addr),
       .reg_write_data(reg_write_data),

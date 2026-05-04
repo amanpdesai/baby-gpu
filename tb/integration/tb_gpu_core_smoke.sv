@@ -87,6 +87,27 @@ module tb_gpu_core_smoke;
     end
   endtask
 
+  task automatic set_reg(input logic [31:0] addr, input logic [31:0] data);
+    begin
+      send_word(32'h1003_0000);
+      send_word(addr);
+      send_word(data);
+      wait_idle();
+    end
+  endtask
+
+  task automatic wait_launch_start;
+    int timeout;
+    begin
+      timeout = 0;
+      while (!dut.launch_start) begin
+        step();
+        timeout = timeout + 1;
+        check(timeout < 50, "LAUNCH_KERNEL start timed out");
+      end
+    end
+  endtask
+
   task automatic wait_idle;
     int timeout;
     begin
@@ -165,6 +186,35 @@ module tb_gpu_core_smoke;
     check(framebuffer[1] == 32'h7777_7777, "SET_REGISTER height allows second compact row");
     check(framebuffer[2][15:0] == 16'h1234, "SET_REGISTER bounds leave old wide row untouched");
     check(error_status == 8'h00, "register-configured command stream has no core errors");
+
+    set_reg(32'h0000_0040, 32'h0000_0020);
+    set_reg(32'h0000_0044, 32'h0000_0008);
+    set_reg(32'h0000_0048, 32'h0000_0002);
+    set_reg(32'h0000_004C, 32'h0000_0004);
+    set_reg(32'h0000_0050, 32'h0000_0001);
+    set_reg(32'h0000_0054, 32'h0000_0100);
+    set_reg(32'h0000_0058, 32'h0000_0000);
+    send_word(32'h2001_0000);
+    wait_launch_start();
+    check(dut.launch_program_base_latched == 32'h0000_0020, "LAUNCH_KERNEL latches register program base");
+    check(dut.launch_grid_x_latched == 16'd8, "LAUNCH_KERNEL latches register grid x");
+    check(dut.launch_grid_y_latched == 16'd2, "LAUNCH_KERNEL latches register grid y");
+    check(dut.launch_group_size_x_latched == 16'd4, "LAUNCH_KERNEL latches register group size x");
+    check(dut.launch_group_size_y_latched == 16'd1, "LAUNCH_KERNEL latches register group size y");
+    check(dut.launch_arg_base_latched == 32'h0000_0100, "LAUNCH_KERNEL latches register arg base");
+    step();
+    check(!dut.launch_start, "gpu_core launch start is a one-cycle pulse");
+    wait_idle();
+    check(error_status == 8'h00, "register-driven LAUNCH_KERNEL has no core errors");
+
+    set_reg(32'h0000_0044, 32'h0000_0000);
+    send_word(32'h2001_0000);
+    wait_idle();
+    check(error_status[4], "zero-grid LAUNCH_KERNEL through register file reports invalid launch");
+    clear_errors = 1'b1;
+    step();
+    clear_errors = 1'b0;
+    set_reg(32'h0000_0044, 32'h0000_0008);
 
     $display("tb_gpu_core_smoke PASS");
     $finish;

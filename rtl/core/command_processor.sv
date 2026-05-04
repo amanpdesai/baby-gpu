@@ -1,7 +1,9 @@
 module command_processor #(
     parameter int WORD_W = 32,
     parameter int COORD_W = 16,
-    parameter int COLOR_W = 16
+    parameter int COLOR_W = 16,
+    parameter int SUPPORTED_GROUP_SIZE_X = 4,
+    parameter int SUPPORTED_GROUP_SIZE_Y = 1
 ) (
     input logic clk,
     input logic reset,
@@ -26,6 +28,23 @@ module command_processor #(
     input logic rect_busy,
     input logic rect_done,
 
+    output logic launch_start,
+    input logic launch_busy,
+    input logic [WORD_W-1:0] launch_program_base,
+    input logic [COORD_W-1:0] launch_grid_x,
+    input logic [COORD_W-1:0] launch_grid_y,
+    input logic [COORD_W-1:0] launch_group_size_x,
+    input logic [COORD_W-1:0] launch_group_size_y,
+    input logic [WORD_W-1:0] launch_arg_base,
+    input logic [WORD_W-1:0] launch_flags,
+    output logic [WORD_W-1:0] launch_program_base_latched,
+    output logic [COORD_W-1:0] launch_grid_x_latched,
+    output logic [COORD_W-1:0] launch_grid_y_latched,
+    output logic [COORD_W-1:0] launch_group_size_x_latched,
+    output logic [COORD_W-1:0] launch_group_size_y_latched,
+    output logic [WORD_W-1:0] launch_arg_base_latched,
+    output logic [WORD_W-1:0] launch_flags_latched,
+
     output logic reg_write_valid,
     output logic [WORD_W-1:0] reg_write_addr,
     output logic [WORD_W-1:0] reg_write_data,
@@ -38,11 +57,13 @@ module command_processor #(
   localparam logic [7:0] OP_FILL_RECT = 8'h02;
   localparam logic [7:0] OP_WAIT_IDLE = 8'h03;
   localparam logic [7:0] OP_SET_REGISTER = 8'h10;
+  localparam logic [7:0] OP_LAUNCH_KERNEL = 8'h20;
 
   localparam logic [7:0] ERR_UNKNOWN_OPCODE = 8'h01;
   localparam logic [7:0] ERR_BAD_WORD_COUNT = 8'h02;
   localparam logic [7:0] ERR_BAD_RESERVED = 8'h04;
   localparam logic [7:0] ERR_DISPATCH_BUSY = 8'h08;
+  localparam logic [7:0] ERR_LAUNCH_INVALID = 8'h10;
 
   typedef enum logic [3:0] {
     STATE_IDLE,
@@ -69,12 +90,19 @@ module command_processor #(
 
   logic command_take;
   logic draw_idle;
+  logic launch_config_invalid;
 
   assign opcode = cmd_data[31:24];
   assign word_count = cmd_data[23:16];
   assign command_take = cmd_valid && cmd_ready;
-  assign draw_idle = !clear_busy && !rect_busy;
-  assign busy = (state != STATE_IDLE) || clear_busy || rect_busy;
+  assign draw_idle = !clear_busy && !rect_busy && !launch_busy;
+  assign launch_config_invalid =
+      (launch_grid_x == '0) ||
+      (launch_grid_y == '0) ||
+      (launch_group_size_x != COORD_W'(SUPPORTED_GROUP_SIZE_X)) ||
+      (launch_group_size_y != COORD_W'(SUPPORTED_GROUP_SIZE_Y)) ||
+      (launch_flags != '0);
+  assign busy = (state != STATE_IDLE) || clear_busy || rect_busy || launch_busy;
 
   always_comb begin
     cmd_ready = 1'b0;
@@ -104,6 +132,14 @@ module command_processor #(
       rect_width <= '0;
       rect_height <= '0;
       rect_color <= '0;
+      launch_start <= 1'b0;
+      launch_program_base_latched <= '0;
+      launch_grid_x_latched <= '0;
+      launch_grid_y_latched <= '0;
+      launch_group_size_x_latched <= '0;
+      launch_group_size_y_latched <= '0;
+      launch_arg_base_latched <= '0;
+      launch_flags_latched <= '0;
       reg_write_valid <= 1'b0;
       reg_write_addr <= '0;
       reg_write_data <= '0;
@@ -112,6 +148,7 @@ module command_processor #(
     end else begin
       clear_start <= 1'b0;
       rect_start <= 1'b0;
+      launch_start <= 1'b0;
       reg_write_valid <= 1'b0;
 
       if (clear_errors) begin
@@ -163,6 +200,28 @@ module command_processor #(
                   error_status <= error_status | ERR_BAD_WORD_COUNT;
                   skip_remaining <= word_count > 8'd1 ? word_count - 8'd1 : 8'd0;
                   state <= word_count > 8'd1 ? STATE_SKIP : STATE_IDLE;
+                end
+              end
+              OP_LAUNCH_KERNEL: begin
+                if (word_count != 8'd1) begin
+                  error_status <= error_status | ERR_BAD_WORD_COUNT;
+                  skip_remaining <= word_count > 8'd1 ? word_count - 8'd1 : 8'd0;
+                  state <= word_count > 8'd1 ? STATE_SKIP : STATE_IDLE;
+                end else if (cmd_data[15:0] != 16'h0000) begin
+                  error_status <= error_status | ERR_BAD_RESERVED;
+                end else if (!draw_idle) begin
+                  error_status <= error_status | ERR_DISPATCH_BUSY;
+                end else if (launch_config_invalid) begin
+                  error_status <= error_status | ERR_LAUNCH_INVALID;
+                end else begin
+                  launch_program_base_latched <= launch_program_base;
+                  launch_grid_x_latched <= launch_grid_x;
+                  launch_grid_y_latched <= launch_grid_y;
+                  launch_group_size_x_latched <= launch_group_size_x;
+                  launch_group_size_y_latched <= launch_group_size_y;
+                  launch_arg_base_latched <= launch_arg_base;
+                  launch_flags_latched <= launch_flags;
+                  launch_start <= 1'b1;
                 end
               end
               default: begin

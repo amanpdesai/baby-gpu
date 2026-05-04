@@ -76,10 +76,27 @@ The command processor must reject or report:
 - launch while busy
 - zero grid dimensions
 - unsupported group size
-- invalid program base
 - unsupported launch flags
 
-The scheduler latches launch registers at launch time.
+Current RTL status:
+
+- `LAUNCH_KERNEL` is decoded by the command processor.
+- header flags must be zero.
+- `GRID_X` and `GRID_Y` must be nonzero.
+- the first supported group size is `GROUP_SIZE_X=4`, `GROUP_SIZE_Y=1`.
+- `LAUNCH_FLAGS` must be zero.
+- valid launches emit a one-cycle launch request and latch launch register
+  values.
+- `gpu_core` wires host launch registers into the command processor.
+
+Program-base validation is deferred until the integrated instruction-memory
+contract is explicit. Current RTL latches `PROGRAM_BASE` but does not reject
+zero, unaligned, or out-of-range values.
+
+The programmable core is not yet driven directly from `gpu_core` launch
+requests. The next integration slice should connect the latched launch request
+to the programmable core and instruction/data memory path, then add
+program-base validation at that boundary.
 
 ## `WAIT_IDLE`
 
@@ -125,7 +142,6 @@ The command processor sets sticky error bits for:
 - unknown opcode
 - incorrect `word_count`
 - unsupported flags
-- FIFO underflow while reading a packet
 - launch while busy
 - invalid launch configuration
 - strict validation failure on reserved fields
