@@ -53,7 +53,7 @@ gantt
 - command FIFO
 - command processor
 - command-processor WAIT_IDLE, RECT reserved-field, CLEAR/RECT dispatch-busy,
-  and LAUNCH_KERNEL validation/latch unit coverage
+  LAUNCH_KERNEL validation/latch, and launch-config invalid unit coverage
 - register file
 - clear and rectangle fixed-function smoke engines
 - clear-engine pixel backpressure unit coverage
