@@ -160,6 +160,8 @@ Implemented coverage for this lifecycle is intentionally narrow:
 - command-driven launch-while-busy dispatch rejection
 - `WAIT_IDLE` barrier behavior while a command-launched kernel is stalled on
   memory
+- launch-register snapshot behavior for `PROGRAM_BASE` while the host rewrites
+  the launch register file during an active stalled kernel
 - launch-register snapshot behavior for `ARG_BASE` while the host rewrites the
   launch register file during an active stalled kernel
 - launch-register snapshot behavior for `GRID_X` and `GRID_Y` while the host

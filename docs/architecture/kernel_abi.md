@@ -109,6 +109,8 @@ Current ABI coverage includes:
 - command-driven 2D framebuffer-gradient kernel using `GRID_X`, `GRID_Y`,
   `GLOBAL_ID_X`, `GLOBAL_ID_Y`, framebuffer base, and framebuffer width
 - nonzero command-driven `PROGRAM_BASE` as an instruction-word offset
+- launch snapshot stability for `PROGRAM_BASE` while the host rewrites launch
+  registers during an active stalled kernel
 - launch snapshot stability for `ARG_BASE` while the host rewrites launch
   registers during an active stalled kernel
 - launch snapshot stability for `GRID_X` and `GRID_Y` while the host rewrites
