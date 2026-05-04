@@ -142,9 +142,12 @@ For each work-item:
 
 ```text
 i = linear_global_id
-if i < element_count:
-  C[i] = A[i] + B[i]
+C[i] = A[i] + B[i]
 ```
+
+For the current lockstep core, the host programs `GRID_X = element_count`.
+Tail work-items are suppressed by the scheduler's active-lane mask, not by a
+divergent per-lane branch inside the kernel.
 
 Hardware proven:
 
@@ -155,6 +158,7 @@ Hardware proven:
 - ALU add
 - 32-bit stores
 - tail lane masking
+- top-level command-driven launch through `gpu_core`
 
 ### `framebuffer_gradient`
 

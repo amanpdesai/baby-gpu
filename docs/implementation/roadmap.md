@@ -123,6 +123,8 @@ architecture.
   LAUNCH_KERNEL latch smoke coverage
 - command-driven `gpu_core` STORE16 kernel smoke through instruction memory,
   programmable core, LSU, and top-level memory response path
+- command-driven `gpu_core` vector_add smoke through launch registers,
+  argument-block loads, global input loads, and global output stores
 
 The first programmable GPU path now executes encoded kernels through scheduler,
 core, LSU, and simulation memory.
@@ -188,6 +190,7 @@ Exit criteria:
 - expected output comparison: done
 - timeout on hang: done
 - zero sticky errors: done
+- command-driven `gpu_core` launch path: done
 
 ## Second Kernel Milestone: `framebuffer_gradient`
 
