@@ -43,6 +43,8 @@ Primary entry points:
 - [Architecture](docs/architecture/architecture.md)
 - [Programming model](docs/architecture/programming_model.md)
 - [ISA](docs/architecture/isa.md)
+- [Command and kernel lifecycle](docs/architecture/command_kernel_lifecycle.md)
+- [Kernel ABI](docs/architecture/kernel_abi.md)
 - [Core architecture](docs/architecture/core_architecture.md)
 - [Roadmap](docs/implementation/roadmap.md)
 - [Verification plan](docs/verification/verification_plan.md)
@@ -55,10 +57,12 @@ path, kernel-level simulations, formal proofs for selected control/datapath
 blocks including the clear engine, scheduler sticky-error behavior, special
 register mux, LSU prep, and request/response sequencing, draw-unit corner
 coverage for command/clear/rectangle/framebuffer paths, command-driven
-`STORE16` and `vector_add` kernel coverage through `gpu_core`, and Yosys
-synthesis smoke coverage for leaf blocks and the integrated programmable core
-path. Top-level command-kernel fault coverage checks that an LSU-detected
-programmable fault reaches host-visible status without issuing a memory write.
+`STORE16` and `vector_add` kernel coverage through `gpu_core`,
+command-driven stalled/delayed memory smoke, host-visible `STORE16` fault
+coverage, soft-reset recovery smoke, and Yosys synthesis smoke coverage for
+leaf blocks and the integrated programmable core path. Top-level command-kernel
+fault coverage checks that an LSU-detected programmable fault reaches
+host-visible status without issuing a memory write.
 Illegal instruction, illegal special-register, branch, memory, and predicated
 store integration tests cover the current programmable path, including
 convergent taken/not-taken branches, signed backward branches, R0 predicates,
@@ -68,6 +72,11 @@ malformed illegal-instruction fixtures still hand-build invalid encodings on
 purpose. The helper package is not a full assembler or C toolchain. An optional
 Vivado synthesis smoke target is present for FPGA-facing checks once Vivado and
 the target part name are available.
+
+The command-driven kernel ABI is current RTL behavior: `PROGRAM_BASE` is an
+instruction-word offset, `GRID_X` and `GRID_Y` define the work-item rectangle,
+the only supported group size is `4x1`, `ARG_BASE` points at a global-memory
+argument block, and `LAUNCH_FLAGS` must be zero.
 
 ## Toolchain Check
 

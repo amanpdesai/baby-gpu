@@ -2,6 +2,7 @@ import isa_pkg::*;
 
 module tb_gpu_core_command_vector_add;
   import kernel_asm_pkg::*;
+  `include "tb/common/gpu_core_command_driver.svh"
 
   localparam int MEM_WORDS = 128;
   localparam int ELEMENTS = 6;
@@ -143,67 +144,6 @@ module tb_gpu_core_command_vector_add;
     end
   end
 
-  task automatic step;
-  begin
-    @(posedge clk);
-    #1;
-  end
-  endtask
-
-  task automatic check(input logic condition, input string message);
-  begin
-    if (!condition) begin
-      $fatal(1, "%s", message);
-    end
-  end
-  endtask
-
-  task automatic write_imem(input logic [7:0] addr, input logic [ISA_WORD_W-1:0] word);
-  begin
-    imem_write_addr = addr;
-    imem_write_data = word;
-    imem_write_en = 1'b1;
-    step();
-    imem_write_en = 1'b0;
-    imem_write_addr = '0;
-    imem_write_data = '0;
-  end
-  endtask
-
-  task automatic send_word(input logic [31:0] word);
-  begin
-    cmd_data = word;
-    cmd_valid = 1'b1;
-    while (!cmd_ready) begin
-      step();
-    end
-    step();
-    cmd_valid = 1'b0;
-    cmd_data = '0;
-  end
-  endtask
-
-  task automatic set_reg(input logic [31:0] addr, input logic [31:0] data);
-  begin
-    send_word(32'h1003_0000);
-    send_word(addr);
-    send_word(data);
-  end
-  endtask
-
-  task automatic wait_idle;
-    int timeout;
-  begin
-    timeout = 0;
-    while (busy) begin
-      check(error_status == 8'h00, "gpu_core error remains clear while waiting");
-      check(timeout < 1000, "gpu_core wait_idle timeout");
-      timeout = timeout + 1;
-      step();
-    end
-  end
-  endtask
-
   task automatic load_vector_add_program;
   begin
     write_imem(8'd0, kgpu_movsr(4'd1, ISA_SR_LINEAR_GLOBAL_ID));
@@ -263,17 +203,11 @@ module tb_gpu_core_command_vector_add;
     memory[C_BASE[31:2] + ELEMENTS] = 32'hBEEF_0006;
     memory[C_BASE[31:2] + ELEMENTS + 1] = 32'hBEEF_0007;
 
-    set_reg(32'h0000_0040, 32'h0000_0000);
-    set_reg(32'h0000_0044, 32'(ELEMENTS));
-    set_reg(32'h0000_0048, 32'h0000_0001);
-    set_reg(32'h0000_004C, 32'h0000_0004);
-    set_reg(32'h0000_0050, 32'h0000_0001);
-    set_reg(32'h0000_0054, ARG_BASE);
-    set_reg(32'h0000_0058, 32'h0000_0000);
+    configure_launch(32'h0000_0000, 32'(ELEMENTS), 32'h0000_0001, ARG_BASE);
 
-    send_word(32'h2001_0000);
-    send_word(32'h0301_0000);
-    wait_idle();
+    launch_kernel();
+    send_word(KGPU_CMD_WAIT_IDLE);
+    wait_idle(1000, "gpu_core wait_idle timeout");
 
     check(error_status == 8'h00, "command vector_add completes without error");
     check(saw_req_stall, "command vector_add observes memory request backpressure");

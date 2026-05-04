@@ -2,6 +2,7 @@ import isa_pkg::*;
 
 module tb_gpu_core_command_store16_fault;
   import kernel_asm_pkg::*;
+  `include "tb/common/gpu_core_command_driver.svh"
 
   localparam int MEM_WORDS = 8;
   localparam logic [7:0] ERR_PROGRAMMABLE = 8'h20;
@@ -94,84 +95,12 @@ module tb_gpu_core_command_store16_fault;
     end
   end
 
-  task automatic step;
-  begin
-    @(posedge clk);
-    #1;
-  end
-  endtask
-
-  task automatic check(input logic condition, input string message);
-  begin
-    if (!condition) begin
-      $fatal(1, "%s", message);
-    end
-  end
-  endtask
-
-  task automatic write_imem(input logic [7:0] addr, input logic [ISA_WORD_W-1:0] word);
-  begin
-    imem_write_addr = addr;
-    imem_write_data = word;
-    imem_write_en = 1'b1;
-    step();
-    imem_write_en = 1'b0;
-    imem_write_addr = '0;
-    imem_write_data = '0;
-  end
-  endtask
-
-  task automatic send_word(input logic [31:0] word);
-  begin
-    cmd_data = word;
-    cmd_valid = 1'b1;
-    while (!cmd_ready) begin
-      step();
-    end
-    step();
-    cmd_valid = 1'b0;
-    cmd_data = '0;
-  end
-  endtask
-
-  task automatic set_reg(input logic [31:0] addr, input logic [31:0] data);
-  begin
-    send_word(32'h1003_0000);
-    send_word(addr);
-    send_word(data);
-  end
-  endtask
-
   task automatic wait_programmable_error;
     int timeout;
   begin
     timeout = 0;
     while ((error_status & ERR_PROGRAMMABLE) == 8'h00) begin
       check(timeout < 200, "programmable STORE16 fault timeout");
-      timeout = timeout + 1;
-      step();
-    end
-  end
-  endtask
-
-  task automatic wait_idle;
-    int timeout;
-  begin
-    timeout = 0;
-    while (busy) begin
-      check(timeout < 200, "gpu_core recovery wait_idle timeout");
-      timeout = timeout + 1;
-      step();
-    end
-  end
-  endtask
-
-  task automatic wait_error_clear;
-    int timeout;
-  begin
-    timeout = 0;
-    while (error_status != 8'h00) begin
-      check(timeout < 20, "soft reset clears programmable fault status");
       timeout = timeout + 1;
       step();
     end
@@ -205,15 +134,9 @@ module tb_gpu_core_command_store16_fault;
     write_imem(8'd2, kgpu_store16(4'd2, 4'd1, 18'd0));
     write_imem(8'd3, kgpu_end());
 
-    set_reg(32'h0000_0040, 32'h0000_0000);
-    set_reg(32'h0000_0044, 32'h0000_0001);
-    set_reg(32'h0000_0048, 32'h0000_0001);
-    set_reg(32'h0000_004C, 32'h0000_0004);
-    set_reg(32'h0000_0050, 32'h0000_0001);
-    set_reg(32'h0000_0054, 32'h0000_0000);
-    set_reg(32'h0000_0058, 32'h0000_0000);
+    configure_launch(32'h0000_0000, 32'h0000_0001, 32'h0000_0001, 32'h0000_0000);
 
-    send_word(32'h2001_0000);
+    launch_kernel();
     wait_programmable_error();
 
     check(error_status == ERR_PROGRAMMABLE, "only programmable error bit is set");
@@ -222,8 +145,8 @@ module tb_gpu_core_command_store16_fault;
       check(memory[i] == 32'hDEAD_DEAD, "faulting STORE16 leaves memory unchanged");
     end
 
-    set_reg(32'h0000_000C, 32'h0000_0002);
-    wait_error_clear();
+    set_reg(KGPU_REG_CONTROL, KGPU_CONTROL_SOFT_RESET);
+    wait_error_clear(20, "soft reset clears programmable fault status");
 
     mem_req_seen = 1'b0;
     write_imem(8'd0, kgpu_movi(4'd1, 18'd0));
@@ -231,17 +154,11 @@ module tb_gpu_core_command_store16_fault;
     write_imem(8'd2, kgpu_store16(4'd2, 4'd1, 18'd0));
     write_imem(8'd3, kgpu_end());
 
-    set_reg(32'h0000_0040, 32'h0000_0000);
-    set_reg(32'h0000_0044, 32'h0000_0001);
-    set_reg(32'h0000_0048, 32'h0000_0001);
-    set_reg(32'h0000_004C, 32'h0000_0004);
-    set_reg(32'h0000_0050, 32'h0000_0001);
-    set_reg(32'h0000_0054, 32'h0000_0000);
-    set_reg(32'h0000_0058, 32'h0000_0000);
+    configure_launch(32'h0000_0000, 32'h0000_0001, 32'h0000_0001, 32'h0000_0000);
 
-    send_word(32'h2001_0000);
-    send_word(32'h0301_0000);
-    wait_idle();
+    launch_kernel();
+    send_word(KGPU_CMD_WAIT_IDLE);
+    wait_idle(200, "gpu_core recovery wait_idle timeout");
 
     check(error_status == 8'h00, "recovered STORE16 completes without error");
     check(mem_req_seen, "recovered STORE16 issues a memory request");

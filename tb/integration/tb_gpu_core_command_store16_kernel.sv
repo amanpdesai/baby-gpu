@@ -2,6 +2,7 @@ import isa_pkg::*;
 
 module tb_gpu_core_command_store16_kernel;
   import kernel_asm_pkg::*;
+  `include "tb/common/gpu_core_command_driver.svh"
 
   localparam int MEM_WORDS = 16;
   localparam logic [15:0] COLOR = 16'h2A5B;
@@ -93,67 +94,6 @@ module tb_gpu_core_command_store16_kernel;
     end
   end
 
-  task automatic step;
-    begin
-      @(posedge clk);
-      #1;
-    end
-  endtask
-
-  task automatic check(input logic condition, input string message);
-    begin
-      if (!condition) begin
-        $fatal(1, "%s", message);
-      end
-    end
-  endtask
-
-  task automatic write_imem(input logic [7:0] addr, input logic [ISA_WORD_W-1:0] word);
-    begin
-      imem_write_addr = addr;
-      imem_write_data = word;
-      imem_write_en = 1'b1;
-      step();
-      imem_write_en = 1'b0;
-      imem_write_addr = '0;
-      imem_write_data = '0;
-    end
-  endtask
-
-  task automatic send_word(input logic [31:0] word);
-    begin
-      cmd_data = word;
-      cmd_valid = 1'b1;
-      while (!cmd_ready) begin
-        step();
-      end
-      step();
-      cmd_valid = 1'b0;
-      cmd_data = '0;
-    end
-  endtask
-
-  task automatic set_reg(input logic [31:0] addr, input logic [31:0] data);
-    begin
-      send_word(32'h1003_0000);
-      send_word(addr);
-      send_word(data);
-    end
-  endtask
-
-  task automatic wait_idle;
-    int timeout;
-    begin
-      timeout = 0;
-      while (busy) begin
-        step();
-        timeout = timeout + 1;
-        check(timeout < 200, "command-driven kernel timed out");
-      end
-      step();
-    end
-  endtask
-
   function automatic logic [15:0] pixel_at(input int x);
     logic [31:0] word;
     begin
@@ -196,17 +136,11 @@ module tb_gpu_core_command_store16_kernel;
     write_imem(8'd6, kgpu_store16(4'd6, 4'd5, 18'd0));
     write_imem(8'd7, kgpu_end());
 
-    set_reg(32'h0000_0010, 32'h0000_0000);
-    set_reg(32'h0000_0040, 32'h0000_0000);
-    set_reg(32'h0000_0044, 32'h0000_0004);
-    set_reg(32'h0000_0048, 32'h0000_0001);
-    set_reg(32'h0000_004C, 32'h0000_0004);
-    set_reg(32'h0000_0050, 32'h0000_0001);
-    set_reg(32'h0000_0054, 32'h0000_0000);
-    set_reg(32'h0000_0058, 32'h0000_0000);
+    set_reg(KGPU_REG_FB_BASE, 32'h0000_0000);
+    configure_launch(32'h0000_0000, 32'h0000_0004, 32'h0000_0001, 32'h0000_0000);
 
-    send_word(32'h2001_0000);
-    wait_idle();
+    launch_kernel();
+    wait_idle(200, "command-driven kernel timed out");
 
     check(error_status == 8'h00, "command-driven kernel completes without errors");
     check(pixel_at(0) == COLOR, "command kernel writes pixel 0");
