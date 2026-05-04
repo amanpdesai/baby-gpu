@@ -192,6 +192,8 @@ Current lifecycle/ABI coverage:
 - stalled request and delayed response memory smoke in command-driven
   `vector_add`
 - launch-while-busy dispatch rejection and WAIT_IDLE barrier smoke
+- queued `SET_REGISTER` behind blocked `WAIT_IDLE` does not retire while a
+  command-driven kernel is stalled, then retires after `WAIT_IDLE` clears
 - `PROGRAM_BASE` launch snapshot behavior while a command-driven kernel is
   stalled
 - `ARG_BASE` launch snapshot behavior while a command-driven kernel is stalled
