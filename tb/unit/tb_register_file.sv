@@ -17,6 +17,13 @@ module tb_register_file;
   logic [15:0] fb_width;
   logic [15:0] fb_height;
   logic [1:0] fb_format;
+  logic [31:0] launch_program_base;
+  logic [15:0] launch_grid_x;
+  logic [15:0] launch_grid_y;
+  logic [15:0] launch_group_size_x;
+  logic [15:0] launch_group_size_y;
+  logic [31:0] launch_arg_base;
+  logic [31:0] launch_flags;
 
   register_file #(
       .FB_WIDTH_DEFAULT(4),
@@ -39,7 +46,14 @@ module tb_register_file;
       .fb_base(fb_base),
       .fb_width(fb_width),
       .fb_height(fb_height),
-      .fb_format(fb_format)
+      .fb_format(fb_format),
+      .launch_program_base(launch_program_base),
+      .launch_grid_x(launch_grid_x),
+      .launch_grid_y(launch_grid_y),
+      .launch_group_size_x(launch_group_size_x),
+      .launch_group_size_y(launch_group_size_y),
+      .launch_arg_base(launch_arg_base),
+      .launch_flags(launch_flags)
   );
 
   always #5 clk = ~clk;
@@ -97,6 +111,12 @@ module tb_register_file;
     check(!core_enable, "control enable resets low");
     check(fb_width == 16'd4 && fb_height == 16'd3, "framebuffer dimensions reset to defaults");
     check(fb_format == 2'd1, "framebuffer format resets to RGB565");
+    check(launch_program_base == 32'h0000_0000, "PROGRAM_BASE resets to zero");
+    check(launch_grid_x == 16'd0 && launch_grid_y == 16'd0, "GRID dimensions reset to zero");
+    check(launch_group_size_x == 16'd4 && launch_group_size_y == 16'd1,
+          "GROUP_SIZE resets to one current warp");
+    check(launch_arg_base == 32'h0000_0000, "ARG_BASE resets to zero");
+    check(launch_flags == 32'h0000_0000, "LAUNCH_FLAGS resets to zero");
 
     read_reg(32'h0000_0000);
     check(read_data == 32'h4250_4755, "GPU_ID readback");
@@ -128,6 +148,40 @@ module tb_register_file;
     write_reg(32'h0000_0028, 32'h0000_0003);
     read_reg(32'h0000_0028);
     check(read_data == 32'h0000_0003, "INTERRUPT_ENABLE readback");
+
+    write_reg(32'h0000_0040, 32'h0000_0014);
+    write_reg(32'h0000_0044, 32'h0000_0008);
+    write_reg(32'h0000_0048, 32'h0000_0003);
+    write_reg(32'h0000_004C, 32'h0000_0002);
+    write_reg(32'h0000_0050, 32'h0000_0004);
+    write_reg(32'h0000_0054, 32'h0000_0200);
+    write_reg(32'h0000_0058, 32'hA5A5_0003);
+    check(launch_program_base == 32'h0000_0014, "PROGRAM_BASE updates");
+    check(launch_grid_x == 16'd8 && launch_grid_y == 16'd3, "GRID registers update");
+    check(launch_group_size_x == 16'd2 && launch_group_size_y == 16'd4,
+          "GROUP_SIZE registers update");
+    check(launch_arg_base == 32'h0000_0200, "ARG_BASE updates");
+    check(launch_flags == 32'hA5A5_0003, "LAUNCH_FLAGS updates");
+
+    write_reg(32'h0000_004C, 32'h0000_0000);
+    write_reg(32'h0000_0050, 32'h0000_0000);
+    check(launch_group_size_x == 16'd2 && launch_group_size_y == 16'd4,
+          "zero GROUP_SIZE writes are ignored");
+
+    read_reg(32'h0000_0040);
+    check(read_data == 32'h0000_0014, "PROGRAM_BASE readback");
+    read_reg(32'h0000_0044);
+    check(read_data == 32'h0000_0008, "GRID_X readback");
+    read_reg(32'h0000_0048);
+    check(read_data == 32'h0000_0003, "GRID_Y readback");
+    read_reg(32'h0000_004C);
+    check(read_data == 32'h0000_0002, "GROUP_SIZE_X readback");
+    read_reg(32'h0000_0050);
+    check(read_data == 32'h0000_0004, "GROUP_SIZE_Y readback");
+    read_reg(32'h0000_0054);
+    check(read_data == 32'h0000_0200, "ARG_BASE readback");
+    read_reg(32'h0000_0058);
+    check(read_data == 32'hA5A5_0003, "LAUNCH_FLAGS readback");
 
     $display("tb_register_file PASS");
     $finish;

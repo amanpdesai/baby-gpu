@@ -18,6 +18,13 @@ module register_file_formal (
     localparam logic [ADDR_W-1:0] ADDR_INTERRUPT_STATUS = 32'h0000_0024;
     localparam logic [ADDR_W-1:0] ADDR_INTERRUPT_ENABLE = 32'h0000_0028;
     localparam logic [ADDR_W-1:0] ADDR_BUSY = 32'h0000_002C;
+    localparam logic [ADDR_W-1:0] ADDR_PROGRAM_BASE = 32'h0000_0040;
+    localparam logic [ADDR_W-1:0] ADDR_GRID_X = 32'h0000_0044;
+    localparam logic [ADDR_W-1:0] ADDR_GRID_Y = 32'h0000_0048;
+    localparam logic [ADDR_W-1:0] ADDR_GROUP_SIZE_X = 32'h0000_004C;
+    localparam logic [ADDR_W-1:0] ADDR_GROUP_SIZE_Y = 32'h0000_0050;
+    localparam logic [ADDR_W-1:0] ADDR_ARG_BASE = 32'h0000_0054;
+    localparam logic [ADDR_W-1:0] ADDR_LAUNCH_FLAGS = 32'h0000_0058;
     localparam logic [DATA_W-1:0] GPU_ID = 32'h4250_4755;
     localparam logic [DATA_W-1:0] GPU_VERSION = 32'h0001_0000;
     localparam logic [1:0] FB_FORMAT_RGB565 = 2'd1;
@@ -39,6 +46,13 @@ module register_file_formal (
     logic [COORD_W-1:0] fb_width;
     logic [COORD_W-1:0] fb_height;
     logic [1:0] fb_format;
+    logic [ADDR_W-1:0] launch_program_base;
+    logic [COORD_W-1:0] launch_grid_x;
+    logic [COORD_W-1:0] launch_grid_y;
+    logic [COORD_W-1:0] launch_group_size_x;
+    logic [COORD_W-1:0] launch_group_size_y;
+    logic [ADDR_W-1:0] launch_arg_base;
+    logic [DATA_W-1:0] launch_flags;
     logic [DATA_W-1:0] expected_control_reg;
     logic [DATA_W-1:0] expected_interrupt_status_reg;
     logic [DATA_W-1:0] expected_interrupt_enable_reg;
@@ -68,7 +82,14 @@ module register_file_formal (
         .fb_base(fb_base),
         .fb_width(fb_width),
         .fb_height(fb_height),
-        .fb_format(fb_format)
+        .fb_format(fb_format),
+        .launch_program_base(launch_program_base),
+        .launch_grid_x(launch_grid_x),
+        .launch_grid_y(launch_grid_y),
+        .launch_group_size_x(launch_group_size_x),
+        .launch_group_size_y(launch_group_size_y),
+        .launch_arg_base(launch_arg_base),
+        .launch_flags(launch_flags)
     );
 
     initial begin
@@ -130,6 +151,34 @@ module register_file_formal (
             assert(read_data == expected_interrupt_enable_reg);
         end
 
+        if (past_valid && read_valid && read_addr == ADDR_PROGRAM_BASE) begin
+            assert(read_data == DATA_W'(launch_program_base));
+        end
+
+        if (past_valid && read_valid && read_addr == ADDR_GRID_X) begin
+            assert(read_data == {16'd0, launch_grid_x});
+        end
+
+        if (past_valid && read_valid && read_addr == ADDR_GRID_Y) begin
+            assert(read_data == {16'd0, launch_grid_y});
+        end
+
+        if (past_valid && read_valid && read_addr == ADDR_GROUP_SIZE_X) begin
+            assert(read_data == {16'd0, launch_group_size_x});
+        end
+
+        if (past_valid && read_valid && read_addr == ADDR_GROUP_SIZE_Y) begin
+            assert(read_data == {16'd0, launch_group_size_y});
+        end
+
+        if (past_valid && read_valid && read_addr == ADDR_ARG_BASE) begin
+            assert(read_data == DATA_W'(launch_arg_base));
+        end
+
+        if (past_valid && read_valid && read_addr == ADDR_LAUNCH_FLAGS) begin
+            assert(read_data == launch_flags);
+        end
+
         if (read_valid
                 && read_addr != ADDR_GPU_ID
                 && read_addr != ADDR_GPU_VERSION
@@ -141,7 +190,14 @@ module register_file_formal (
                 && read_addr != ADDR_FB_FORMAT
                 && read_addr != ADDR_INTERRUPT_STATUS
                 && read_addr != ADDR_INTERRUPT_ENABLE
-                && read_addr != ADDR_BUSY) begin
+                && read_addr != ADDR_BUSY
+                && read_addr != ADDR_PROGRAM_BASE
+                && read_addr != ADDR_GRID_X
+                && read_addr != ADDR_GRID_Y
+                && read_addr != ADDR_GROUP_SIZE_X
+                && read_addr != ADDR_GROUP_SIZE_Y
+                && read_addr != ADDR_ARG_BASE
+                && read_addr != ADDR_LAUNCH_FLAGS) begin
             assert(read_data == '0);
         end
     end
@@ -185,6 +241,13 @@ module register_file_formal (
             assert(fb_width == COORD_W'(FB_WIDTH_DEFAULT));
             assert(fb_height == COORD_W'(FB_HEIGHT_DEFAULT));
             assert(fb_format == FB_FORMAT_RGB565);
+            assert(launch_program_base == '0);
+            assert(launch_grid_x == '0);
+            assert(launch_grid_y == '0);
+            assert(launch_group_size_x == COORD_W'(4));
+            assert(launch_group_size_y == COORD_W'(1));
+            assert(launch_arg_base == '0);
+            assert(launch_flags == '0);
         end else if ($past(write_valid && write_addr == ADDR_CONTROL)) begin
             assert(core_enable == $past(write_data[0]));
             assert(soft_reset_pulse == $past(write_data[1]));
@@ -227,6 +290,46 @@ module register_file_formal (
         if (past_valid && !$past(reset) && $past(write_valid && write_addr == ADDR_FB_FORMAT)
                 && $past(write_data[1:0] != FB_FORMAT_RGB565)) begin
             assert(fb_format == $past(fb_format));
+        end
+
+        if (past_valid && !$past(reset) && $past(write_valid && write_addr == ADDR_PROGRAM_BASE)) begin
+            assert(launch_program_base == ADDR_W'($past(write_data)));
+        end
+
+        if (past_valid && !$past(reset) && $past(write_valid && write_addr == ADDR_GRID_X)) begin
+            assert(launch_grid_x == $past(write_data[COORD_W-1:0]));
+        end
+
+        if (past_valid && !$past(reset) && $past(write_valid && write_addr == ADDR_GRID_Y)) begin
+            assert(launch_grid_y == $past(write_data[COORD_W-1:0]));
+        end
+
+        if (past_valid && !$past(reset) && $past(write_valid && write_addr == ADDR_GROUP_SIZE_X)
+                && $past(write_data[COORD_W-1:0] != '0)) begin
+            assert(launch_group_size_x == $past(write_data[COORD_W-1:0]));
+        end
+
+        if (past_valid && !$past(reset) && $past(write_valid && write_addr == ADDR_GROUP_SIZE_X)
+                && $past(write_data[COORD_W-1:0] == '0)) begin
+            assert(launch_group_size_x == $past(launch_group_size_x));
+        end
+
+        if (past_valid && !$past(reset) && $past(write_valid && write_addr == ADDR_GROUP_SIZE_Y)
+                && $past(write_data[COORD_W-1:0] != '0)) begin
+            assert(launch_group_size_y == $past(write_data[COORD_W-1:0]));
+        end
+
+        if (past_valid && !$past(reset) && $past(write_valid && write_addr == ADDR_GROUP_SIZE_Y)
+                && $past(write_data[COORD_W-1:0] == '0)) begin
+            assert(launch_group_size_y == $past(launch_group_size_y));
+        end
+
+        if (past_valid && !$past(reset) && $past(write_valid && write_addr == ADDR_ARG_BASE)) begin
+            assert(launch_arg_base == ADDR_W'($past(write_data)));
+        end
+
+        if (past_valid && !$past(reset) && $past(write_valid && write_addr == ADDR_LAUNCH_FLAGS)) begin
+            assert(launch_flags == $past(write_data));
         end
 
         cover(past_valid && !$past(reset) && $past(write_valid && write_addr == ADDR_CONTROL)

@@ -113,7 +113,14 @@ module gpu_core #(
       .fb_base(register_fb_base),
       .fb_width(register_fb_width),
       .fb_height(register_fb_height),
-      .fb_format(register_fb_format)
+      .fb_format(register_fb_format),
+      .launch_program_base(),
+      .launch_grid_x(),
+      .launch_grid_y(),
+      .launch_group_size_x(),
+      .launch_group_size_y(),
+      .launch_arg_base(),
+      .launch_flags()
   );
 
   command_fifo #(
