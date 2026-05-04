@@ -122,6 +122,28 @@ module tb_gpu_core_command_launch_invalid;
 
     load_empty_kernel_program();
 
+    send_word(32'h5501_0000);
+    wait_idle(20, "unknown opcode returns idle");
+    check(error_status == KGPU_ERR_UNKNOWN_OPCODE, "unknown opcode reaches gpu_core error status");
+    reset_errors();
+
+    send_word(32'h2002_0000);
+    check(!dut.u_command_processor.launch_start, "bad-count LAUNCH_KERNEL does not pulse launch_start");
+    send_word(KGPU_CMD_SET_REGISTER);
+    check(!dut.u_command_processor.launch_start,
+          "bad-count LAUNCH_KERNEL skipped payload does not pulse launch_start");
+    wait_idle(20, "bad-count LAUNCH_KERNEL skip returns idle");
+    check(error_status == KGPU_ERR_BAD_WORD_COUNT,
+          "bad-count LAUNCH_KERNEL reaches gpu_core error status");
+    reset_errors();
+
+    send_word(32'h2001_0001);
+    check(!dut.u_command_processor.launch_start, "reserved LAUNCH_KERNEL does not pulse launch_start");
+    wait_idle(20, "reserved LAUNCH_KERNEL returns idle");
+    check(error_status == KGPU_ERR_BAD_RESERVED,
+          "reserved LAUNCH_KERNEL reaches gpu_core error status");
+    reset_errors();
+
     configure_launch(32'h0000_0000, 32'h0000_0000, 32'h0000_0001, 32'h0000_0000);
     wait_idle(40, "zero-grid launch registers drain");
     expect_invalid_launch("zero GRID_X sets launch-invalid");
