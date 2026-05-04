@@ -171,7 +171,8 @@ Implemented coverage for this lifecycle is intentionally narrow:
 - launch-register snapshot behavior for `GRID_X` and `GRID_Y` while the host
   rewrites the launch register file during an active stalled kernel
 - command-driven invalid-launch rejection through real `gpu_core` launch
-  registers for zero grid, unsupported group size, and nonzero flags
+  registers for zero grid dimensions, unsupported group dimensions, and nonzero
+  flags
 - command-driven soft reset while a kernel is stalled on memory, followed by
   successful relaunch
 - command-driven odd-address `STORE16` fault visibility

@@ -75,7 +75,7 @@ The command processor must reject or report:
 
 - launch while busy
 - zero grid dimensions
-- unsupported group size
+- unsupported group dimensions
 - unsupported launch flags
 
 Current RTL status:

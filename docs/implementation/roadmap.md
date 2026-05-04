@@ -133,7 +133,8 @@ architecture.
 - command-driven `gpu_core` launch-while-busy dispatch rejection and WAIT_IDLE
   barrier smoke while a kernel is stalled on memory
 - command-driven `gpu_core` invalid-launch rejection through real launch
-  registers
+  registers for zero grid dimensions, unsupported group dimensions, and nonzero
+  flags
 - command-driven `gpu_core` soft reset while a kernel is stalled on memory,
   followed by successful relaunch
 - command-driven `gpu_core` odd-address STORE16 fault smoke through
@@ -199,7 +200,8 @@ Current lifecycle/ABI coverage:
 - `ARG_BASE` launch snapshot behavior while a command-driven kernel is stalled
 - `GRID_X`/`GRID_Y` launch snapshot behavior while a command-driven kernel is
   stalled
-- invalid-launch rejection through real `gpu_core` launch registers
+- invalid-launch rejection through real `gpu_core` launch registers for zero
+  grid dimensions, unsupported group dimensions, and nonzero flags
 - active-kernel soft reset and relaunch while memory response is held
 - host-visible odd-address `STORE16` fault
 - soft-reset recovery after the `STORE16` fault
