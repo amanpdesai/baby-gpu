@@ -154,6 +154,30 @@ module tb_gpu_core_command_store16_fault;
   end
   endtask
 
+  task automatic wait_idle;
+    int timeout;
+  begin
+    timeout = 0;
+    while (busy) begin
+      check(timeout < 200, "gpu_core recovery wait_idle timeout");
+      timeout = timeout + 1;
+      step();
+    end
+  end
+  endtask
+
+  task automatic wait_error_clear;
+    int timeout;
+  begin
+    timeout = 0;
+    while (error_status != 8'h00) begin
+      check(timeout < 20, "soft reset clears programmable fault status");
+      timeout = timeout + 1;
+      step();
+    end
+  end
+  endtask
+
   initial begin
     clk = 1'b0;
     reset = 1'b1;
@@ -197,6 +221,32 @@ module tb_gpu_core_command_store16_fault;
     for (i = 0; i < MEM_WORDS; i = i + 1) begin
       check(memory[i] == 32'hDEAD_DEAD, "faulting STORE16 leaves memory unchanged");
     end
+
+    set_reg(32'h0000_000C, 32'h0000_0002);
+    wait_error_clear();
+
+    mem_req_seen = 1'b0;
+    write_imem(8'd0, kgpu_movi(4'd1, 18'd0));
+    write_imem(8'd1, kgpu_movi(4'd2, 18'h02A5B));
+    write_imem(8'd2, kgpu_store16(4'd2, 4'd1, 18'd0));
+    write_imem(8'd3, kgpu_end());
+
+    set_reg(32'h0000_0040, 32'h0000_0000);
+    set_reg(32'h0000_0044, 32'h0000_0001);
+    set_reg(32'h0000_0048, 32'h0000_0001);
+    set_reg(32'h0000_004C, 32'h0000_0004);
+    set_reg(32'h0000_0050, 32'h0000_0001);
+    set_reg(32'h0000_0054, 32'h0000_0000);
+    set_reg(32'h0000_0058, 32'h0000_0000);
+
+    send_word(32'h2001_0000);
+    send_word(32'h0301_0000);
+    wait_idle();
+
+    check(error_status == 8'h00, "recovered STORE16 completes without error");
+    check(mem_req_seen, "recovered STORE16 issues a memory request");
+    check(memory[0][15:0] == 16'h2A5B, "recovered STORE16 writes low halfword");
+    check(memory[0][31:16] == 16'hDEAD, "recovered STORE16 preserves high halfword");
 
     $display("tb_gpu_core_command_store16_fault PASS");
     $finish;
