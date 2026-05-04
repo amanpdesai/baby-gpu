@@ -7,6 +7,7 @@ module tb_gpu_core_command_lifecycle;
 
   localparam int MEM_WORDS = 8;
   localparam int IMEM_ADDR_W = 8;
+  localparam logic [31:0] POST_WAIT_ARG_BASE = 32'h0000_0040;
 
   logic clk;
   logic reset;
@@ -163,14 +164,20 @@ module tb_gpu_core_command_lifecycle;
     send_word(KGPU_CMD_WAIT_IDLE);
     step();
     check(busy, "WAIT_IDLE keeps gpu_core busy while kernel is active");
+    set_reg(KGPU_REG_ARG_BASE, POST_WAIT_ARG_BASE);
     repeat (4) begin
       step();
       check(busy, "WAIT_IDLE remains blocked while memory response is held");
+      check(dut.register_launch_arg_base == 32'h0000_0000,
+            "WAIT_IDLE blocks following SET_REGISTER while kernel is active");
     end
 
     hold_rsp = 1'b0;
     wait_idle(200, "WAIT_IDLE retires after held memory response completes");
+    step();
     check(!pending_rsp, "held memory response drains");
+    check(dut.register_launch_arg_base == POST_WAIT_ARG_BASE,
+          "SET_REGISTER behind WAIT_IDLE retires after kernel completes");
     check(error_status == KGPU_ERR_DISPATCH_BUSY, "dispatch-busy remains sticky after kernel completes");
 
     $display("tb_gpu_core_command_lifecycle PASS");
