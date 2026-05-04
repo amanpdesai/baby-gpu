@@ -127,6 +127,8 @@ architecture.
   argument-block loads, global input loads, and global output stores
 - command-driven `gpu_core` memory request backpressure and delayed response
   smoke in the vector_add path
+- command-driven `gpu_core` launch-while-busy dispatch rejection and WAIT_IDLE
+  barrier smoke while a kernel is stalled on memory
 - command-driven `gpu_core` odd-address STORE16 fault smoke through
   host-visible programmable error status
 - command-driven `gpu_core` soft-reset recovery after programmable STORE16
@@ -180,6 +182,7 @@ Current lifecycle/ABI coverage:
 - command-driven `vector_add`
 - stalled request and delayed response memory smoke in command-driven
   `vector_add`
+- launch-while-busy dispatch rejection and WAIT_IDLE barrier smoke
 - host-visible odd-address `STORE16` fault
 - soft-reset recovery after the `STORE16` fault
 

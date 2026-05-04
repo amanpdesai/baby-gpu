@@ -86,7 +86,8 @@ command is decoded, the command processor remains in `WAIT_IDLE`.
 While blocked:
 
 - `busy` remains high
-- new command words are not accepted by the command processor
+- new command words may still enter the top-level FIFO if FIFO space exists
+- queued words are not retired by the command processor until the barrier clears
 - completion waits for clear, rectangle, programmable launch, scheduler, core,
   and memory-facing work to become idle
 
@@ -154,6 +155,9 @@ Implemented coverage for this lifecycle is intentionally narrow:
 - command-driven `vector_add` through `gpu_core`
 - command-driven memory request backpressure and delayed response smoke in the
   `vector_add` path
+- command-driven launch-while-busy dispatch rejection
+- `WAIT_IDLE` barrier behavior while a command-launched kernel is stalled on
+  memory
 - command-driven odd-address `STORE16` fault visibility
 - command-driven soft-reset recovery after the `STORE16` fault
 

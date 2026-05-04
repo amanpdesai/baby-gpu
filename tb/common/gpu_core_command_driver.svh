@@ -16,6 +16,13 @@ localparam logic [31:0] KGPU_REG_GROUP_SIZE_Y = 32'h0000_0050;
 localparam logic [31:0] KGPU_REG_ARG_BASE = 32'h0000_0054;
 localparam logic [31:0] KGPU_REG_LAUNCH_FLAGS = 32'h0000_0058;
 
+localparam logic [7:0] KGPU_ERR_UNKNOWN_OPCODE = 8'h01;
+localparam logic [7:0] KGPU_ERR_BAD_WORD_COUNT = 8'h02;
+localparam logic [7:0] KGPU_ERR_BAD_RESERVED = 8'h04;
+localparam logic [7:0] KGPU_ERR_DISPATCH_BUSY = 8'h08;
+localparam logic [7:0] KGPU_ERR_LAUNCH_INVALID = 8'h10;
+localparam logic [7:0] KGPU_ERR_PROGRAMMABLE = 8'h20;
+
 task automatic step;
 begin
   @(posedge clk);
