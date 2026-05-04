@@ -45,6 +45,7 @@ module tb_gpu_core_command_vector_add;
   logic saw_rsp_delay;
   logic [31:0] memory [0:MEM_WORDS-1];
   int i;
+  `include "tb/common/gpu_core_memory_helpers.svh"
 
   gpu_core #(
       .FB_WIDTH(16),
@@ -116,18 +117,7 @@ module tb_gpu_core_command_vector_add;
           mem_rsp_rdata <= pending_rdata;
 
           if (pending_write) begin
-            if (pending_wmask[0]) begin
-              memory[pending_addr[31:2]][7:0] <= pending_wdata[7:0];
-            end
-            if (pending_wmask[1]) begin
-              memory[pending_addr[31:2]][15:8] <= pending_wdata[15:8];
-            end
-            if (pending_wmask[2]) begin
-              memory[pending_addr[31:2]][23:16] <= pending_wdata[23:16];
-            end
-            if (pending_wmask[3]) begin
-              memory[pending_addr[31:2]][31:24] <= pending_wdata[31:24];
-            end
+            write_memory_masked(pending_addr, pending_wdata, pending_wmask);
           end
         end
       end
@@ -138,7 +128,7 @@ module tb_gpu_core_command_vector_add;
         pending_addr <= mem_req_addr;
         pending_wdata <= mem_req_wdata;
         pending_wmask <= mem_req_wmask;
-        pending_rdata <= mem_req_write ? '0 : memory[mem_req_addr[31:2]];
+        pending_rdata <= mem_req_write ? '0 : read_memory_word(mem_req_addr);
         pending_delay <= mem_req_write ? 2'd1 : 2'd2;
       end
     end
@@ -180,9 +170,7 @@ module tb_gpu_core_command_vector_add;
     mem_rsp_valid = 1'b0;
     mem_rsp_rdata = '0;
 
-    for (i = 0; i < MEM_WORDS; i = i + 1) begin
-      memory[i] = 32'hDEAD_DEAD;
-    end
+    init_memory(32'hDEAD_DEAD);
 
     step();
     reset = 1'b0;

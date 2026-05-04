@@ -33,6 +33,7 @@ module tb_gpu_core_command_active_reset;
   logic [31:0] pending_rdata;
   logic [31:0] memory [0:MEM_WORDS-1];
   int i;
+  `include "tb/common/gpu_core_memory_helpers.svh"
 
   gpu_core #(
       .FB_WIDTH(4),
@@ -81,21 +82,10 @@ module tb_gpu_core_command_active_reset;
       if (mem_req_valid && mem_req_ready) begin
         saw_mem_req <= 1'b1;
         pending_rsp <= 1'b1;
-        pending_rdata <= mem_req_write ? '0 : memory[mem_req_addr[31:2]];
+        pending_rdata <= mem_req_write ? '0 : read_memory_word(mem_req_addr);
 
         if (mem_req_write) begin
-          if (mem_req_wmask[0]) begin
-            memory[mem_req_addr[31:2]][7:0] <= mem_req_wdata[7:0];
-          end
-          if (mem_req_wmask[1]) begin
-            memory[mem_req_addr[31:2]][15:8] <= mem_req_wdata[15:8];
-          end
-          if (mem_req_wmask[2]) begin
-            memory[mem_req_addr[31:2]][23:16] <= mem_req_wdata[23:16];
-          end
-          if (mem_req_wmask[3]) begin
-            memory[mem_req_addr[31:2]][31:24] <= mem_req_wdata[31:24];
-          end
+          write_memory_masked(mem_req_addr, mem_req_wdata, mem_req_wmask);
         end
       end else if (pending_rsp && !hold_rsp && (!mem_rsp_valid || mem_rsp_ready)) begin
         pending_rsp <= 1'b0;
@@ -146,9 +136,7 @@ module tb_gpu_core_command_active_reset;
     pending_rdata = '0;
     saw_mem_req = 1'b0;
 
-    for (i = 0; i < MEM_WORDS; i = i + 1) begin
-      memory[i] = 32'hDEAD_DEAD;
-    end
+    init_memory(32'hDEAD_DEAD);
 
     step();
     reset = 1'b0;

@@ -30,6 +30,7 @@ module tb_gpu_core_command_store16_kernel;
   logic [31:0] mem_rsp_rdata;
   logic [31:0] memory [0:MEM_WORDS-1];
   int i;
+  `include "tb/common/gpu_core_memory_helpers.svh"
 
   gpu_core #(
       .FB_WIDTH(4),
@@ -74,21 +75,10 @@ module tb_gpu_core_command_store16_kernel;
 
       if (mem_req_valid && mem_req_ready) begin
         mem_rsp_valid <= 1'b1;
-        mem_rsp_rdata <= mem_req_write ? '0 : memory[mem_req_addr[31:2]];
+        mem_rsp_rdata <= mem_req_write ? '0 : read_memory_word(mem_req_addr);
 
         if (mem_req_write) begin
-          if (mem_req_wmask[0]) begin
-            memory[mem_req_addr[31:2]][7:0] <= mem_req_wdata[7:0];
-          end
-          if (mem_req_wmask[1]) begin
-            memory[mem_req_addr[31:2]][15:8] <= mem_req_wdata[15:8];
-          end
-          if (mem_req_wmask[2]) begin
-            memory[mem_req_addr[31:2]][23:16] <= mem_req_wdata[23:16];
-          end
-          if (mem_req_wmask[3]) begin
-            memory[mem_req_addr[31:2]][31:24] <= mem_req_wdata[31:24];
-          end
+          write_memory_masked(mem_req_addr, mem_req_wdata, mem_req_wmask);
         end
       end
     end
@@ -97,7 +87,7 @@ module tb_gpu_core_command_store16_kernel;
   function automatic logic [15:0] pixel_at(input int x);
     logic [31:0] word;
     begin
-      word = memory[x / 2];
+      word = read_memory_word(32'(x * 2));
       if ((x % 2) == 0) begin
         pixel_at = word[15:0];
       end else begin
@@ -119,9 +109,7 @@ module tb_gpu_core_command_store16_kernel;
     mem_rsp_valid = 1'b0;
     mem_rsp_rdata = '0;
 
-    for (i = 0; i < MEM_WORDS; i = i + 1) begin
-      memory[i] = 32'hDEAD_DEAD;
-    end
+    init_memory(32'hDEAD_DEAD);
 
     step();
     reset = 1'b0;
