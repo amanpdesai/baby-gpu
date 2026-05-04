@@ -57,12 +57,12 @@ path, kernel-level simulations, formal proofs for selected control/datapath
 blocks including the clear engine, scheduler sticky-error behavior, special
 register mux, LSU prep, and request/response sequencing, draw-unit corner
 coverage for command/clear/rectangle/framebuffer paths, command-driven
-`STORE16` and `vector_add` kernel coverage through `gpu_core`,
-command-driven stalled/delayed memory smoke, host-visible `STORE16` fault
-coverage, soft-reset recovery smoke, and Yosys synthesis smoke coverage for
-leaf blocks and the integrated programmable core path. Top-level command-kernel
-fault coverage checks that an LSU-detected programmable fault reaches
-host-visible status without issuing a memory write.
+`STORE16`, `vector_add`, nonzero `PROGRAM_BASE`, and 2D framebuffer-gradient
+kernel coverage through `gpu_core`, command-driven stalled/delayed memory
+smoke, host-visible `STORE16` fault coverage, soft-reset recovery smoke, and
+Yosys synthesis smoke coverage for leaf blocks and the integrated programmable
+core path. Top-level command-kernel fault coverage checks that an LSU-detected
+programmable fault reaches host-visible status without issuing a memory write.
 Illegal instruction, illegal special-register, branch, memory, and predicated
 store integration tests cover the current programmable path, including
 convergent taken/not-taken branches, signed backward branches, R0 predicates,

@@ -153,6 +153,8 @@ semantics.
 Implemented coverage for this lifecycle is intentionally narrow:
 
 - command-driven `vector_add` through `gpu_core`
+- command-driven 2D framebuffer-gradient kernel through `gpu_core`
+- command-driven nonzero `PROGRAM_BASE` launch through `gpu_core`
 - command-driven memory request backpressure and delayed response smoke in the
   `vector_add` path
 - command-driven launch-while-busy dispatch rejection

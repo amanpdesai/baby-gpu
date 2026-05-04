@@ -125,6 +125,9 @@ architecture.
   programmable core, LSU, and top-level memory response path
 - command-driven `gpu_core` vector_add smoke through launch registers,
   argument-block loads, global input loads, and global output stores
+- command-driven `gpu_core` nonzero `PROGRAM_BASE` launch smoke
+- command-driven `gpu_core` 2D framebuffer-gradient smoke through `GRID_X`,
+  `GRID_Y`, `GLOBAL_ID_X`, `GLOBAL_ID_Y`, framebuffer base, and `STORE16`
 - command-driven `gpu_core` memory request backpressure and delayed response
   smoke in the vector_add path
 - command-driven `gpu_core` launch-while-busy dispatch rejection and WAIT_IDLE
@@ -184,6 +187,8 @@ Lifecycle and ABI specs:
 Current lifecycle/ABI coverage:
 
 - command-driven `vector_add`
+- command-driven nonzero `PROGRAM_BASE`
+- command-driven 2D framebuffer-gradient kernel
 - stalled request and delayed response memory smoke in command-driven
   `vector_add`
 - launch-while-busy dispatch rejection and WAIT_IDLE barrier smoke
@@ -244,6 +249,7 @@ Exit criteria:
 - memory comparison passes: done
 - optional generated image artifact
 - no fixed-function pixel writer required: done
+- command-driven `gpu_core` launch path: done
 
 ## Third Kernel Milestone: Bounded Fill
 

@@ -106,6 +106,9 @@ kernel.
 Current ABI coverage includes:
 
 - command-driven `vector_add`
+- command-driven 2D framebuffer-gradient kernel using `GRID_X`, `GRID_Y`,
+  `GLOBAL_ID_X`, `GLOBAL_ID_Y`, framebuffer base, and framebuffer width
+- nonzero command-driven `PROGRAM_BASE` as an instruction-word offset
 - memory request stall and delayed response smoke in command-driven
   `vector_add`
 - `STORE16` odd-address fault visibility through host-visible error status
