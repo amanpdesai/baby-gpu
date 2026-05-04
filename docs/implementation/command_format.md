@@ -88,15 +88,13 @@ Current RTL status:
 - valid launches emit a one-cycle launch request and latch launch register
   values.
 - `gpu_core` wires host launch registers into the command processor.
+- `gpu_core` drives the programmable core from the latched launch request and
+  routes programmable LSU traffic through the top-level memory interface.
 
 Program-base validation is deferred until the integrated instruction-memory
-contract is explicit. Current RTL latches `PROGRAM_BASE` but does not reject
-zero, unaligned, or out-of-range values.
-
-The programmable core is not yet driven directly from `gpu_core` launch
-requests. The next integration slice should connect the latched launch request
-to the programmable core and instruction/data memory path, then add
-program-base validation at that boundary.
+contract is explicit. Current RTL uses the low instruction-address bits of
+`PROGRAM_BASE` as a fetch offset but does not reject zero, unaligned, or
+out-of-range values.
 
 ## `WAIT_IDLE`
 

@@ -63,7 +63,9 @@ module instruction_memory #(
     if (write_en) begin
       if (!addr_known(write_addr) || (addr_to_index(write_addr) >= DEPTH)) begin
 `ifndef FORMAL
+`ifndef SYNTHESIS
         $error("instruction_memory write address out of range: 0x%0h", write_addr);
+`endif
 `endif
       end else begin
         memory[addr_to_index(write_addr)] <= write_data;

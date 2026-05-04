@@ -121,6 +121,8 @@ architecture.
 - programmable-core all-false predicated STORE16 skip integration coverage
 - command-driven launch register plumbing through `gpu_core` with
   LAUNCH_KERNEL latch smoke coverage
+- command-driven `gpu_core` STORE16 kernel smoke through instruction memory,
+  programmable core, LSU, and top-level memory response path
 
 The first programmable GPU path now executes encoded kernels through scheduler,
 core, LSU, and simulation memory.

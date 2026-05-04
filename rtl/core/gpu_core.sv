@@ -5,7 +5,11 @@ module gpu_core #(
     parameter int ADDR_W = 32,
     parameter int DATA_W = 32,
     parameter int COORD_W = 16,
-    parameter int COLOR_W = 16
+    parameter int COLOR_W = 16,
+    parameter int LANES = 4,
+    parameter int PC_W = 8,
+    parameter int REGS = 16,
+    parameter int INSTR_W = 32
 ) (
     input logic clk,
     input logic reset,
@@ -16,6 +20,10 @@ module gpu_core #(
     output logic cmd_ready,
     input logic [DATA_W-1:0] cmd_data,
 
+    input logic imem_write_en,
+    input logic [PC_W-1:0] imem_write_addr,
+    input logic [INSTR_W-1:0] imem_write_data,
+
     output logic busy,
     output logic [7:0] error_status,
 
@@ -24,7 +32,10 @@ module gpu_core #(
     output logic mem_req_write,
     output logic [ADDR_W-1:0] mem_req_addr,
     output logic [DATA_W-1:0] mem_req_wdata,
-    output logic [(DATA_W/8)-1:0] mem_req_wmask
+    output logic [(DATA_W/8)-1:0] mem_req_wmask,
+    input logic mem_rsp_valid,
+    output logic mem_rsp_ready,
+    input logic [DATA_W-1:0] mem_rsp_rdata
 );
   localparam int FIFO_COUNT_W = $clog2(FIFO_DEPTH + 1);
 
@@ -62,6 +73,22 @@ module gpu_core #(
   logic [COORD_W-1:0] launch_group_size_y_latched;
   logic [DATA_W-1:0] launch_arg_base_latched;
   logic [DATA_W-1:0] launch_flags_latched;
+  logic programmable_launch_ready;
+  logic programmable_busy;
+  logic programmable_done;
+  logic programmable_error;
+  logic [PC_W-1:0] programmable_instruction_addr;
+  logic [PC_W-1:0] imem_fetch_addr;
+  logic [INSTR_W-1:0] programmable_instruction;
+  logic imem_fetch_error;
+  logic programmable_data_req_valid;
+  logic programmable_data_req_ready;
+  logic programmable_data_req_write;
+  logic [ADDR_W-1:0] programmable_data_req_addr;
+  logic [31:0] programmable_data_req_wdata;
+  logic [3:0] programmable_data_req_wmask;
+  logic programmable_data_rsp_ready;
+  logic [(LANES*DATA_W)-1:0] programmable_debug_read_data;
 
   logic clear_start;
   logic [COLOR_W-1:0] clear_color;
@@ -94,6 +121,12 @@ module gpu_core #(
   logic [COORD_W-1:0] writer_pixel_x;
   logic [COORD_W-1:0] writer_pixel_y;
   logic [COLOR_W-1:0] writer_pixel_color;
+  logic writer_mem_req_valid;
+  logic writer_mem_req_ready;
+  logic writer_mem_req_write;
+  logic [ADDR_W-1:0] writer_mem_req_addr;
+  logic [DATA_W-1:0] writer_mem_req_wdata;
+  logic [(DATA_W/8)-1:0] writer_mem_req_wmask;
 
   logic reg_write_valid;
   logic [DATA_W-1:0] reg_write_addr;
@@ -102,9 +135,12 @@ module gpu_core #(
   assign combined_clear_errors = clear_errors || register_clear_errors;
   assign combined_reset = reset || register_soft_reset;
   assign register_stride_bytes = ADDR_W'(register_fb_width) << 1;
-  assign launch_busy = 1'b0;
+  assign launch_busy = programmable_busy || !programmable_launch_ready || launch_start;
   assign busy = cp_busy || !fifo_empty;
-  assign error_status = cp_error_status | {clear_error, rect_error, 6'b000000};
+  assign error_status = cp_error_status |
+      {clear_error, rect_error, programmable_error | imem_fetch_error, 5'b00000};
+
+  assign imem_fetch_addr = programmable_instruction_addr + PC_W'(launch_program_base_latched[PC_W-1:0]);
 
   register_file #(
       .ADDR_W(ADDR_W),
@@ -205,6 +241,56 @@ module gpu_core #(
       .error_status(cp_error_status)
   );
 
+  instruction_memory #(
+      .WORD_W(INSTR_W),
+      .ADDR_W(PC_W),
+      .DEPTH(1 << PC_W)
+  ) u_instruction_memory (
+      .clk(clk),
+      .write_en(imem_write_en),
+      .write_addr(imem_write_addr),
+      .write_data(imem_write_data),
+      .fetch_addr(imem_fetch_addr),
+      .fetch_instruction(programmable_instruction),
+      .fetch_error(imem_fetch_error)
+  );
+
+  programmable_core #(
+      .LANES(LANES),
+      .DATA_W(DATA_W),
+      .COORD_W(COORD_W),
+      .ADDR_W(ADDR_W),
+      .PC_W(PC_W),
+      .REGS(REGS)
+  ) u_programmable_core (
+      .clk(clk),
+      .reset(combined_reset),
+      .launch_valid(launch_start),
+      .launch_ready(programmable_launch_ready),
+      .grid_x(launch_grid_x_latched),
+      .grid_y(launch_grid_y_latched),
+      .arg_base(ADDR_W'(launch_arg_base_latched)),
+      .framebuffer_base(register_fb_base),
+      .framebuffer_width(register_fb_width),
+      .framebuffer_height(register_fb_height),
+      .instruction_addr(programmable_instruction_addr),
+      .instruction(programmable_instruction),
+      .data_req_valid(programmable_data_req_valid),
+      .data_req_ready(programmable_data_req_ready),
+      .data_req_write(programmable_data_req_write),
+      .data_req_addr(programmable_data_req_addr),
+      .data_req_wdata(programmable_data_req_wdata),
+      .data_req_wmask(programmable_data_req_wmask),
+      .data_rsp_valid(mem_rsp_valid),
+      .data_rsp_ready(programmable_data_rsp_ready),
+      .data_rsp_rdata(mem_rsp_rdata[31:0]),
+      .busy(programmable_busy),
+      .done(programmable_done),
+      .error(programmable_error),
+      .debug_read_addr('0),
+      .debug_read_data(programmable_debug_read_data)
+  );
+
   clear_engine #(
       .FB_WIDTH(FB_WIDTH),
       .FB_HEIGHT(FB_HEIGHT),
@@ -271,11 +357,20 @@ module gpu_core #(
       .fb_width(register_fb_width),
       .fb_height(register_fb_height),
       .stride_bytes(register_stride_bytes),
-      .mem_req_valid(mem_req_valid),
-      .mem_req_ready(mem_req_ready),
-      .mem_req_write(mem_req_write),
-      .mem_req_addr(mem_req_addr),
-      .mem_req_wdata(mem_req_wdata),
-      .mem_req_wmask(mem_req_wmask)
+      .mem_req_valid(writer_mem_req_valid),
+      .mem_req_ready(writer_mem_req_ready),
+      .mem_req_write(writer_mem_req_write),
+      .mem_req_addr(writer_mem_req_addr),
+      .mem_req_wdata(writer_mem_req_wdata),
+      .mem_req_wmask(writer_mem_req_wmask)
   );
+
+  assign mem_req_valid = writer_mem_req_valid || programmable_data_req_valid;
+  assign mem_req_write = writer_mem_req_valid ? writer_mem_req_write : programmable_data_req_write;
+  assign mem_req_addr = writer_mem_req_valid ? writer_mem_req_addr : programmable_data_req_addr;
+  assign mem_req_wdata = writer_mem_req_valid ? writer_mem_req_wdata : DATA_W'(programmable_data_req_wdata);
+  assign mem_req_wmask = writer_mem_req_valid ? writer_mem_req_wmask : (DATA_W / 8)'(programmable_data_req_wmask);
+  assign writer_mem_req_ready = mem_req_ready;
+  assign programmable_data_req_ready = !writer_mem_req_valid && mem_req_ready;
+  assign mem_rsp_ready = programmable_busy ? programmable_data_rsp_ready : 1'b1;
 endmodule

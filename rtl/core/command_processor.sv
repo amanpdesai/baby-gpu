@@ -241,7 +241,7 @@ module command_processor #(
         end
 
         STATE_CLEAR_DISPATCH: begin
-          if (clear_busy) begin
+          if (!draw_idle) begin
             error_status <= error_status | ERR_DISPATCH_BUSY;
             state <= STATE_IDLE;
           end else begin
@@ -290,7 +290,7 @@ module command_processor #(
         end
 
         STATE_RECT_DISPATCH: begin
-          if (rect_busy) begin
+          if (!draw_idle) begin
             error_status <= error_status | ERR_DISPATCH_BUSY;
             state <= STATE_IDLE;
           end else begin

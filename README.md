@@ -54,9 +54,9 @@ The repository contains the portable RTL scaffold, a programmable SIMD core
 path, kernel-level simulations, formal proofs for selected control/datapath
 blocks including the clear engine, scheduler sticky-error behavior, special
 register mux, LSU prep, and request/response sequencing, draw-unit corner
-coverage for command/clear/rectangle/framebuffer paths, command-driven launch
-request/latch coverage through `gpu_core`, and Yosys synthesis smoke coverage
-for leaf blocks and the integrated programmable core path.
+coverage for command/clear/rectangle/framebuffer paths, command-driven kernel
+execution coverage through `gpu_core`, and Yosys synthesis smoke coverage for
+leaf blocks and the integrated programmable core path.
 Illegal instruction, illegal special-register, branch, memory, and predicated
 store integration tests cover the current programmable path, including
 convergent taken/not-taken branches, signed backward branches, R0 predicates,

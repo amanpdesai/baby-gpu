@@ -410,8 +410,8 @@ Implemented modules: FIFO, command processor, register file, fixed smoke
 engines, framebuffer writer, instruction memory, instruction decoder, special
 register mux, lane register file, SIMD ALU, scheduler, LSU, simulation memory,
 programmable core
-Next planned slice: connect the command-processor LAUNCH_KERNEL request to the
-programmable-core execution path, then harden protocol coverage before
+Next planned slice: add command-driven LOAD/vector_add coverage through
+gpu_core, define program-base validation, then harden protocol coverage before
 FPGA/Vivado bring-up
 Known risks: no caches, scratchpad, multi-core routing IDs, DDR/video platform
 integration, or Vivado board timing closure yet

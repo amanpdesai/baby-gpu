@@ -53,11 +53,21 @@ run_synth instruction_decoder \
 
 run_synth gpu_core \
   rtl/common/gpu_pkg.sv \
+  rtl/common/isa_pkg.sv \
+  platform/sim/instruction_memory.sv \
   rtl/core/command_fifo.sv \
   rtl/core/command_processor.sv \
   rtl/core/framebuffer_writer.sv \
   rtl/core/gpu_core.sv \
+  rtl/core/instruction_decoder.sv \
+  rtl/core/lane_register_file.sv \
+  rtl/core/load_store_unit.sv \
+  rtl/core/programmable_core.sv \
   rtl/core/register_file.sv \
+  rtl/core/simd_alu.sv \
+  rtl/core/simd_core.sv \
+  rtl/core/special_registers.sv \
+  rtl/core/work_scheduler.sv \
   rtl/draw_units/clear_engine.sv \
   rtl/draw_units/rect_fill_engine.sv
 

@@ -1,4 +1,6 @@
 module tb_gpu_core_smoke;
+  import isa_pkg::*;
+
   logic clk;
   logic reset;
   logic enable;
@@ -14,6 +16,12 @@ module tb_gpu_core_smoke;
   logic [31:0] mem_req_addr;
   logic [31:0] mem_req_wdata;
   logic [3:0] mem_req_wmask;
+  logic mem_rsp_valid;
+  logic mem_rsp_ready;
+  logic [31:0] mem_rsp_rdata;
+  logic imem_write_en;
+  logic [7:0] imem_write_addr;
+  logic [ISA_WORD_W-1:0] imem_write_data;
 
   logic [31:0] framebuffer [0:5];
   int i;
@@ -30,6 +38,9 @@ module tb_gpu_core_smoke;
       .cmd_valid(cmd_valid),
       .cmd_ready(cmd_ready),
       .cmd_data(cmd_data),
+      .imem_write_en(imem_write_en),
+      .imem_write_addr(imem_write_addr),
+      .imem_write_data(imem_write_data),
       .busy(busy),
       .error_status(error_status),
       .mem_req_valid(mem_req_valid),
@@ -37,12 +48,29 @@ module tb_gpu_core_smoke;
       .mem_req_write(mem_req_write),
       .mem_req_addr(mem_req_addr),
       .mem_req_wdata(mem_req_wdata),
-      .mem_req_wmask(mem_req_wmask)
+      .mem_req_wmask(mem_req_wmask),
+      .mem_rsp_valid(mem_rsp_valid),
+      .mem_rsp_ready(mem_rsp_ready),
+      .mem_rsp_rdata(mem_rsp_rdata)
   );
 
   always #5 clk = ~clk;
 
   always_ff @(posedge clk) begin
+    if (reset) begin
+      mem_rsp_valid <= 1'b0;
+      mem_rsp_rdata <= '0;
+    end else begin
+      if (mem_rsp_valid && mem_rsp_ready) begin
+        mem_rsp_valid <= 1'b0;
+      end
+
+      if (mem_req_valid && mem_req_ready) begin
+        mem_rsp_valid <= 1'b1;
+        mem_rsp_rdata <= mem_req_write ? '0 : framebuffer[mem_req_addr[31:2]];
+      end
+    end
+
     if (!reset && mem_req_valid && mem_req_ready && mem_req_write) begin
       if (mem_req_wmask[0]) begin
         framebuffer[mem_req_addr[31:2]][7:0] <= mem_req_wdata[7:0];
@@ -84,6 +112,18 @@ module tb_gpu_core_smoke;
       step();
       cmd_valid = 1'b0;
       cmd_data = '0;
+    end
+  endtask
+
+  task automatic write_imem(input logic [7:0] addr, input logic [ISA_WORD_W-1:0] word);
+    begin
+      imem_write_addr = addr;
+      imem_write_data = word;
+      imem_write_en = 1'b1;
+      step();
+      imem_write_en = 1'b0;
+      imem_write_addr = '0;
+      imem_write_data = '0;
     end
   endtask
 
@@ -140,7 +180,12 @@ module tb_gpu_core_smoke;
     clear_errors = 1'b0;
     cmd_valid = 1'b0;
     cmd_data = '0;
+    imem_write_en = 1'b0;
+    imem_write_addr = '0;
+    imem_write_data = '0;
     mem_req_ready = 1'b1;
+    mem_rsp_valid = 1'b0;
+    mem_rsp_rdata = '0;
     for (i = 0; i < 6; i = i + 1) begin
       framebuffer[i] = 32'hDEAD_DEAD;
     end
@@ -148,6 +193,7 @@ module tb_gpu_core_smoke;
     step();
     reset = 1'b0;
     step();
+    write_imem(8'h20, isa_r_type(ISA_OP_END, 4'd0, 4'd0, 4'd0));
 
     send_word(32'h0102_0000);
     send_word(32'h0000_1234);
