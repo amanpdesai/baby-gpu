@@ -52,7 +52,7 @@ flowchart TB
 | `work_scheduler.sv` | launch sequencing, active masks, tail handling, and progress. |
 | `instruction_decoder.sv` | field extraction, high-risk CMP/PSTORE/unknown-opcode decode contracts, unassigned-opcode side-effect suppression, and CMP edge reachability covers. |
 | `lane_register_file.sv` | R0 hardwiring, lane isolation, write enables, and multi-read behavior. |
-| `load_store_unit.sv` | request sequencing, alignment and invalid-op errors, byte masks, and response routing. |
+| `load_store_unit.sv` | request sequencing, alignment and invalid-op errors, byte masks, response routing, and public status/handshake contracts. |
 | `data_memory.sv` | byte-mask writes, read-after-write behavior, out-of-range errors, and scenario reachability covers. |
 
 ## Directory Plan
@@ -138,13 +138,14 @@ Initial formal adoption is already active when:
 - framebuffer writer address and mask proof passes
 - work scheduler proof passes
 - instruction decoder smoke proof passes
-- instruction memory smoke proof passes
+- instruction memory smoke proof passes, including low and high out-of-range fetch faults
 - lane register file smoke proof passes
 - special register mux smoke proof passes
 - simulation data memory smoke proof and cover tasks pass
 - LSU prep smoke proof passes
 - LSU request/response sequencing smoke proof passes
 - LSU multi-lane response routing smoke proof passes
+- LSU public status and `rsp_ready` contracts pass
 
 Next exit criteria:
 

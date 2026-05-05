@@ -85,7 +85,7 @@ architecture.
 - convergent branch support
 - compare instruction
 - predicated 32-bit and 16-bit stores
-- instruction memory bounded formal smoke
+- instruction memory bounded formal smoke including high out-of-range fetch fault
 - register file bounded formal smoke
 - lane register file bounded formal smoke
 - work-scheduler sticky-error bounded formal smoke
@@ -93,6 +93,7 @@ architecture.
 - LSU invalid-op containment unit coverage and bounded prep formal scenario
 - LSU request/response transition bounded formal smoke
 - LSU multi-lane response routing bounded formal smoke
+- LSU public status and response-ready formal contracts
 - LSU empty active-mask unit coverage
 - LSU masked-lane fault suppression unit coverage
 - special register mux bounded formal smoke
