@@ -77,6 +77,9 @@ run_synth lane_register_file \
 run_synth load_store_unit \
   rtl/core/load_store_unit.sv
 
+run_synth memory_arbiter \
+  rtl/core/memory_arbiter.sv
+
 run_synth programmable_core \
   rtl/common/isa_pkg.sv \
   rtl/core/work_scheduler.sv \

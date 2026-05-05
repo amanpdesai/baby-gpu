@@ -42,6 +42,7 @@ mem_req_write
 mem_req_addr
 mem_req_wdata
 mem_req_wmask
+mem_req_id
 ```
 
 ## Abstract Response Interface
@@ -50,7 +51,19 @@ mem_req_wmask
 mem_rsp_valid
 mem_rsp_ready
 mem_rsp_rdata
+mem_rsp_id
+mem_rsp_error
 ```
+
+The request ID is split into arbiter source bits plus a source-local opaque ID:
+
+```text
+mem_req_id = source_id || local_request_id
+```
+
+The response path routes by `source_id` and returns `local_request_id` unchanged
+to the selected client. The first RTL arbiter is a fixed-priority mux with this
+identity contract. It is a scale-prep block, not a throughput feature.
 
 ## Memory Client Diagram
 
@@ -67,17 +80,19 @@ flowchart TB
 
 ## Arbitration Policy
 
-Version 1 can use a simple fixed-priority or round-robin arbiter. The main
-functional requirement is that scanout and writes do not corrupt each other.
+Version 1 can use fixed-priority arbitration while requesters are blocking or
+low-throughput. The current leaf arbiter grants the lowest-index valid client.
+The functional requirement is that accepted requests preserve payload and
+responses route to exactly one client by ID.
 
 Initial priority recommendation:
 
-1. video scanout read
-2. framebuffer writer
+1. video scanout read once display output matters
+2. framebuffer writer or programmable LSU, depending on active demo
 3. command or future fetch clients
 
-This favors stable display. Later versions can add buffering to relax scanout
-priority.
+Later versions can add buffering or round-robin arbitration to relax scanout
+priority. Do this before high-rate DMA, multiple cores, or cache refills.
 
 ## Write Masking
 

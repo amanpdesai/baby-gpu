@@ -101,7 +101,8 @@ rsp_ready
 rsp_rdata
 ```
 
-Scalable fields to reserve:
+Scalable fields are now part of the memory-system direction, even when an early
+leaf block or platform memory ignores them:
 
 ```text
 req_core_id
@@ -112,9 +113,33 @@ rsp_lane_id
 rsp_id
 ```
 
-The first implementation can issue one outstanding request and ignore IDs.
-Multiple cores require response routing, so the interface should not be written
-in a way that prevents IDs later.
+Initial identity rule:
+
+```text
+memory_request_id = source_id || local_request_id
+```
+
+`source_id` identifies the request origin at the arbiter boundary. For the
+current single-core design, sources are expected to be things like
+programmable-core LSU traffic, fixed-function framebuffer-writer traffic, and
+future scanout or host DMA traffic. `local_request_id` is opaque to the arbiter
+and is returned unchanged on the response path.
+
+Response routing rule:
+
+```text
+rsp_id.source_id selects the response sink
+rsp_id.local_request_id is returned to that sink unchanged
+```
+
+The first arbiter is intentionally a small valid/ready mux with response
+routing. It does not reorder, allocate IDs, track completion, or implement
+fairness. Those are later memory-system blocks. Priority arbitration is
+acceptable while all requesters are blocking or low-throughput. Round-robin or
+weighted arbitration should be added before attaching high-rate scanout, DMA, or
+multiple cores.
+
+Multiple cores require response routing before they are added.
 
 ## Per-Core Scratchpad
 
@@ -166,6 +191,10 @@ Initial memory ordering is conservative:
 - program order is preserved
 - loads stall until response
 - stores stall until accepted
+- each accepted request returns exactly one response
+- responses carry identity and are routed by ID
+- software-visible ordering across different sources is not guaranteed unless a
+  command-level barrier or future fence defines it
 - no atomics
 - no memory fences
 
@@ -210,6 +239,7 @@ Required tests:
 - RGB565 `STORE16` low and high halfword byte masks
 - framebuffer address calculation
 - LSU request stability under backpressure
+- arbiter priority and response-ID routing
 - vector add memory result
 - framebuffer gradient golden image
 - out-of-bounds or illegal access behavior once specified

@@ -1,0 +1,19 @@
+[tasks]
+prove
+cover
+
+[options]
+prove: mode prove
+cover: mode cover
+depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv memory_arbiter.sv memory_arbiter_formal.sv
+prep -top memory_arbiter_formal
+
+[files]
+rtl/core/memory_arbiter.sv
+formal/harnesses/memory_arbiter_formal.sv

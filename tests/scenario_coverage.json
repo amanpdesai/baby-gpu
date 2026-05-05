@@ -142,6 +142,16 @@
       ]
     },
     {
+      "id": "memory_arbiter_identity_routing",
+      "description": "Global memory arbitration forwards source-local IDs and routes responses by source ID.",
+      "tests": [
+        "tb/unit/tb_memory_arbiter.sv"
+      ],
+      "formal": [
+        "formal/scripts/memory_arbiter.sby"
+      ]
+    },
+    {
       "id": "memory_faults",
       "description": "Unaligned or invalid memory operations set errors without corrupting unrelated state.",
       "tests": [
