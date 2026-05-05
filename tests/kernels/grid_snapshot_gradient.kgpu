@@ -1,0 +1,25 @@
+# Command grid-snapshot test kernel.
+# First instruction pair creates a held memory request so the test can rewrite
+# GRID_X/Y while the launched kernel is active. Remaining code writes
+# framebuffer[y][x] = 0x0080 + x + (y * 16) using launch-snapshotted state.
+
+MOVI  R1, 0
+LOAD  R2, [R1 + 0]
+
+MOVSR R1, GLOBAL_ID_Y
+MOVSR R2, FRAMEBUFFER_WIDTH
+MUL   R3, R1, R2
+MOVSR R4, GLOBAL_ID_X
+ADD   R3, R3, R4
+MOVI  R5, 2
+MUL   R3, R3, R5
+MOVSR R6, FRAMEBUFFER_BASE
+ADD   R7, R6, R3
+
+MOVI  R8, 16
+MUL   R1, R1, R8
+MOVI  R8, 0x80
+ADD   R8, R8, R4
+ADD   R8, R8, R1
+STORE16 [R7 + 0], R8
+END
