@@ -1,0 +1,15 @@
+# Launch snapshot test kernel.
+# Initial load is held by the testbench while ARG_BASE is rewritten after
+# launch. The kernel must keep using the launch-snapshotted ARG_BASE.
+
+MOVI  R1, 0
+LOAD  R2, [R1 + 0]
+MOVSR R3, ARG_BASE
+LOAD  R4, [R3 + 0]
+LOAD  R5, [R3 + 4]
+MOVSR R6, LINEAR_GLOBAL_ID
+MOVI  R7, 2
+MUL   R6, R6, R7
+ADD   R4, R4, R6
+STORE16 [R4 + 0], R5
+END

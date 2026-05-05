@@ -1,7 +1,6 @@
 import isa_pkg::*;
 
 module tb_gpu_core_command_launch_snapshot;
-  import kernel_asm_pkg::*;
   `include "tb/common/gpu_core_command_driver.svh"
   `include "tb/common/kernel_program_loader.svh"
 
@@ -146,17 +145,7 @@ module tb_gpu_core_command_launch_snapshot;
   task automatic load_snapshot_program;
     logic [ISA_WORD_W-1:0] kernel_words [0:10];
   begin
-    kernel_words[0] = kgpu_movi(4'd1, 18'd0);
-    kernel_words[1] = kgpu_load(4'd2, 4'd1, 18'd0);
-    kernel_words[2] = kgpu_movsr(4'd3, ISA_SR_ARG_BASE);
-    kernel_words[3] = kgpu_load(4'd4, 4'd3, 18'd0);
-    kernel_words[4] = kgpu_load(4'd5, 4'd3, 18'd4);
-    kernel_words[5] = kgpu_movsr(4'd6, ISA_SR_LINEAR_GLOBAL_ID);
-    kernel_words[6] = kgpu_movi(4'd7, 18'd2);
-    kernel_words[7] = kgpu_mul(4'd6, 4'd6, 4'd7);
-    kernel_words[8] = kgpu_add(4'd4, 4'd4, 4'd6);
-    kernel_words[9] = kgpu_store16(4'd5, 4'd4, 18'd0);
-    kernel_words[10] = kgpu_end();
+    $readmemh("tests/kernels/launch_arg_snapshot_store16.memh", kernel_words);
     `KGPU_LOAD_PROGRAM(kernel_words)
   end
   endtask
