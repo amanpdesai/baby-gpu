@@ -11,6 +11,9 @@ module tb_gpu_core_command_launch_invalid;
   localparam logic [31:0] CLEAR_SKIP_ARG_BASE = 32'h0000_0040;
   localparam logic [31:0] RECT_SKIP_ARG_BASE = 32'h0000_0080;
   localparam logic [31:0] SET_REG_SKIP_ARG_BASE = 32'h0000_00C0;
+  localparam logic [31:0] CLEAR_RESERVED_ARG_BASE = 32'h0000_0100;
+  localparam logic [31:0] RECT_RESERVED_ARG_BASE = 32'h0000_0140;
+  localparam logic [31:0] SET_REG_RESERVED_ARG_BASE = 32'h0000_0180;
 
   logic clk;
   logic reset;
@@ -107,6 +110,19 @@ module tb_gpu_core_command_launch_invalid;
   end
   endtask
 
+  task automatic check_no_effects(input logic watch_clear,
+                                  input logic watch_rect,
+                                  input logic watch_launch,
+                                  input logic watch_reg_write,
+                                  input string message);
+  begin
+    check_no_starts(watch_clear, watch_rect, watch_launch, message);
+    if (watch_reg_write) begin
+      check(!dut.u_command_processor.reg_write_valid, message);
+    end
+  end
+  endtask
+
   task automatic send_word_no_starts(input logic [31:0] word,
                                      input logic watch_clear,
                                      input logic watch_rect,
@@ -124,6 +140,32 @@ module tb_gpu_core_command_launch_invalid;
     check_no_starts(watch_clear, watch_rect, watch_launch, message);
     step();
     check_no_starts(watch_clear, watch_rect, watch_launch, message);
+    cmd_valid = 1'b0;
+    cmd_data = '0;
+  end
+  endtask
+
+  task automatic send_word_no_effects(input logic [31:0] word,
+                                      input logic watch_clear,
+                                      input logic watch_rect,
+                                      input logic watch_launch,
+                                      input logic watch_reg_write,
+                                      input string message);
+  begin
+    cmd_data = word;
+    cmd_valid = 1'b1;
+    while (!cmd_ready) begin
+      #1;
+      check_no_effects(watch_clear, watch_rect, watch_launch,
+                       watch_reg_write, message);
+      step();
+    end
+    #1;
+    check_no_effects(watch_clear, watch_rect, watch_launch,
+                     watch_reg_write, message);
+    step();
+    check_no_effects(watch_clear, watch_rect, watch_launch,
+                     watch_reg_write, message);
     cmd_valid = 1'b0;
     cmd_data = '0;
   end
@@ -248,6 +290,58 @@ module tb_gpu_core_command_launch_invalid;
                            "bad-count SET_REGISTER post-skip SET_REGISTER is aligned");
     check(error_status == KGPU_ERR_BAD_WORD_COUNT,
           "bad-count SET_REGISTER reaches gpu_core error status");
+    reset_errors();
+
+    send_word_no_starts(32'h0001_0001, 1'b1, 1'b1, 1'b1,
+                        "reserved NOP does not pulse command starts");
+    wait_idle(20, "reserved NOP returns idle");
+    check(error_status == KGPU_ERR_BAD_RESERVED,
+          "reserved NOP reaches gpu_core error status");
+    reset_errors();
+
+    send_word_no_starts(32'h0301_0001, 1'b1, 1'b1, 1'b1,
+                        "reserved WAIT_IDLE does not pulse command starts");
+    wait_idle(20, "reserved WAIT_IDLE returns idle");
+    check(error_status == KGPU_ERR_BAD_RESERVED,
+          "reserved WAIT_IDLE reaches gpu_core error status");
+    reset_errors();
+
+    send_word_no_starts(32'h0102_0001, 1'b1, 1'b0, 1'b0,
+                        "reserved CLEAR does not pulse clear_start");
+    send_word_no_starts(KGPU_CMD_SET_REGISTER, 1'b1, 1'b0, 1'b0,
+                        "reserved CLEAR hostile skipped word keeps clear_start low");
+    set_arg_base_no_starts(CLEAR_RESERVED_ARG_BASE, 1'b1, 1'b0, 1'b0,
+                           "reserved CLEAR post-skip SET_REGISTER is aligned");
+    check(error_status == KGPU_ERR_BAD_RESERVED,
+          "reserved CLEAR reaches gpu_core error status");
+    reset_errors();
+
+    send_word_no_starts(32'h0205_0001, 1'b0, 1'b1, 1'b0,
+                        "reserved FILL_RECT does not pulse rect_start");
+    send_word_no_starts(32'h0000_BEEF, 1'b0, 1'b1, 1'b0,
+                        "reserved FILL_RECT skipped payload keeps rect_start low");
+    send_word_no_starts(32'h0000_1234, 1'b0, 1'b1, 1'b0,
+                        "reserved FILL_RECT skipped payload keeps rect_start low");
+    send_word_no_starts(32'h0000_ABCD, 1'b0, 1'b1, 1'b0,
+                        "reserved FILL_RECT skipped payload keeps rect_start low");
+    send_word_no_starts(KGPU_CMD_SET_REGISTER, 1'b0, 1'b1, 1'b0,
+                        "reserved FILL_RECT hostile skipped word keeps rect_start low");
+    set_arg_base_no_starts(RECT_RESERVED_ARG_BASE, 1'b0, 1'b1, 1'b0,
+                           "reserved FILL_RECT post-skip SET_REGISTER is aligned");
+    check(error_status == KGPU_ERR_BAD_RESERVED,
+          "reserved FILL_RECT reaches gpu_core error status");
+    reset_errors();
+
+    send_word_no_effects(32'h1003_0001, 1'b1, 1'b1, 1'b1, 1'b1,
+                         "reserved SET_REGISTER does not dispatch side effects");
+    send_word_no_effects(32'h0000_BEEF, 1'b1, 1'b1, 1'b1, 1'b1,
+                         "reserved SET_REGISTER skipped payload does not dispatch side effects");
+    send_word_no_effects(KGPU_CMD_SET_REGISTER, 1'b1, 1'b1, 1'b1, 1'b1,
+                         "reserved SET_REGISTER hostile skipped word does not dispatch side effects");
+    set_arg_base_no_starts(SET_REG_RESERVED_ARG_BASE, 1'b1, 1'b1, 1'b1,
+                           "reserved SET_REGISTER post-skip SET_REGISTER is aligned");
+    check(error_status == KGPU_ERR_BAD_RESERVED,
+          "reserved SET_REGISTER reaches gpu_core error status");
     reset_errors();
 
     send_word(32'h2002_0000);

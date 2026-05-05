@@ -90,12 +90,14 @@ module command_processor #(
 
   logic command_take;
   logic draw_idle;
+  logic header_reserved_nonzero;
   logic launch_config_invalid;
 
   assign opcode = cmd_data[31:24];
   assign word_count = cmd_data[23:16];
   assign command_take = cmd_valid && cmd_ready;
   assign draw_idle = !clear_busy && !rect_busy && !launch_busy;
+  assign header_reserved_nonzero = cmd_data[15:0] != 16'h0000;
   assign launch_config_invalid =
       (launch_grid_x == '0) ||
       (launch_grid_y == '0) ||
@@ -164,42 +166,58 @@ module command_processor #(
                   error_status <= error_status | ERR_BAD_WORD_COUNT;
                   skip_remaining <= word_count > 8'd1 ? word_count - 8'd1 : 8'd0;
                   state <= word_count > 8'd1 ? STATE_SKIP : STATE_IDLE;
+                end else if (header_reserved_nonzero) begin
+                  error_status <= error_status | ERR_BAD_RESERVED;
                 end
               end
               OP_CLEAR: begin
-                if (word_count == 8'd2) begin
-                  state <= STATE_CLEAR_COLOR;
-                end else begin
+                if (word_count != 8'd2) begin
                   error_status <= error_status | ERR_BAD_WORD_COUNT;
                   skip_remaining <= word_count > 8'd1 ? word_count - 8'd1 : 8'd0;
                   state <= word_count > 8'd1 ? STATE_SKIP : STATE_IDLE;
+                end else if (header_reserved_nonzero) begin
+                  error_status <= error_status | ERR_BAD_RESERVED;
+                  skip_remaining <= 8'd1;
+                  state <= STATE_SKIP;
+                end else begin
+                  state <= STATE_CLEAR_COLOR;
                 end
               end
               OP_FILL_RECT: begin
-                if (word_count == 8'd5) begin
-                  state <= STATE_RECT_XY;
-                end else begin
+                if (word_count != 8'd5) begin
                   error_status <= error_status | ERR_BAD_WORD_COUNT;
                   skip_remaining <= word_count > 8'd1 ? word_count - 8'd1 : 8'd0;
                   state <= word_count > 8'd1 ? STATE_SKIP : STATE_IDLE;
+                end else if (header_reserved_nonzero) begin
+                  error_status <= error_status | ERR_BAD_RESERVED;
+                  skip_remaining <= 8'd4;
+                  state <= STATE_SKIP;
+                end else begin
+                  state <= STATE_RECT_XY;
                 end
               end
               OP_WAIT_IDLE: begin
-                if (word_count == 8'd1) begin
-                  state <= draw_idle ? STATE_IDLE : STATE_WAIT_IDLE;
-                end else begin
+                if (word_count != 8'd1) begin
                   error_status <= error_status | ERR_BAD_WORD_COUNT;
                   skip_remaining <= word_count > 8'd1 ? word_count - 8'd1 : 8'd0;
                   state <= word_count > 8'd1 ? STATE_SKIP : STATE_IDLE;
+                end else if (header_reserved_nonzero) begin
+                  error_status <= error_status | ERR_BAD_RESERVED;
+                end else begin
+                  state <= draw_idle ? STATE_IDLE : STATE_WAIT_IDLE;
                 end
               end
               OP_SET_REGISTER: begin
-                if (word_count == 8'd3) begin
-                  state <= STATE_SET_REG_ADDR;
-                end else begin
+                if (word_count != 8'd3) begin
                   error_status <= error_status | ERR_BAD_WORD_COUNT;
                   skip_remaining <= word_count > 8'd1 ? word_count - 8'd1 : 8'd0;
                   state <= word_count > 8'd1 ? STATE_SKIP : STATE_IDLE;
+                end else if (header_reserved_nonzero) begin
+                  error_status <= error_status | ERR_BAD_RESERVED;
+                  skip_remaining <= 8'd2;
+                  state <= STATE_SKIP;
+                end else begin
+                  state <= STATE_SET_REG_ADDR;
                 end
               end
               OP_LAUNCH_KERNEL: begin
@@ -207,7 +225,7 @@ module command_processor #(
                   error_status <= error_status | ERR_BAD_WORD_COUNT;
                   skip_remaining <= word_count > 8'd1 ? word_count - 8'd1 : 8'd0;
                   state <= word_count > 8'd1 ? STATE_SKIP : STATE_IDLE;
-                end else if (cmd_data[15:0] != 16'h0000) begin
+                end else if (header_reserved_nonzero) begin
                   error_status <= error_status | ERR_BAD_RESERVED;
                 end else if (!draw_idle) begin
                   error_status <= error_status | ERR_DISPATCH_BUSY;

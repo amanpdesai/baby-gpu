@@ -120,7 +120,7 @@ Current sticky fault sources include:
 
 - unknown command opcode
 - bad command word count
-- nonzero `LAUNCH_KERNEL` reserved bits
+- nonzero reserved header bits for every current command opcode
 - invalid launch configuration
 - launch attempted while a dispatch path is busy
 - programmable illegal instruction or reserved instruction field
@@ -165,8 +165,7 @@ Implemented coverage for this lifecycle is intentionally narrow:
 - queued `SET_REGISTER(ARG_BASE)` behind blocked `WAIT_IDLE` while a
   command-launched kernel is stalled on held memory response
 - command-driven command-structure error reporting for unknown opcode, malformed
-  word counts on every current command opcode, and nonzero `LAUNCH_KERNEL`
-  reserved bits
+  word counts, and nonzero reserved header bits on every current command opcode
 - launch-register snapshot behavior for `PROGRAM_BASE` while the host rewrites
   the launch register file during an active stalled kernel
 - launch-register snapshot behavior for `ARG_BASE` while the host rewrites the
