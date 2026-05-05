@@ -65,6 +65,19 @@ The response path routes by `source_id` and returns `local_request_id` unchanged
 to the selected client. The first RTL arbiter is a fixed-priority mux with this
 identity contract. It is a scale-prep block, not a throughput feature.
 
+The current `gpu_core` top-level memory port does not expose returned IDs yet.
+It uses an in-order response tracker that records each accepted `mem_req_id`
+and supplies the oldest outstanding ID when a memory response is accepted. This
+keeps the external memory contract explicit:
+
+```text
+accepted requests and responses are in-order
+one accepted request produces one accepted response
+```
+
+A future pipelined or out-of-order memory wrapper should return a real response
+ID and replace or bypass the in-order tracker.
+
 ## Memory Client Diagram
 
 ```mermaid

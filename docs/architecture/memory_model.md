@@ -132,6 +132,11 @@ rsp_id.source_id selects the response sink
 rsp_id.local_request_id is returned to that sink unchanged
 ```
 
+Until the top-level memory port carries returned IDs, `gpu_core` tracks accepted
+request IDs in FIFO order and supplies the oldest outstanding ID to the arbiter
+when a memory response is accepted. That makes the current in-order external
+memory contract explicit without pretending to support out-of-order responses.
+
 The first arbiter is intentionally a small valid/ready mux with response
 routing. It does not reorder, allocate IDs, track completion, or implement
 fairness. Those are later memory-system blocks. Priority arbitration is

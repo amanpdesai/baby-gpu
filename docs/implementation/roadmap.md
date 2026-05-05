@@ -121,6 +121,9 @@ architecture.
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset
+- memory response tracker records accepted request IDs, returns oldest
+  outstanding ID for in-order external responses, flags overflow/underflow, and
+  has unit simulation, bounded formal coverage, and synthesis smoke
 - directed malformed illegal-instruction fixtures use checked `.word` raw
   encodings
 - programmable-core convergent, signed backward, and R0 predicate branch

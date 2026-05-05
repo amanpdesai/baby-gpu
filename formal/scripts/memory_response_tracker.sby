@@ -1,0 +1,19 @@
+[tasks]
+prove
+cover
+
+[options]
+prove: mode bmc
+cover: mode cover
+depth 8
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv memory_response_tracker.sv memory_response_tracker_formal.sv
+prep -top memory_response_tracker_formal
+
+[files]
+rtl/core/memory_response_tracker.sv
+formal/harnesses/memory_response_tracker_formal.sv

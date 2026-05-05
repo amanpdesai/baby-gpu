@@ -145,8 +145,16 @@ module gpu_core #(
   logic [MEM_CLIENTS-1:0] arb_client_rsp_valid;
   logic [MEM_CLIENTS-1:0] arb_client_rsp_ready;
   logic [(MEM_CLIENTS*DATA_W)-1:0] arb_client_rsp_rdata;
+  logic arb_mem_req_valid;
+  logic arb_mem_req_write;
+  logic [ADDR_W-1:0] arb_mem_req_addr;
+  logic [DATA_W-1:0] arb_mem_req_wdata;
+  logic [(DATA_W/8)-1:0] arb_mem_req_wmask;
   logic [MEM_ID_W-1:0] arb_mem_req_id;
-  logic [MEM_ID_W-1:0] mem_rsp_id_q;
+  logic [MEM_ID_W-1:0] tracked_mem_rsp_id;
+  logic tracker_empty;
+  logic tracker_full;
+  logic tracker_can_accept_req;
 
   logic reg_write_valid;
   logic [DATA_W-1:0] reg_write_addr;
@@ -201,7 +209,7 @@ module gpu_core #(
       .DEPTH(FIFO_DEPTH)
   ) u_command_fifo (
       .clk(clk),
-      .reset(combined_reset),
+      .reset(reset),
       .flush(combined_clear_errors),
       .in_valid(cmd_valid),
       .in_ready(cmd_ready),
@@ -403,14 +411,32 @@ module gpu_core #(
   assign arb_client_rsp_ready[1] = programmable_busy ? programmable_data_rsp_ready : 1'b1;
   assign programmable_data_rsp_valid = arb_client_rsp_valid[1];
   assign programmable_data_rsp_rdata = arb_client_rsp_rdata[DATA_W +: DATA_W];
+  assign tracker_can_accept_req = !tracker_full || (mem_rsp_valid && mem_rsp_ready && !tracker_empty);
 
-  always_ff @(posedge clk) begin
-    if (reset) begin
-      mem_rsp_id_q <= '0;
-    end else if (mem_req_valid && mem_req_ready) begin
-      mem_rsp_id_q <= arb_mem_req_id;
-    end
-  end
+  assign mem_req_valid = arb_mem_req_valid && tracker_can_accept_req;
+  assign mem_req_write = arb_mem_req_write;
+  assign mem_req_addr = arb_mem_req_addr;
+  assign mem_req_wdata = arb_mem_req_wdata;
+  assign mem_req_wmask = arb_mem_req_wmask;
+
+  memory_response_tracker #(
+      .ID_W(MEM_ID_W),
+      .DEPTH(4)
+  ) u_memory_response_tracker (
+      .clk(clk),
+      .reset(combined_reset),
+      .clear_errors(combined_clear_errors),
+      .req_fire(mem_req_valid && mem_req_ready),
+      .req_id(arb_mem_req_id),
+      .rsp_fire(mem_rsp_valid && mem_rsp_ready),
+      .rsp_id(tracked_mem_rsp_id),
+      .empty(tracker_empty),
+      .full(tracker_full),
+      .outstanding_count(),
+      .overflow_error(),
+      .underflow_error(),
+      .error()
+  );
 
   memory_arbiter #(
       .CLIENTS(MEM_CLIENTS),
@@ -430,17 +456,17 @@ module gpu_core #(
       .client_rsp_rdata(arb_client_rsp_rdata),
       .client_rsp_id(),
       .client_rsp_error(),
-      .mem_req_valid(mem_req_valid),
-      .mem_req_ready(mem_req_ready),
-      .mem_req_write(mem_req_write),
-      .mem_req_addr(mem_req_addr),
-      .mem_req_wdata(mem_req_wdata),
-      .mem_req_wmask(mem_req_wmask),
+      .mem_req_valid(arb_mem_req_valid),
+      .mem_req_ready(mem_req_ready && tracker_can_accept_req),
+      .mem_req_write(arb_mem_req_write),
+      .mem_req_addr(arb_mem_req_addr),
+      .mem_req_wdata(arb_mem_req_wdata),
+      .mem_req_wmask(arb_mem_req_wmask),
       .mem_req_id(arb_mem_req_id),
       .mem_rsp_valid(mem_rsp_valid),
       .mem_rsp_ready(mem_rsp_ready),
       .mem_rsp_rdata(mem_rsp_rdata),
-      .mem_rsp_id(mem_rsp_id_q),
+      .mem_rsp_id(tracked_mem_rsp_id),
       .mem_rsp_error(1'b0)
   );
 endmodule
