@@ -1,7 +1,6 @@
 import isa_pkg::*;
 
 module tb_gpu_core_command_program_base_snapshot;
-  import kernel_asm_pkg::*;
   `include "tb/common/gpu_core_command_driver.svh"
   `include "tb/common/kernel_program_loader.svh"
 
@@ -144,34 +143,26 @@ module tb_gpu_core_command_program_base_snapshot;
 
   task automatic load_old_program;
     logic [ISA_WORD_W-1:0] kernel_words [0:9];
-  begin
-    kernel_words[0] = kgpu_movi(4'd1, 18'd0);
-    kernel_words[1] = kgpu_load(4'd2, 4'd1, 18'd0);
-    kernel_words[2] = kgpu_movsr(4'd3, ISA_SR_LINEAR_GLOBAL_ID);
-    kernel_words[3] = kgpu_movi(4'd4, 18'd2);
-    kernel_words[4] = kgpu_mul(4'd3, 4'd3, 4'd4);
-    kernel_words[5] = kgpu_movi(4'd5, 18'(OLD_OUT_BASE));
-    kernel_words[6] = kgpu_add(4'd5, 4'd5, 4'd3);
-    kernel_words[7] = kgpu_movi(4'd6, 18'(OLD_COLOR));
-    kernel_words[8] = kgpu_store16(4'd6, 4'd5, 18'd0);
-    kernel_words[9] = kgpu_end();
-    `KGPU_LOAD_PROGRAM_AT(OLD_PROGRAM_BASE[7:0], kernel_words)
-  end
+    begin
+      $readmemh("tests/kernels/program_base_snapshot_old.memh", kernel_words);
+      `KGPU_LOAD_PROGRAM_AT(OLD_PROGRAM_BASE[7:0], kernel_words)
+    end
   endtask
 
   task automatic load_new_program;
     logic [ISA_WORD_W-1:0] kernel_words [0:7];
-  begin
-    kernel_words[0] = kgpu_movsr(4'd3, ISA_SR_LINEAR_GLOBAL_ID);
-    kernel_words[1] = kgpu_movi(4'd4, 18'd2);
-    kernel_words[2] = kgpu_mul(4'd3, 4'd3, 4'd4);
-    kernel_words[3] = kgpu_movi(4'd5, 18'(NEW_OUT_BASE));
-    kernel_words[4] = kgpu_add(4'd5, 4'd5, 4'd3);
-    kernel_words[5] = kgpu_movi(4'd6, 18'(NEW_COLOR));
-    kernel_words[6] = kgpu_store16(4'd6, 4'd5, 18'd0);
-    kernel_words[7] = kgpu_end();
-    `KGPU_LOAD_PROGRAM_AT(NEW_PROGRAM_BASE[7:0] + 8'd1, kernel_words)
-  end
+    begin
+      $readmemh("tests/kernels/program_base_snapshot_new.memh", kernel_words);
+      `KGPU_LOAD_PROGRAM_AT(NEW_PROGRAM_BASE[7:0] + 8'd1, kernel_words)
+    end
+  endtask
+
+  task automatic load_empty_kernel_at(input logic [IMEM_ADDR_W-1:0] addr);
+    logic [ISA_WORD_W-1:0] kernel_words [0:0];
+    begin
+      $readmemh("tests/kernels/empty.memh", kernel_words);
+      `KGPU_LOAD_PROGRAM_AT(addr, kernel_words)
+    end
   endtask
 
   initial begin
@@ -192,9 +183,9 @@ module tb_gpu_core_command_program_base_snapshot;
     reset = 1'b0;
     step();
 
-    write_imem(8'd0, kgpu_end());
-    write_imem(OLD_PROGRAM_BASE[7:0] - 8'd1, kgpu_end());
-    write_imem(NEW_PROGRAM_BASE[7:0], kgpu_end());
+    load_empty_kernel_at(8'd0);
+    load_empty_kernel_at(OLD_PROGRAM_BASE[7:0] - 8'd1);
+    load_empty_kernel_at(NEW_PROGRAM_BASE[7:0]);
     load_old_program();
     load_new_program();
 
