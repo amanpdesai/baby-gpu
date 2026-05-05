@@ -43,11 +43,16 @@ make formal
 make sim
 make synth-yosys
 make test-tools
+make assemble-kernels
+make check-kernel-fixtures
 ```
 
 `make check-tools` should pass before writing RTL. `make lint`, `make formal`,
 and `make sim` are allowed to report that no RTL or no formal jobs exist yet.
 `make test-tools` runs host-side tooling tests, including the assembler tests.
+`make assemble-kernels` regenerates checked-in kernel `.memh` fixtures from
+`.kgpu` source. `make check-kernel-fixtures` verifies those committed images are
+not stale.
 
 Vivado is optional until FPGA-facing milestones. When Vivado is installed, run
 the synthesis smoke with the exact board part:

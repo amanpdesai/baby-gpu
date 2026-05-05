@@ -3,9 +3,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ASM_PATH = REPO_ROOT / "tools" / "assembler" / "kgpu_asm.py"
+KERNEL_DIR = REPO_ROOT / "tests" / "kernels"
 
 
 def load_assembler():
@@ -143,18 +146,10 @@ def test_cli_writes_memh_file(tmp_path):
     assert output_path.read_text() == "08400007\n04000000\n"
 
 
-def test_checked_in_vector_add_fixture_matches_assembler():
-    assert_fixture_matches_source("vector_add")
-
-
-def test_checked_in_framebuffer_gradient_fixture_matches_assembler():
-    assert_fixture_matches_source("framebuffer_gradient")
-
-
-def assert_fixture_matches_source(kernel_name):
+@pytest.mark.parametrize("source_path", sorted(KERNEL_DIR.glob("*.kgpu")), ids=lambda path: path.stem)
+def test_checked_in_kernel_fixture_matches_assembler(source_path):
     asm = load_assembler()
-    source_path = REPO_ROOT / "tests" / "kernels" / f"{kernel_name}.kgpu"
-    memh_path = REPO_ROOT / "tests" / "kernels" / f"{kernel_name}.memh"
+    memh_path = source_path.with_suffix(".memh")
 
     assembled = "".join(f"{word:08x}\n" for word in asm.assemble(source_path))
 

@@ -1,4 +1,6 @@
-.PHONY: check-tools tool-versions test-tools lint formal sim synth-yosys synth-vivado clean
+.PHONY: check-tools tool-versions assemble-kernels check-kernel-fixtures test-tools lint formal sim synth-yosys synth-vivado clean
+
+REPO_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 check-tools:
 	tools/scripts/check_tools.sh
@@ -6,8 +8,15 @@ check-tools:
 tool-versions:
 	tools/scripts/tool_versions.sh
 
+assemble-kernels:
+	python3 $(REPO_ROOT)tools/scripts/assemble_kernels.py --write
+
+check-kernel-fixtures:
+	python3 $(REPO_ROOT)tools/scripts/assemble_kernels.py --check
+
 test-tools:
-	pytest tests
+	python3 $(REPO_ROOT)tools/scripts/assemble_kernels.py --check
+	pytest $(REPO_ROOT)tests
 
 lint:
 	tools/scripts/lint.sh

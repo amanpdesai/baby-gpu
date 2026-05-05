@@ -110,6 +110,18 @@ image should have a matching `.kgpu` source file and a host-tool test proving
 the assembler output is identical to the checked-in image used by RTL
 simulation.
 
+Regenerate all committed kernel images with:
+
+```bash
+make assemble-kernels
+```
+
+Check that every committed image is current with:
+
+```bash
+make check-kernel-fixtures
+```
+
 Hardware changes still require the normal RTL gates:
 
 ```bash
