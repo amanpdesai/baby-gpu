@@ -62,6 +62,7 @@ run_synth gpu_core \
   rtl/core/instruction_decoder.sv \
   rtl/core/lane_register_file.sv \
   rtl/core/load_store_unit.sv \
+  rtl/core/memory_arbiter.sv \
   rtl/core/programmable_core.sv \
   rtl/core/register_file.sv \
   rtl/core/simd_alu.sv \

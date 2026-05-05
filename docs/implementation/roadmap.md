@@ -118,6 +118,9 @@ architecture.
 - memory arbiter scale-prep leaf with fixed-priority request selection,
   source-local request IDs, response-ID routing, unit simulation, bounded formal
   smoke, and Yosys synthesis coverage
+- `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
+  programmable LSU request selection while preserving stale-response drain
+  behavior across active soft reset
 - directed malformed illegal-instruction fixtures use checked `.word` raw
   encodings
 - programmable-core convergent, signed backward, and R0 predicate branch

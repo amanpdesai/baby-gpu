@@ -24,6 +24,7 @@ sources=(
   "${repo_root}/rtl/core/instruction_decoder.sv"
   "${repo_root}/rtl/core/lane_register_file.sv"
   "${repo_root}/rtl/core/load_store_unit.sv"
+  "${repo_root}/rtl/core/memory_arbiter.sv"
   "${repo_root}/rtl/core/programmable_core.sv"
   "${repo_root}/rtl/core/register_file.sv"
   "${repo_root}/rtl/core/simd_alu.sv"

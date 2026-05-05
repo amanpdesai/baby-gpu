@@ -87,7 +87,9 @@ module gpu_core #(
   logic [ADDR_W-1:0] programmable_data_req_addr;
   logic [31:0] programmable_data_req_wdata;
   logic [3:0] programmable_data_req_wmask;
+  logic programmable_data_rsp_valid;
   logic programmable_data_rsp_ready;
+  logic [DATA_W-1:0] programmable_data_rsp_rdata;
   logic [(LANES*DATA_W)-1:0] programmable_debug_read_data;
 
   logic clear_start;
@@ -127,6 +129,24 @@ module gpu_core #(
   logic [ADDR_W-1:0] writer_mem_req_addr;
   logic [DATA_W-1:0] writer_mem_req_wdata;
   logic [(DATA_W/8)-1:0] writer_mem_req_wmask;
+
+  localparam int MEM_CLIENTS = 2;
+  localparam int MEM_LOCAL_ID_W = 1;
+  localparam int MEM_SOURCE_ID_W = 1;
+  localparam int MEM_ID_W = MEM_SOURCE_ID_W + MEM_LOCAL_ID_W;
+
+  logic [MEM_CLIENTS-1:0] arb_client_req_valid;
+  logic [MEM_CLIENTS-1:0] arb_client_req_ready;
+  logic [MEM_CLIENTS-1:0] arb_client_req_write;
+  logic [(MEM_CLIENTS*ADDR_W)-1:0] arb_client_req_addr;
+  logic [(MEM_CLIENTS*DATA_W)-1:0] arb_client_req_wdata;
+  logic [(MEM_CLIENTS*(DATA_W/8))-1:0] arb_client_req_wmask;
+  logic [(MEM_CLIENTS*MEM_LOCAL_ID_W)-1:0] arb_client_req_id;
+  logic [MEM_CLIENTS-1:0] arb_client_rsp_valid;
+  logic [MEM_CLIENTS-1:0] arb_client_rsp_ready;
+  logic [(MEM_CLIENTS*DATA_W)-1:0] arb_client_rsp_rdata;
+  logic [MEM_ID_W-1:0] arb_mem_req_id;
+  logic [MEM_ID_W-1:0] mem_rsp_id_q;
 
   logic reg_write_valid;
   logic [DATA_W-1:0] reg_write_addr;
@@ -281,9 +301,9 @@ module gpu_core #(
       .data_req_addr(programmable_data_req_addr),
       .data_req_wdata(programmable_data_req_wdata),
       .data_req_wmask(programmable_data_req_wmask),
-      .data_rsp_valid(mem_rsp_valid),
+      .data_rsp_valid(programmable_data_rsp_valid),
       .data_rsp_ready(programmable_data_rsp_ready),
-      .data_rsp_rdata(mem_rsp_rdata[31:0]),
+      .data_rsp_rdata(programmable_data_rsp_rdata[31:0]),
       .busy(programmable_busy),
       .done(programmable_done),
       .error(programmable_error),
@@ -365,12 +385,62 @@ module gpu_core #(
       .mem_req_wmask(writer_mem_req_wmask)
   );
 
-  assign mem_req_valid = writer_mem_req_valid || programmable_data_req_valid;
-  assign mem_req_write = writer_mem_req_valid ? writer_mem_req_write : programmable_data_req_write;
-  assign mem_req_addr = writer_mem_req_valid ? writer_mem_req_addr : programmable_data_req_addr;
-  assign mem_req_wdata = writer_mem_req_valid ? writer_mem_req_wdata : DATA_W'(programmable_data_req_wdata);
-  assign mem_req_wmask = writer_mem_req_valid ? writer_mem_req_wmask : (DATA_W / 8)'(programmable_data_req_wmask);
-  assign writer_mem_req_ready = mem_req_ready;
-  assign programmable_data_req_ready = !writer_mem_req_valid && mem_req_ready;
-  assign mem_rsp_ready = programmable_busy ? programmable_data_rsp_ready : 1'b1;
+  assign arb_client_req_valid[0] = writer_mem_req_valid;
+  assign arb_client_req_valid[1] = programmable_data_req_valid;
+  assign arb_client_req_write[0] = writer_mem_req_write;
+  assign arb_client_req_write[1] = programmable_data_req_write;
+  assign arb_client_req_addr[0 +: ADDR_W] = writer_mem_req_addr;
+  assign arb_client_req_addr[ADDR_W +: ADDR_W] = programmable_data_req_addr;
+  assign arb_client_req_wdata[0 +: DATA_W] = writer_mem_req_wdata;
+  assign arb_client_req_wdata[DATA_W +: DATA_W] = DATA_W'(programmable_data_req_wdata);
+  assign arb_client_req_wmask[0 +: (DATA_W/8)] = writer_mem_req_wmask;
+  assign arb_client_req_wmask[(DATA_W/8) +: (DATA_W/8)] = (DATA_W / 8)'(programmable_data_req_wmask);
+  assign arb_client_req_id = '0;
+
+  assign writer_mem_req_ready = arb_client_req_ready[0];
+  assign programmable_data_req_ready = arb_client_req_ready[1];
+  assign arb_client_rsp_ready[0] = 1'b1;
+  assign arb_client_rsp_ready[1] = programmable_busy ? programmable_data_rsp_ready : 1'b1;
+  assign programmable_data_rsp_valid = arb_client_rsp_valid[1];
+  assign programmable_data_rsp_rdata = arb_client_rsp_rdata[DATA_W +: DATA_W];
+
+  always_ff @(posedge clk) begin
+    if (reset) begin
+      mem_rsp_id_q <= '0;
+    end else if (mem_req_valid && mem_req_ready) begin
+      mem_rsp_id_q <= arb_mem_req_id;
+    end
+  end
+
+  memory_arbiter #(
+      .CLIENTS(MEM_CLIENTS),
+      .ADDR_W(ADDR_W),
+      .DATA_W(DATA_W),
+      .LOCAL_ID_W(MEM_LOCAL_ID_W)
+  ) u_memory_arbiter (
+      .client_req_valid(arb_client_req_valid),
+      .client_req_ready(arb_client_req_ready),
+      .client_req_write(arb_client_req_write),
+      .client_req_addr(arb_client_req_addr),
+      .client_req_wdata(arb_client_req_wdata),
+      .client_req_wmask(arb_client_req_wmask),
+      .client_req_id(arb_client_req_id),
+      .client_rsp_valid(arb_client_rsp_valid),
+      .client_rsp_ready(arb_client_rsp_ready),
+      .client_rsp_rdata(arb_client_rsp_rdata),
+      .client_rsp_id(),
+      .client_rsp_error(),
+      .mem_req_valid(mem_req_valid),
+      .mem_req_ready(mem_req_ready),
+      .mem_req_write(mem_req_write),
+      .mem_req_addr(mem_req_addr),
+      .mem_req_wdata(mem_req_wdata),
+      .mem_req_wmask(mem_req_wmask),
+      .mem_req_id(arb_mem_req_id),
+      .mem_rsp_valid(mem_rsp_valid),
+      .mem_rsp_ready(mem_rsp_ready),
+      .mem_rsp_rdata(mem_rsp_rdata),
+      .mem_rsp_id(mem_rsp_id_q),
+      .mem_rsp_error(1'b0)
+  );
 endmodule
