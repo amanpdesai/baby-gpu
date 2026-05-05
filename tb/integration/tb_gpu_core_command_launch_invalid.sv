@@ -1,7 +1,6 @@
 import isa_pkg::*;
 
 module tb_gpu_core_command_launch_invalid;
-  import kernel_asm_pkg::*;
   `include "tb/common/gpu_core_command_driver.svh"
   `include "tb/common/kernel_program_loader.svh"
 
@@ -207,7 +206,7 @@ module tb_gpu_core_command_launch_invalid;
   task automatic load_empty_kernel_program;
     logic [ISA_WORD_W-1:0] kernel_words [0:0];
     begin
-      kernel_words[0] = kgpu_end();
+      $readmemh("tests/kernels/empty.memh", kernel_words);
       `KGPU_LOAD_PROGRAM(kernel_words)
     end
   endtask
