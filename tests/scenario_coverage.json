@@ -7,6 +7,9 @@
       "tests": [
         "tb/unit/tb_command_processor.sv",
         "tb/integration/tb_gpu_core_command_lifecycle.sv"
+      ],
+      "formal": [
+        "formal/scripts/command_fifo.sby"
       ]
     },
     {
@@ -31,6 +34,9 @@
         "tests/kernels/grid_snapshot_gradient.kgpu",
         "tests/kernels/program_base_snapshot_new.kgpu",
         "tests/kernels/program_base_snapshot_old.kgpu"
+      ],
+      "formal": [
+        "formal/scripts/register_file.sby"
       ]
     },
     {
@@ -54,6 +60,12 @@
       "kernels": [
         "tests/kernels/vector_add.kgpu",
         "tests/kernels/programmable_vector_add_direct.kgpu"
+      ],
+      "formal": [
+        "formal/scripts/lane_register_file.sby",
+        "formal/scripts/simd_alu.sby",
+        "formal/scripts/work_scheduler.sby",
+        "formal/scripts/work_scheduler_sequence.sby"
       ]
     },
     {
@@ -187,6 +199,7 @@
         "tests/kernels/reserved_cmp_payload_raw.kgpu"
       ],
       "formal": [
+        "formal/scripts/instruction_memory.sby",
         "formal/scripts/instruction_decoder.sby"
       ]
     },

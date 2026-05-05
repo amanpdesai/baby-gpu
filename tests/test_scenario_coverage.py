@@ -29,6 +29,10 @@ def test_scenario_coverage_manifest_is_well_formed():
         assert scenario["description"].strip()
         assert scenario["tests"], f"{scenario['id']} must reference at least one simulation test"
 
+    for waiver in manifest.get("formal_out_of_scope", []):
+        assert waiver["path"].startswith("formal/scripts/")
+        assert waiver["reason"].strip()
+
 
 def test_scenario_coverage_references_existing_artifacts():
     manifest = load_manifest()
@@ -80,3 +84,25 @@ def test_testbench_kernel_fixtures_are_claimed_by_scenarios():
                 f"{source_path.relative_to(REPO_ROOT)} references {fixture}, but {kernel} is not "
                 "claimed by tests/scenario_coverage.json"
             )
+
+
+def test_active_formal_scripts_are_accounted_for_by_scenarios():
+    manifest = load_manifest()
+    active_scripts = {
+        str(path.relative_to(REPO_ROOT))
+        for path in (REPO_ROOT / "formal" / "scripts").glob("*.sby")
+    }
+    covered_scripts = {
+        formal for scenario in manifest["scenarios"] for formal in scenario.get("formal", [])
+    }
+    waived_scripts = {waiver["path"] for waiver in manifest.get("formal_out_of_scope", [])}
+
+    assert covered_scripts <= active_scripts, f"unknown formal scripts: {sorted(covered_scripts - active_scripts)}"
+    assert waived_scripts <= active_scripts, f"unknown formal waivers: {sorted(waived_scripts - active_scripts)}"
+    assert not (covered_scripts & waived_scripts), (
+        f"formal scripts cannot be both covered and waived: {sorted(covered_scripts & waived_scripts)}"
+    )
+    assert active_scripts <= (covered_scripts | waived_scripts), (
+        f"active formal scripts missing from scenario coverage manifest: "
+        f"{sorted(active_scripts - covered_scripts - waived_scripts)}"
+    )

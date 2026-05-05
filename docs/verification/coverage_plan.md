@@ -45,6 +45,8 @@ The regression intent is tracked in
 simulation tests, kernel fixtures, and formal jobs under the expected roots.
 It also checks that each listed `.kgpu` has a generated `.memh`, and that every
 kernel fixture read by a testbench is claimed by at least one scenario.
+Every active top-level formal script must also be claimed by a scenario or
+listed as outside scenario scope with a reason.
 This is not a coverage database; it is an enforceable coverage manifest that
 keeps documented verification intent tied to runnable artifacts.
 
