@@ -53,8 +53,8 @@ Current implementation state:
 - open-source synthesis smoke exists
 - formal proofs exist for FIFO, clear engine, SIMD ALU, framebuffer writer,
   work scheduler smoke, sticky-error, public-status, and tail-mask contracts, lane register file smoke
-  contracts, special register mux smoke, instruction decoder smoke contracts,
-  instruction decoder unassigned-opcode side-effect suppression, instruction
+  contracts, special register mux smoke, instruction decoder smoke and memory-op
+  side-effect contracts, instruction decoder unassigned-opcode side-effect suppression, instruction
   memory smoke and high-fetch-fault contracts, and LSU prep, invalid-op, and
   public status contracts
 - bounded formal covers exist for special-register illegal IDs and instruction

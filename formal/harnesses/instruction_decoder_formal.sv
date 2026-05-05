@@ -94,6 +94,41 @@ module instruction_decoder_formal (
             assert(!uses_memory && !memory_write && !memory_predicated);
         end
 
+        if (uses_memory) begin
+            assert(!illegal);
+            assert(uses_immediate);
+            assert(!uses_special && !uses_alu && !uses_compare && !uses_branch);
+            assert(!ends_lane);
+        end
+
+        if (memory_write) begin
+            assert(uses_memory);
+            assert(!writes_register);
+        end
+
+        if (memory_store16) begin
+            assert(memory_write && uses_memory);
+        end
+
+        if (memory_predicated) begin
+            assert(memory_write && uses_memory);
+        end
+
+        if (opcode == isa_pkg::ISA_OP_LOAD) begin
+            assert(!illegal && writes_register && uses_immediate && uses_memory);
+            assert(!memory_write && !memory_store16 && !memory_predicated);
+        end
+
+        if (opcode == isa_pkg::ISA_OP_STORE) begin
+            assert(!illegal && !writes_register && uses_immediate && uses_memory);
+            assert(memory_write && !memory_store16 && !memory_predicated);
+        end
+
+        if (opcode == isa_pkg::ISA_OP_STORE16) begin
+            assert(!illegal && !writes_register && uses_immediate && uses_memory);
+            assert(memory_write && memory_store16 && !memory_predicated);
+        end
+
         if (opcode == isa_pkg::ISA_OP_PSTORE) begin
             assert(!illegal && !writes_register && uses_immediate && uses_memory);
             assert(memory_write && !memory_store16 && memory_predicated);

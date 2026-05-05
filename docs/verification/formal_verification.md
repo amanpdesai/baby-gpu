@@ -137,7 +137,7 @@ Initial formal adoption is already active when:
 - SIMD ALU proof passes
 - framebuffer writer address and mask proof passes
 - work scheduler proof passes, including public status exclusivity and a stalled 3x3 dispatch sequence with tail-mask coverage
-- instruction decoder smoke proof passes
+- instruction decoder smoke proof passes, including memory-op side-effect contracts
 - instruction memory smoke proof passes, including low and high out-of-range fetch faults
 - lane register file smoke proof passes
 - special register mux smoke proof passes
