@@ -139,7 +139,7 @@ Initial formal adoption is already active when:
 - work scheduler proof passes, including public status exclusivity and a stalled 3x3 dispatch sequence with tail-mask coverage
 - instruction decoder smoke proof passes, including memory-op side-effect contracts
 - instruction memory smoke proof passes, including low and high out-of-range fetch faults
-- lane register file smoke proof passes
+- lane register file smoke proof passes, including R0 suppression and nonzero read covers
 - special register mux smoke proof passes
 - simulation data memory smoke proof and cover tasks pass, including masked writes and out-of-range sticky-error response
 - LSU prep smoke proof passes

@@ -87,6 +87,14 @@ module lane_register_file_formal (
                            ((read_addr_b == '0) ? '0 : model[lane][read_addr_b]));
                     assert(read_data_c[(lane*DATA_W)+:DATA_W] ==
                            ((read_addr_c == '0) ? '0 : model[lane][read_addr_c]));
+
+                    cover(!reset && (read_addr_a == REG_ADDR_W'(1)) &&
+                          (model[lane][1] != '0) &&
+                          (read_data_a[(lane*DATA_W)+:DATA_W] == model[lane][1]));
+                    cover(!reset && $past(!reset && write_enable[lane] && (write_addr == '0) &&
+                                          (write_data[(lane*DATA_W)+:DATA_W] != '0)) &&
+                          (model[lane][0] == '0) && (read_addr_a == '0) &&
+                          (read_data_a[(lane*DATA_W)+:DATA_W] == '0));
                 end
             end
         end
