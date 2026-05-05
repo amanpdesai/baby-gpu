@@ -74,7 +74,7 @@ LAUNCH_FLAGS
 The command processor must reject or report:
 
 - unknown command opcodes
-- malformed `LAUNCH_KERNEL` word count
+- malformed `CLEAR`, `FILL_RECT`, and `LAUNCH_KERNEL` word counts
 - nonzero reserved command fields
 - launch while busy
 - zero grid dimensions

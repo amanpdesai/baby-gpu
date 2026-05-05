@@ -165,7 +165,8 @@ Implemented coverage for this lifecycle is intentionally narrow:
 - queued `SET_REGISTER(ARG_BASE)` behind blocked `WAIT_IDLE` while a
   command-launched kernel is stalled on held memory response
 - command-driven command-structure error reporting for unknown opcode, malformed
-  `LAUNCH_KERNEL` word count, and nonzero `LAUNCH_KERNEL` reserved bits
+  `CLEAR`, `FILL_RECT`, and `LAUNCH_KERNEL` word counts, and nonzero
+  `LAUNCH_KERNEL` reserved bits
 - launch-register snapshot behavior for `PROGRAM_BASE` while the host rewrites
   the launch register file during an active stalled kernel
 - launch-register snapshot behavior for `ARG_BASE` while the host rewrites the
