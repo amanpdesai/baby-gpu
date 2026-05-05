@@ -1,0 +1,9 @@
+# Exercises a blocking LOAD, STORE, and STORE16 through an externally stalled
+# data-memory interface.
+MOVI R1, 16
+LOAD R2, [R1 + 0]
+MOVI R3, 32
+STORE [R3 + 0], R2
+MOVI R4, 34
+STORE16 [R4 + 0], R2
+END

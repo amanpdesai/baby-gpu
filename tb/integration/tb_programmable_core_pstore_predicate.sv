@@ -1,7 +1,7 @@
 import isa_pkg::*;
+`include "tb/common/kernel_program_loader.svh"
 
 module tb_programmable_core_pstore_predicate;
-    import kernel_asm_pkg::*;
     localparam int LANES = 4;
     localparam int DATA_W = 32;
     localparam int COORD_W = 16;
@@ -309,6 +309,22 @@ module tb_programmable_core_pstore_predicate;
         end
     endtask
 
+    task automatic load_pstore_lane_lt2_program;
+        logic [ISA_WORD_W-1:0] kernel_words [0:7];
+        begin
+            $readmemh("tests/kernels/pstore_lane_lt2.memh", kernel_words);
+            `KGPU_LOAD_PROGRAM(kernel_words)
+        end
+    endtask
+
+    task automatic load_pstore_never_taken_program;
+        logic [ISA_WORD_W-1:0] kernel_words [0:2];
+        begin
+            $readmemh("tests/kernels/pstore_never_taken.memh", kernel_words);
+            `KGPU_LOAD_PROGRAM(kernel_words)
+        end
+    endtask
+
     initial begin
         reset = 1'b1;
         launch_valid = 1'b0;
@@ -339,14 +355,7 @@ module tb_programmable_core_pstore_predicate;
         mem_write_word(STORE_BASE + 32'd8, 32'hCCCC_CCCC);
         mem_write_word(STORE_BASE + 32'd12, 32'hDDDD_DDDD);
 
-        write_imem(8'd0, kgpu_movsr(4'd1, ISA_SR_LANE_ID));
-        write_imem(8'd1, kgpu_movi(4'd2, 18'd2));
-        write_imem(8'd2, kgpu_cmp(4'd3, 4'd1, 4'd2, ISA_CMP_LTU));
-        write_imem(8'd3, kgpu_movi(4'd4, 18'd4));
-        write_imem(8'd4, kgpu_mul(4'd5, 4'd1, 4'd4));
-        write_imem(8'd5, kgpu_movi(4'd6, 18'h0_05A5));
-        write_imem(8'd6, kgpu_pstore(4'd6, 4'd5, 4'd3, 14'd64));
-        write_imem(8'd7, kgpu_end());
+        load_pstore_lane_lt2_program();
 
         run_kernel();
 
@@ -355,9 +364,7 @@ module tb_programmable_core_pstore_predicate;
         mem_expect_word(STORE_BASE + 32'd8, 32'hCCCC_CCCC);
         mem_expect_word(STORE_BASE + 32'd12, 32'hDDDD_DDDD);
 
-        write_imem(8'd0, kgpu_movi(4'd6, 18'h1_2345));
-        write_imem(8'd1, kgpu_pstore(4'd6, 4'd0, 4'd0, 14'd64));
-        write_imem(8'd2, kgpu_end());
+        load_pstore_never_taken_program();
 
         run_kernel_expect_no_data_request("R0-predicated PSTORE");
 

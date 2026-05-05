@@ -1,0 +1,10 @@
+# All predicates are false. Some lanes form odd halfword addresses, but the
+# core should issue no memory request because the active mask is empty.
+MOVSR R1, LANE_ID
+MOVI R2, 1
+AND R3, R1, R2
+MOVI R4, 2
+CMP.EQ R5, R3, R4
+MOVI R6, 0x0C0D
+PSTORE16 [R1 + 64], R6, R5
+END

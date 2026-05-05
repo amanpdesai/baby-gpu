@@ -1,0 +1,6 @@
+# Issues an unaligned 32-bit STORE. The core should reject this before issuing
+# an external data-memory request.
+MOVI R1, 1
+MOVI R2, 0x1234
+STORE [R1 + 0], R2
+END

@@ -1,0 +1,4 @@
+# Uses R0 as a false predicate so no data-memory request is issued.
+MOVI R6, 0x12345
+PSTORE [R0 + 64], R6, R0
+END

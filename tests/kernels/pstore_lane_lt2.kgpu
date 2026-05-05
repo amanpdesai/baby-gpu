@@ -1,0 +1,9 @@
+# Stores 0x05A5 for lanes whose lane_id is less than 2.
+MOVSR R1, LANE_ID
+MOVI R2, 2
+CMP.LTU R3, R1, R2
+MOVI R4, 4
+MUL R5, R1, R4
+MOVI R6, 0x05A5
+PSTORE [R5 + 64], R6, R3
+END

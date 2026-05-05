@@ -1,7 +1,7 @@
 import isa_pkg::*;
+`include "tb/common/kernel_program_loader.svh"
 
 module tb_programmable_core_memory_fault;
-    import kernel_asm_pkg::*;
     localparam int LANES = 4;
     localparam int DATA_W = 32;
     localparam int COORD_W = 16;
@@ -157,6 +157,14 @@ module tb_programmable_core_memory_fault;
         end
     endtask
 
+    task automatic load_memory_fault_program;
+        logic [ISA_WORD_W-1:0] kernel_words [0:3];
+        begin
+            $readmemh("tests/kernels/memory_fault_unaligned_store.memh", kernel_words);
+            `KGPU_LOAD_PROGRAM(kernel_words)
+        end
+    endtask
+
     task automatic wait_memory_fault;
         int cycles;
         begin
@@ -197,10 +205,7 @@ module tb_programmable_core_memory_fault;
         reset = 1'b0;
         step();
 
-        write_imem(8'd0, kgpu_movi(4'd1, 18'd1));
-        write_imem(8'd1, kgpu_movi(4'd2, 18'h0_1234));
-        write_imem(8'd2, kgpu_store(4'd2, 4'd1, 18'd0));
-        write_imem(8'd3, kgpu_end());
+        load_memory_fault_program();
 
         launch_kernel();
         wait_memory_fault();
