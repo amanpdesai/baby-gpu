@@ -106,6 +106,46 @@ module tb_command_fifo;
     flush = 1'b0;
     check(empty && !out_valid && count == 3'd0, "flush clears FIFO");
 
+    flush = 1'b1;
+    in_valid = 1'b1;
+    in_data = 32'hBBBB_000B;
+    #1;
+    check(!in_ready, "flush blocks incoming push");
+    step();
+    flush = 1'b0;
+    in_valid = 1'b0;
+    check(empty && !out_valid && count == 3'd0, "flush ignores incoming push");
+
+    out_ready = 1'b0;
+    in_valid = 1'b1;
+    in_data = 32'hCCCC_000C;
+    step();
+    in_data = 32'hDDDD_000D;
+    step();
+    in_valid = 1'b0;
+    check(out_valid && out_data == 32'hCCCC_000C && count == 3'd2,
+          "two words queued before priority flush");
+
+    flush = 1'b1;
+    out_ready = 1'b1;
+    in_valid = 1'b1;
+    in_data = 32'hEEEE_000E;
+    #1;
+    check(!in_ready, "flush blocks simultaneous push while popping");
+    step();
+    flush = 1'b0;
+    out_ready = 1'b0;
+    in_valid = 1'b0;
+    check(empty && !out_valid && count == 3'd0,
+          "flush has priority over simultaneous push and pop");
+
+    in_valid = 1'b1;
+    in_data = 32'hFFFF_000F;
+    step();
+    in_valid = 1'b0;
+    check(out_valid && out_data == 32'hFFFF_000F && count == 3'd1,
+          "post-priority-flush push emits only fresh data");
+
     $display("tb_command_fifo PASS");
     $finish;
   end
