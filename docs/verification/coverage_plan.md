@@ -39,6 +39,13 @@ Required Version 1 scenarios:
 | Programmable branch control | Convergent taken/not-taken branches, signed backward offsets, R0 never-taken predicates, and divergent faults are observed. |
 | Predicated memory no-op | R0-predicated `PSTORE` completes without memory requests and leaves memory unchanged. |
 
+The regression intent is tracked in
+[`tests/scenario_coverage.json`](../../tests/scenario_coverage.json). The
+`make test-tools` gate validates that each scenario references existing
+simulation tests, kernel fixtures, and formal jobs under the expected roots.
+This is not a coverage database; it is an enforceable coverage manifest that
+keeps documented verification intent tied to runnable artifacts.
+
 ## Code Coverage
 
 If the simulator supports it, collect:

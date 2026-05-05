@@ -49,6 +49,8 @@ Current implementation state:
   use checked `.kgpu`/`.memh` assembler fixtures
 - directed malformed illegal-instruction fixtures use checked `.word` raw
   encodings
+- scenario coverage intent is tracked in `tests/scenario_coverage.json` and
+  validated by `make test-tools`
 - CMP, convergent BRA, and predicated stores exist
 - open-source synthesis smoke exists
 - formal proofs exist for FIFO, clear engine, SIMD ALU, framebuffer writer,

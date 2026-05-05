@@ -1,0 +1,205 @@
+{
+  "version": 1,
+  "scenarios": [
+    {
+      "id": "command_wait_idle_barrier",
+      "description": "WAIT_IDLE stalls the command stream until backend work is idle.",
+      "tests": [
+        "tb/unit/tb_command_processor.sv",
+        "tb/integration/tb_gpu_core_command_lifecycle.sv"
+      ]
+    },
+    {
+      "id": "command_malformed_packets",
+      "description": "Malformed command packets set sticky errors and do not launch illegal work.",
+      "tests": [
+        "tb/unit/tb_command_processor.sv",
+        "tb/integration/tb_gpu_core_command_launch_invalid.sv"
+      ]
+    },
+    {
+      "id": "command_launch_latches_abi",
+      "description": "LAUNCH_KERNEL latches launch ABI registers and exposes them to kernels.",
+      "tests": [
+        "tb/unit/tb_command_processor.sv",
+        "tb/integration/tb_gpu_core_command_launch_snapshot.sv",
+        "tb/integration/tb_gpu_core_command_grid_snapshot.sv",
+        "tb/integration/tb_gpu_core_command_program_base_snapshot.sv"
+      ],
+      "kernels": [
+        "tests/kernels/launch_arg_snapshot_store16.kgpu",
+        "tests/kernels/grid_snapshot_gradient.kgpu",
+        "tests/kernels/program_base_snapshot_new.kgpu",
+        "tests/kernels/program_base_snapshot_old.kgpu"
+      ]
+    },
+    {
+      "id": "command_soft_reset_recovery",
+      "description": "Host-visible soft reset clears recoverable fault state after a command-driven fault.",
+      "tests": [
+        "tb/integration/tb_gpu_core_command_store16_fault.sv",
+        "tb/integration/tb_gpu_core_command_active_reset.sv"
+      ],
+      "kernels": [
+        "tests/kernels/store16_fault_odd.kgpu"
+      ]
+    },
+    {
+      "id": "vector_add_kernel",
+      "description": "Kernel launch, global loads, ALU add, tail lanes, and global stores for vector add.",
+      "tests": [
+        "tb/integration/tb_programmable_core_vector_add.sv",
+        "tb/integration/tb_gpu_core_command_vector_add.sv"
+      ],
+      "kernels": [
+        "tests/kernels/vector_add.kgpu",
+        "tests/kernels/programmable_vector_add_direct.kgpu"
+      ]
+    },
+    {
+      "id": "framebuffer_gradient_kernel",
+      "description": "2D global IDs, framebuffer convention, RGB565 packing, and STORE16 output.",
+      "tests": [
+        "tb/integration/tb_programmable_core_framebuffer_gradient.sv",
+        "tb/integration/tb_gpu_core_command_framebuffer_gradient.sv"
+      ],
+      "kernels": [
+        "tests/kernels/framebuffer_gradient.kgpu"
+      ]
+    },
+    {
+      "id": "bounded_fill_predication",
+      "description": "Predicated bounded-fill kernels update only pixels inside the requested rectangle.",
+      "tests": [
+        "tb/integration/tb_programmable_core_bounded_fill.sv",
+        "tb/integration/tb_programmable_core_offset_fill.sv"
+      ],
+      "kernels": [
+        "tests/kernels/bounded_fill_3x2_04d2.kgpu",
+        "tests/kernels/offset_fill_1x1_at_1_1_0a5c.kgpu"
+      ]
+    },
+    {
+      "id": "branch_control",
+      "description": "Convergent branches, backward offsets, untaken branches, and R0 predicates.",
+      "tests": [
+        "tb/integration/tb_programmable_core_branch_control.sv"
+      ],
+      "kernels": [
+        "tests/kernels/branch_backward_loop.kgpu",
+        "tests/kernels/branch_not_taken.kgpu",
+        "tests/kernels/branch_r0_never_taken.kgpu",
+        "tests/kernels/branch_taken.kgpu"
+      ]
+    },
+    {
+      "id": "special_registers",
+      "description": "Lane, global, local, group, linear, ARG_BASE, and framebuffer special registers.",
+      "tests": [
+        "tb/unit/tb_special_registers.sv",
+        "tb/integration/tb_programmable_core_groups.sv"
+      ],
+      "kernels": [
+        "tests/kernels/group_special_registers.kgpu"
+      ],
+      "formal": [
+        "formal/scripts/special_registers.sby"
+      ]
+    },
+    {
+      "id": "load_store_backpressure",
+      "description": "Blocking LSU request stability, delayed memory readiness, and delayed response behavior.",
+      "tests": [
+        "tb/unit/tb_load_store_unit.sv",
+        "tb/integration/tb_programmable_core_memory_backpressure.sv"
+      ],
+      "kernels": [
+        "tests/kernels/memory_backpressure_load_store16.kgpu",
+        "tests/kernels/stalling_load.kgpu"
+      ],
+      "formal": [
+        "formal/scripts/load_store_unit_sequence.sby"
+      ]
+    },
+    {
+      "id": "memory_faults",
+      "description": "Unaligned or invalid memory operations set errors without corrupting unrelated state.",
+      "tests": [
+        "tb/unit/tb_load_store_unit.sv",
+        "tb/integration/tb_programmable_core_memory_fault.sv",
+        "tb/integration/tb_gpu_core_command_store16_fault.sv"
+      ],
+      "kernels": [
+        "tests/kernels/memory_fault_unaligned_store.kgpu",
+        "tests/kernels/store16_fault_odd.kgpu"
+      ],
+      "formal": [
+        "formal/scripts/data_memory.sby",
+        "formal/scripts/load_store_unit_prep.sby"
+      ]
+    },
+    {
+      "id": "predicated_memory_noop",
+      "description": "False predicates suppress memory requests and leave memory unchanged.",
+      "tests": [
+        "tb/integration/tb_programmable_core_pstore_predicate.sv",
+        "tb/integration/tb_programmable_core_pstore16_masked_fault.sv"
+      ],
+      "kernels": [
+        "tests/kernels/pstore_never_taken.kgpu",
+        "tests/kernels/pstore_lane_lt2.kgpu",
+        "tests/kernels/pstore16_all_false_misaligned.kgpu"
+      ]
+    },
+    {
+      "id": "store16_masks",
+      "description": "STORE16 and PSTORE16 update low/high halfwords with correct byte masks.",
+      "tests": [
+        "tb/unit/tb_data_memory.sv",
+        "tb/unit/tb_load_store_unit.sv",
+        "tb/integration/tb_programmable_core_store16_framebuffer.sv",
+        "tb/integration/tb_gpu_core_command_store16_kernel.sv"
+      ],
+      "kernels": [
+        "tests/kernels/store16_2a5b_zero.kgpu",
+        "tests/kernels/store16_linear.kgpu",
+        "tests/kernels/store16_linear_id_plus_50.kgpu",
+        "tests/kernels/pstore16_even_lanes.kgpu"
+      ],
+      "formal": [
+        "formal/scripts/data_memory.sby",
+        "formal/scripts/load_store_unit_sequence.sby"
+      ]
+    },
+    {
+      "id": "instruction_decode_errors",
+      "description": "Illegal opcodes, illegal special registers, and reserved CMP payloads are contained.",
+      "tests": [
+        "tb/integration/tb_programmable_core_illegal_instruction.sv"
+      ],
+      "kernels": [
+        "tests/kernels/illegal_opcode_raw.kgpu",
+        "tests/kernels/illegal_special_register_raw.kgpu",
+        "tests/kernels/reserved_cmp_payload_raw.kgpu"
+      ],
+      "formal": [
+        "formal/scripts/instruction_decoder.sby"
+      ]
+    },
+    {
+      "id": "fixed_function_compat",
+      "description": "Compatibility clear, rectangle, and framebuffer writer paths still pass smoke coverage.",
+      "tests": [
+        "tb/unit/tb_clear_engine.sv",
+        "tb/unit/tb_rect_fill_engine.sv",
+        "tb/unit/tb_framebuffer_writer.sv",
+        "tb/integration/tb_gpu_core_smoke.sv",
+        "tb/integration/tb_gpu_core_command_clear_flush.sv"
+      ],
+      "formal": [
+        "formal/scripts/clear_engine.sby",
+        "formal/scripts/framebuffer_writer.sby"
+      ]
+    }
+  ]
+}

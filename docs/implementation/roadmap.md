@@ -110,6 +110,8 @@ architecture.
 - programmable-core zero-sized launch integration coverage
 - host-side assembler plus checked `.kgpu`/`.memh` fixtures used by
   command-level `gpu_core` and lower-level programmable-core integration tests
+- checked scenario coverage manifest tying regression intent to simulation,
+  kernel, and formal artifacts
 - directed malformed illegal-instruction fixtures use checked `.word` raw
   encodings
 - programmable-core convergent, signed backward, and R0 predicate branch
