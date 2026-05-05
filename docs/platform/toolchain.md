@@ -54,8 +54,11 @@ the synthesis smoke with the exact board part:
 VIVADO_PART=<xilinx-part-name> make synth-vivado
 ```
 
-The target intentionally requires `VIVADO_PART` instead of guessing the board
-part, so the smoke check does not create false platform claims.
+The default Vivado smoke top is the integrated `gpu_core`, using the same RTL
+source closure as the open-source integrated synthesis smoke. Set `VIVADO_TOP`
+only when intentionally checking a leaf block. The target intentionally requires
+`VIVADO_PART` instead of guessing the board part, so the smoke check does not
+create false platform claims.
 
 ## Installation Policy
 
