@@ -122,5 +122,13 @@ module special_registers_formal (
 
     always_comb begin
         cover(special_reg_id == 6'h3f && illegal && value == '0);
+        cover((special_reg_id == isa_pkg::ISA_SR_ARG_BASE) && !illegal &&
+              (value[0+:DATA_W] == fit_addr(arg_base)));
+        cover((special_reg_id == isa_pkg::ISA_SR_FRAMEBUFFER_BASE) && !illegal &&
+              (value[DATA_W+:DATA_W] == fit_addr(framebuffer_base)));
+        cover((special_reg_id == isa_pkg::ISA_SR_FRAMEBUFFER_WIDTH) && !illegal &&
+              (value[0+:DATA_W] == fit_coord(framebuffer_width)));
+        cover((special_reg_id == isa_pkg::ISA_SR_FRAMEBUFFER_HEIGHT) && !illegal &&
+              (value[DATA_W+:DATA_W] == fit_coord(framebuffer_height)));
     end
 endmodule

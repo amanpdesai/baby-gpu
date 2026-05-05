@@ -140,7 +140,7 @@ Initial formal adoption is already active when:
 - instruction decoder smoke proof passes, including memory-op side-effect contracts
 - instruction memory smoke proof passes, including low and high out-of-range fetch faults
 - lane register file smoke proof passes, including R0 suppression and nonzero read covers
-- special register mux smoke proof passes
+- special register mux smoke proof passes, including illegal-ID and ABI-parameter covers
 - simulation data memory smoke proof and cover tasks pass, including masked writes and out-of-range sticky-error response
 - LSU prep smoke proof passes
 - LSU request/response sequencing smoke proof passes

@@ -97,7 +97,7 @@ architecture.
 - LSU empty active-mask unit coverage
 - LSU masked-lane fault suppression unit coverage
 - special register mux bounded formal smoke
-- special register mux illegal-ID bounded formal cover
+- special register mux illegal-ID, argument-base, and framebuffer-parameter bounded formal covers
 - instruction decoder CMP reserved-field and highest-valid-CMP bounded formal
   cover
 - instruction decoder unassigned-opcode side-effect suppression formal coverage
