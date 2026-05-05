@@ -48,6 +48,7 @@ Primary entry points:
 - [Core architecture](docs/architecture/core_architecture.md)
 - [Roadmap](docs/implementation/roadmap.md)
 - [Verification plan](docs/verification/verification_plan.md)
+- [Regression debug](docs/verification/regression_debug.md)
 - [FPGA bring-up](docs/platform/fpga_bringup.md)
 
 ## Current Status
@@ -88,6 +89,15 @@ make sim
 make lint
 make formal
 make synth-yosys
+make regress
+```
+
+For targeted simulation debug:
+
+```text
+make list-sim-tests
+SIM_TEST=tb_gpu_core_command_vector_add SIM_TRACE=1 make sim
+SIM_GLOB='*load_store*' make sim
 ```
 
 Optional FPGA synthesis smoke:

@@ -82,9 +82,18 @@ Required before any ASIC experiment:
 For code commits:
 
 ```bash
+rtk make regress
+```
+
+When isolating failures, run the component gates directly:
+
+```bash
+rtk make check-kernel-fixtures
+rtk make test-tools
 rtk make sim
 rtk make lint
 rtk make formal
+rtk make synth-yosys
 rtk git diff --check
 ```
 
@@ -238,9 +247,12 @@ Current targets:
 
 ```text
 make sim
+make list-sim-tests
 make lint
 make formal
 make synth-yosys
+make synth-vivado
+make regress
 make check-tools
 make tool-versions
 ```
@@ -248,10 +260,8 @@ make tool-versions
 Planned targets:
 
 ```text
-make synth-vivado
 make sta
 make formal-core
-make regress
 make fpga-smoke
 make signoff-smoke
 ```

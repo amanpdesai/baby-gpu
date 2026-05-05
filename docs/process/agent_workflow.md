@@ -142,11 +142,19 @@ can hang.
 Every code commit must run:
 
 ```bash
+rtk make regress
+rtk git diff --check
+```
+
+When debugging a failure, split the gate:
+
+```bash
+rtk make check-kernel-fixtures
+rtk make test-tools
 rtk make sim
 rtk make lint
 rtk err make formal
 rtk make synth-yosys
-rtk git diff --check
 ```
 
 Doc-only commits still run:

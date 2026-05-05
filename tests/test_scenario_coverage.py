@@ -33,6 +33,10 @@ def test_scenario_coverage_manifest_is_well_formed():
         assert waiver["path"].startswith("formal/scripts/")
         assert waiver["reason"].strip()
 
+    for waiver in manifest.get("test_out_of_scope", []):
+        assert waiver["path"].startswith(("tb/unit/", "tb/integration/"))
+        assert waiver["reason"].strip()
+
 
 def test_scenario_coverage_references_existing_artifacts():
     manifest = load_manifest()
@@ -84,6 +88,23 @@ def test_testbench_kernel_fixtures_are_claimed_by_scenarios():
                 f"{source_path.relative_to(REPO_ROOT)} references {fixture}, but {kernel} is not "
                 "claimed by tests/scenario_coverage.json"
             )
+
+
+def test_active_sim_testbenches_are_accounted_for_by_scenarios():
+    manifest = load_manifest()
+    active_tests = {str(path.relative_to(REPO_ROOT)) for path in (REPO_ROOT / "tb").rglob("tb_*.sv")}
+    covered_tests = {test for scenario in manifest["scenarios"] for test in scenario.get("tests", [])}
+    waived_tests = {waiver["path"] for waiver in manifest.get("test_out_of_scope", [])}
+
+    assert covered_tests <= active_tests, f"unknown simulation tests: {sorted(covered_tests - active_tests)}"
+    assert waived_tests <= active_tests, f"unknown simulation test waivers: {sorted(waived_tests - active_tests)}"
+    assert not (covered_tests & waived_tests), (
+        f"simulation tests cannot be both covered and waived: {sorted(covered_tests & waived_tests)}"
+    )
+    assert active_tests <= (covered_tests | waived_tests), (
+        f"active simulation tests missing from scenario coverage manifest: "
+        f"{sorted(active_tests - covered_tests - waived_tests)}"
+    )
 
 
 def test_active_formal_scripts_are_accounted_for_by_scenarios():

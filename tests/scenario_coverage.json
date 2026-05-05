@@ -5,6 +5,7 @@
       "id": "command_wait_idle_barrier",
       "description": "WAIT_IDLE stalls the command stream until backend work is idle.",
       "tests": [
+        "tb/unit/tb_command_fifo.sv",
         "tb/unit/tb_command_processor.sv",
         "tb/integration/tb_gpu_core_command_lifecycle.sv"
       ],
@@ -24,7 +25,9 @@
       "id": "command_launch_latches_abi",
       "description": "LAUNCH_KERNEL latches launch ABI registers and exposes them to kernels.",
       "tests": [
+        "tb/unit/tb_register_file.sv",
         "tb/unit/tb_command_processor.sv",
+        "tb/integration/tb_gpu_core_command_program_base.sv",
         "tb/integration/tb_gpu_core_command_launch_snapshot.sv",
         "tb/integration/tb_gpu_core_command_grid_snapshot.sv",
         "tb/integration/tb_gpu_core_command_program_base_snapshot.sv"
@@ -54,6 +57,10 @@
       "id": "vector_add_kernel",
       "description": "Kernel launch, global loads, ALU add, tail lanes, and global stores for vector add.",
       "tests": [
+        "tb/unit/tb_lane_register_file.sv",
+        "tb/unit/tb_simd_alu.sv",
+        "tb/unit/tb_simd_core_basic.sv",
+        "tb/unit/tb_work_scheduler.sv",
         "tb/integration/tb_programmable_core_vector_add.sv",
         "tb/integration/tb_gpu_core_command_vector_add.sv"
       ],
@@ -190,6 +197,8 @@
       "id": "instruction_decode_errors",
       "description": "Illegal opcodes, illegal special registers, and reserved CMP payloads are contained.",
       "tests": [
+        "tb/unit/tb_instruction_decoder.sv",
+        "tb/unit/tb_instruction_memory.sv",
         "tb/integration/tb_programmable_core_illegal_instruction.sv"
       ],
       "kernels": [

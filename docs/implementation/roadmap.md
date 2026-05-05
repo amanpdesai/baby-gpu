@@ -112,6 +112,9 @@ architecture.
   command-level `gpu_core` and lower-level programmable-core integration tests
 - checked scenario coverage manifest tying regression intent to simulation,
   kernel, and formal artifacts
+- regression-observability tooling for simulation listing, exact-test
+  selection, glob selection, custom output directories, opt-in VCD traces, full
+  local `make regress`, and enforced simulation-test scenario accounting
 - directed malformed illegal-instruction fixtures use checked `.word` raw
   encodings
 - programmable-core convergent, signed backward, and R0 predicate branch

@@ -1,4 +1,4 @@
-.PHONY: check-tools tool-versions assemble-kernels check-kernel-fixtures test-tools lint formal sim synth-yosys synth-vivado clean
+.PHONY: check-tools tool-versions assemble-kernels check-kernel-fixtures test-tools lint formal sim list-sim-tests synth-yosys synth-vivado regress clean
 
 REPO_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
@@ -27,11 +27,22 @@ formal:
 sim:
 	tools/scripts/run_sim.sh
 
+list-sim-tests:
+	SIM_LIST=1 tools/scripts/run_sim.sh
+
 synth-yosys:
 	tools/scripts/synth_yosys.sh
 
 synth-vivado:
 	tools/scripts/synth_vivado.sh
+
+regress:
+	$(MAKE) check-kernel-fixtures
+	$(MAKE) test-tools
+	$(MAKE) sim
+	$(MAKE) lint
+	$(MAKE) formal
+	$(MAKE) synth-yosys
 
 clean:
 	find . -type d -name obj_dir -prune -exec rm -rf {} +

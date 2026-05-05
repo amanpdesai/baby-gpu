@@ -68,6 +68,7 @@ The documentation is grouped by how it is used during design work:
 | [verification/verification_plan.md](verification/verification_plan.md) | Simulation, formal, and regression plan. |
 | [verification/formal_verification.md](verification/formal_verification.md) | Formal property strategy. |
 | [verification/coverage_plan.md](verification/coverage_plan.md) | Functional and formal coverage plan. |
+| [verification/regression_debug.md](verification/regression_debug.md) | Simulation selection, trace, and regression debug workflow. |
 | [verification/signoff_strategy.md](verification/signoff_strategy.md) | Industry-style pre-tapeout discipline. |
 | [verification/asic_signoff_flow.md](verification/asic_signoff_flow.md) | ASIC signoff flow outline. |
 | [verification/dft_plan.md](verification/dft_plan.md) | DFT planning. |
