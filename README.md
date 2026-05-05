@@ -95,3 +95,6 @@ Optional FPGA synthesis smoke:
 ```text
 VIVADO_PART=<xilinx-part-name> make synth-vivado
 ```
+
+Use `VIVADO_DRY_RUN=1 VIVADO_PART=<xilinx-part-name> make synth-vivado`
+without Vivado installed to validate the Vivado source manifest and Tcl path.

@@ -1,23 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if ! command -v vivado >/dev/null 2>&1; then
-  echo "Vivado is not installed or not on PATH."
-  echo "Install AMD/Xilinx Vivado and rerun with VIVADO_PART set for the FPGA target."
-  exit 127
-fi
-
-if [[ -z "${VIVADO_PART:-}" ]]; then
-  echo "VIVADO_PART is required for Vivado synthesis smoke."
-  echo "Example: VIVADO_PART=<xilinx-part-name> make synth-vivado"
-  exit 2
-fi
-
 top="${VIVADO_TOP:-gpu_core}"
 out_dir="${VIVADO_OUT_DIR:-synth_build/vivado}"
+dry_run="${VIVADO_DRY_RUN:-0}"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../.." && pwd)"
 tcl_script="${repo_root}/tools/vivado/synth_smoke.tcl"
+out_path="${repo_root}/${out_dir}"
+
+if [[ "${out_dir}" = /* ]]; then
+  out_path="${out_dir}"
+fi
 
 sources=(
   "${repo_root}/rtl/common/gpu_pkg.sv"
@@ -40,11 +34,43 @@ sources=(
   "${repo_root}/rtl/draw_units/rect_fill_engine.sv"
 )
 
-mkdir -p "${repo_root}/${out_dir}"
+if [[ -z "${VIVADO_PART:-}" ]]; then
+  echo "VIVADO_PART is required for Vivado synthesis smoke."
+  echo "Example: VIVADO_PART=<xilinx-part-name> make synth-vivado"
+  exit 2
+fi
+
+if [[ ! -f "${tcl_script}" ]]; then
+  echo "Missing Vivado Tcl script: ${tcl_script}"
+  exit 2
+fi
+
+for source in "${sources[@]}"; do
+  if [[ ! -f "${source}" ]]; then
+    echo "Missing Vivado source: ${source}"
+    exit 2
+  fi
+done
+
+if [[ "${dry_run}" == "1" ]]; then
+  echo "VIVADO DRY-RUN ${top} (${VIVADO_PART})"
+  echo "Vivado Tcl: ${tcl_script}"
+  echo "Output dir: ${out_path}"
+  echo "Sources: ${#sources[@]}"
+  exit 0
+fi
+
+if ! command -v vivado >/dev/null 2>&1; then
+  echo "Vivado is not installed or not on PATH."
+  echo "Install AMD/Xilinx Vivado and rerun with VIVADO_PART set for the FPGA target."
+  exit 127
+fi
+
+mkdir -p "${out_path}"
 
 echo "VIVADO SYNTH ${top}"
 vivado -mode batch -nojournal -nolog \
   -source "${tcl_script}" \
-  -tclargs "${top}" "${VIVADO_PART}" "${repo_root}/${out_dir}" "${sources[@]}"
+  -tclargs "${top}" "${VIVADO_PART}" "${out_path}" "${sources[@]}"
 
 echo "Vivado synthesis smoke passed for ${top} (${VIVADO_PART})."

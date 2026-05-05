@@ -61,6 +61,9 @@ the synthesis smoke with the exact board part:
 VIVADO_PART=<xilinx-part-name> make synth-vivado
 ```
 
+Without Vivado installed, use `VIVADO_DRY_RUN=1` with the same target to check
+the Tcl script path and source list. `make test-tools` covers this dry-run path.
+
 The default Vivado smoke top is the integrated `gpu_core`, using the same RTL
 source closure as the open-source integrated synthesis smoke. Set `VIVADO_TOP`
 only when intentionally checking a leaf block. The target intentionally requires

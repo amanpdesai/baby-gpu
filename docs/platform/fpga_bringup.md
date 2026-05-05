@@ -15,6 +15,16 @@ synthesized by Vivado for the selected part. Board wrappers, clocks,
 constraints, bitstream generation, and timing closure remain separate bring-up
 steps.
 
+Without Vivado installed, validate the source manifest and Tcl invocation path
+with:
+
+```text
+VIVADO_DRY_RUN=1 VIVADO_PART=<xilinx-part-name> make synth-vivado
+```
+
+The dry run does not synthesize RTL. It only checks script inputs and source
+file paths, and is covered by `make test-tools`.
+
 ## Bring-Up Sequence
 
 ```mermaid
