@@ -90,6 +90,8 @@ module tb_register_file;
       read_addr = addr;
       read_valid = 1'b1;
       #1;
+      read_valid = 1'b0;
+      read_addr = '0;
     end
   endtask
 
@@ -182,6 +184,22 @@ module tb_register_file;
     check(read_data == 32'h0000_0200, "ARG_BASE readback");
     read_reg(32'h0000_0058);
     check(read_data == 32'hA5A5_0003, "LAUNCH_FLAGS readback");
+
+    write_reg(32'h0000_00FC, 32'hFFFF_FFFF);
+    read_reg(32'h0000_000C);
+    check(read_data == 32'h0000_0019, "unknown write preserves CONTROL state");
+    check(fb_base == 32'h0000_0040 && fb_width == 16'd8 && fb_height == 16'd6,
+          "unknown write preserves framebuffer state");
+    check(fb_format == 2'd1, "unknown write preserves framebuffer format");
+    check(launch_program_base == 32'h0000_0014 && launch_grid_x == 16'd8 &&
+          launch_grid_y == 16'd3, "unknown write preserves launch dimensions");
+    check(launch_group_size_x == 16'd2 && launch_group_size_y == 16'd4,
+          "unknown write preserves launch group size");
+    check(launch_arg_base == 32'h0000_0200 && launch_flags == 32'hA5A5_0003,
+          "unknown write preserves launch payload registers");
+
+    read_reg(32'h0000_00FC);
+    check(read_data == 32'h0000_0000, "unknown register reads as zero");
 
     $display("tb_register_file PASS");
     $finish;
