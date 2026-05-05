@@ -1,0 +1,17 @@
+# Programmable-core direct-address vector add.
+# C[i] = A[i] + B[i] with A=0x00, B=0x40, C=0x80.
+
+MOVSR R1, LINEAR_GLOBAL_ID
+MOVI  R2, 4
+MUL   R1, R1, R2
+MOVI  R3, 0x00
+ADD   R4, R3, R1
+LOAD  R5, [R4 + 0]
+MOVI  R3, 0x40
+ADD   R4, R3, R1
+LOAD  R6, [R4 + 0]
+ADD   R7, R5, R6
+MOVI  R3, 0x80
+ADD   R4, R3, R1
+STORE [R4 + 0], R7
+END
