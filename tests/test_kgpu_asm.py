@@ -141,3 +141,13 @@ def test_cli_writes_memh_file(tmp_path):
     assert result.stdout == ""
     assert result.stderr == ""
     assert output_path.read_text() == "08400007\n04000000\n"
+
+
+def test_checked_in_vector_add_fixture_matches_assembler():
+    asm = load_assembler()
+    source_path = REPO_ROOT / "tests" / "kernels" / "vector_add.kgpu"
+    memh_path = REPO_ROOT / "tests" / "kernels" / "vector_add.memh"
+
+    assembled = "".join(f"{word:08x}\n" for word in asm.assemble(source_path))
+
+    assert assembled == memh_path.read_text()

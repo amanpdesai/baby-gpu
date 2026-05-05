@@ -105,6 +105,11 @@ Tool tests live in `tests/test_kgpu_asm.py` and can be run with:
 make test-tools
 ```
 
+Checked-in kernel fixtures live under `tests/kernels/`. Each committed `.memh`
+image should have a matching `.kgpu` source file and a host-tool test proving
+the assembler output is identical to the checked-in image used by RTL
+simulation.
+
 Hardware changes still require the normal RTL gates:
 
 ```bash
