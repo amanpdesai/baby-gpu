@@ -1,0 +1,19 @@
+[tasks]
+prove
+cover
+
+[options]
+prove: mode bmc
+cover: mode cover
+depth 12
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv work_scheduler.sv work_scheduler_sequence_formal.sv
+prep -top work_scheduler_sequence_formal
+
+[files]
+rtl/core/work_scheduler.sv
+formal/harnesses/work_scheduler_sequence_formal.sv

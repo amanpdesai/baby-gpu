@@ -88,7 +88,7 @@ architecture.
 - instruction memory bounded formal smoke including high out-of-range fetch fault
 - register file bounded formal smoke
 - lane register file bounded formal smoke
-- work-scheduler sticky-error bounded formal smoke
+- work-scheduler sticky-error, public status, stalled launch, and tail-mask bounded formal smoke
 - LSU prep bounded formal smoke
 - LSU invalid-op containment unit coverage and bounded prep formal scenario
 - LSU request/response transition bounded formal smoke
