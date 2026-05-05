@@ -124,9 +124,7 @@ module tb_gpu_core_command_active_reset;
   task automatic load_stalling_load_program;
     logic [ISA_WORD_W-1:0] kernel_words [0:2];
     begin
-      kernel_words[0] = kgpu_movi(4'd1, 18'd0);
-      kernel_words[1] = kgpu_load(4'd2, 4'd1, 18'd0);
-      kernel_words[2] = kgpu_end();
+      $readmemh("tests/kernels/stalling_load.memh", kernel_words);
       `KGPU_LOAD_PROGRAM(kernel_words)
     end
   endtask

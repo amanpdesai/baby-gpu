@@ -1,0 +1,5 @@
+# Minimal load kernel used by command lifecycle tests to hold a memory response.
+
+MOVI R1, 0
+LOAD R2, [R1 + 0]
+END
