@@ -6,8 +6,11 @@ module tb_gpu_core_command_launch_invalid;
   `include "tb/common/kernel_program_loader.svh"
 
   localparam int IMEM_ADDR_W = 8;
+  localparam logic [31:0] NOP_SKIP_ARG_BASE = 32'h0000_0020;
+  localparam logic [31:0] WAIT_SKIP_ARG_BASE = 32'h0000_0030;
   localparam logic [31:0] CLEAR_SKIP_ARG_BASE = 32'h0000_0040;
   localparam logic [31:0] RECT_SKIP_ARG_BASE = 32'h0000_0080;
+  localparam logic [31:0] SET_REG_SKIP_ARG_BASE = 32'h0000_00C0;
 
   logic clk;
   logic reset;
@@ -129,11 +132,12 @@ module tb_gpu_core_command_launch_invalid;
   task automatic set_arg_base_no_starts(input logic [31:0] value,
                                         input logic watch_clear,
                                         input logic watch_rect,
+                                        input logic watch_launch,
                                         input string message);
   begin
-    send_word_no_starts(KGPU_CMD_SET_REGISTER, watch_clear, watch_rect, 1'b0, message);
-    send_word_no_starts(KGPU_REG_ARG_BASE, watch_clear, watch_rect, 1'b0, message);
-    send_word_no_starts(value, watch_clear, watch_rect, 1'b0, message);
+    send_word_no_starts(KGPU_CMD_SET_REGISTER, watch_clear, watch_rect, watch_launch, message);
+    send_word_no_starts(KGPU_REG_ARG_BASE, watch_clear, watch_rect, watch_launch, message);
+    send_word_no_starts(value, watch_clear, watch_rect, watch_launch, message);
     wait_idle(20, message);
     step();
     check(dut.register_launch_arg_base == value, message);
@@ -182,13 +186,33 @@ module tb_gpu_core_command_launch_invalid;
     check(error_status == KGPU_ERR_UNKNOWN_OPCODE, "unknown opcode reaches gpu_core error status");
     reset_errors();
 
+    send_word_no_starts(32'h0002_0000, 1'b1, 1'b1, 1'b1,
+                        "bad-count NOP does not pulse command starts");
+    send_word_no_starts(KGPU_CMD_SET_REGISTER, 1'b1, 1'b1, 1'b1,
+                        "bad-count NOP hostile skipped word does not pulse starts");
+    set_arg_base_no_starts(NOP_SKIP_ARG_BASE, 1'b1, 1'b1, 1'b1,
+                           "bad-count NOP post-skip SET_REGISTER is aligned");
+    check(error_status == KGPU_ERR_BAD_WORD_COUNT,
+          "bad-count NOP reaches gpu_core error status");
+    reset_errors();
+
+    send_word_no_starts(32'h0302_0000, 1'b1, 1'b1, 1'b1,
+                        "bad-count WAIT_IDLE does not pulse command starts");
+    send_word_no_starts(KGPU_CMD_SET_REGISTER, 1'b1, 1'b1, 1'b1,
+                        "bad-count WAIT_IDLE hostile skipped word does not pulse starts");
+    set_arg_base_no_starts(WAIT_SKIP_ARG_BASE, 1'b1, 1'b1, 1'b1,
+                           "bad-count WAIT_IDLE post-skip SET_REGISTER is aligned");
+    check(error_status == KGPU_ERR_BAD_WORD_COUNT,
+          "bad-count WAIT_IDLE reaches gpu_core error status");
+    reset_errors();
+
     send_word_no_starts(32'h0103_0000, 1'b1, 1'b0, 1'b0,
                         "bad-count CLEAR does not pulse clear_start");
     send_word_no_starts(32'h0000_CAFE, 1'b1, 1'b0, 1'b0,
                         "bad-count CLEAR skipped word keeps clear_start low");
     send_word_no_starts(KGPU_CMD_SET_REGISTER, 1'b1, 1'b0, 1'b0,
                         "bad-count CLEAR hostile skipped word keeps clear_start low");
-    set_arg_base_no_starts(CLEAR_SKIP_ARG_BASE, 1'b1, 1'b0,
+    set_arg_base_no_starts(CLEAR_SKIP_ARG_BASE, 1'b1, 1'b0, 1'b0,
                            "bad-count CLEAR post-skip SET_REGISTER is aligned");
     check(error_status == KGPU_ERR_BAD_WORD_COUNT,
           "bad-count CLEAR reaches gpu_core error status");
@@ -206,10 +230,24 @@ module tb_gpu_core_command_launch_invalid;
                         "bad-count FILL_RECT skipped payload keeps rect_start low");
     send_word_no_starts(KGPU_CMD_SET_REGISTER, 1'b0, 1'b1, 1'b0,
                         "bad-count FILL_RECT hostile skipped word keeps rect_start low");
-    set_arg_base_no_starts(RECT_SKIP_ARG_BASE, 1'b0, 1'b1,
+    set_arg_base_no_starts(RECT_SKIP_ARG_BASE, 1'b0, 1'b1, 1'b0,
                            "bad-count FILL_RECT post-skip SET_REGISTER is aligned");
     check(error_status == KGPU_ERR_BAD_WORD_COUNT,
           "bad-count FILL_RECT reaches gpu_core error status");
+    reset_errors();
+
+    send_word_no_starts(32'h1004_0000, 1'b1, 1'b1, 1'b1,
+                        "bad-count SET_REGISTER does not pulse command starts");
+    send_word_no_starts(32'h0000_BEEF, 1'b1, 1'b1, 1'b1,
+                        "bad-count SET_REGISTER skipped payload does not pulse starts");
+    send_word_no_starts(32'h0000_1234, 1'b1, 1'b1, 1'b1,
+                        "bad-count SET_REGISTER skipped payload does not pulse starts");
+    send_word_no_starts(KGPU_CMD_SET_REGISTER, 1'b1, 1'b1, 1'b1,
+                        "bad-count SET_REGISTER hostile skipped word does not pulse starts");
+    set_arg_base_no_starts(SET_REG_SKIP_ARG_BASE, 1'b1, 1'b1, 1'b1,
+                           "bad-count SET_REGISTER post-skip SET_REGISTER is aligned");
+    check(error_status == KGPU_ERR_BAD_WORD_COUNT,
+          "bad-count SET_REGISTER reaches gpu_core error status");
     reset_errors();
 
     send_word(32'h2002_0000);
