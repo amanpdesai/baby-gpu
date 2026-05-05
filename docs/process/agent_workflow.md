@@ -402,7 +402,7 @@ Example:
 
 ```text
 Current branch: main
-Latest commit: 4714441 sim: cover illegal cmp reserved path
+Latest commit: 8c40081 tools: target gpu core in vivado smoke
 Working tree status: clean, synced with origin/main
 Checks last run: make sim, make lint, make formal, make synth-yosys, git diff --check
 Architecture direction: unified programmable tiny GPU, 1 core x 4 lanes
@@ -410,9 +410,9 @@ Implemented modules: FIFO, command processor, register file, fixed smoke
 engines, framebuffer writer, instruction memory, instruction decoder, special
 register mux, lane register file, SIMD ALU, scheduler, LSU, simulation memory,
 programmable core
-Next planned slice: add command-driven LOAD/vector_add coverage through
-gpu_core, define program-base validation, then harden protocol coverage before
-FPGA/Vivado bring-up
+Next planned slice: continue verification hardening around command/kernel
+lifecycle, then add FPGA-facing wrappers once the board part and IO plan are
+known
 Known risks: no caches, scratchpad, multi-core routing IDs, DDR/video platform
 integration, or Vivado board timing closure yet
 ```
