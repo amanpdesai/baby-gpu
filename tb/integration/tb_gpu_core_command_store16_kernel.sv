@@ -1,7 +1,6 @@
 import isa_pkg::*;
 
 module tb_gpu_core_command_store16_kernel;
-  import kernel_asm_pkg::*;
   `include "tb/common/gpu_core_command_driver.svh"
   `include "tb/common/kernel_program_loader.svh"
 
@@ -101,14 +100,7 @@ module tb_gpu_core_command_store16_kernel;
   task automatic load_store16_kernel_program;
     logic [ISA_WORD_W-1:0] kernel_words [0:7];
     begin
-      kernel_words[0] = kgpu_movsr(4'd1, ISA_SR_LINEAR_GLOBAL_ID);
-      kernel_words[1] = kgpu_movi(4'd2, 18'd2);
-      kernel_words[2] = kgpu_mul(4'd3, 4'd1, 4'd2);
-      kernel_words[3] = kgpu_movsr(4'd4, ISA_SR_FRAMEBUFFER_BASE);
-      kernel_words[4] = kgpu_add(4'd5, 4'd4, 4'd3);
-      kernel_words[5] = kgpu_movi(4'd6, 18'(COLOR));
-      kernel_words[6] = kgpu_store16(4'd6, 4'd5, 18'd0);
-      kernel_words[7] = kgpu_end();
+      $readmemh("tests/kernels/store16_linear.memh", kernel_words);
       `KGPU_LOAD_PROGRAM(kernel_words)
     end
   endtask

@@ -1,0 +1,10 @@
+# Store a constant RGB565 halfword at framebuffer_base + linear_global_id * 2.
+
+MOVSR R1, LINEAR_GLOBAL_ID
+MOVI  R2, 2
+MUL   R3, R1, R2
+MOVSR R4, FRAMEBUFFER_BASE
+ADD   R5, R4, R3
+MOVI  R6, 0x2A5B
+STORE16 [R5 + 0], R6
+END
