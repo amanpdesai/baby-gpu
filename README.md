@@ -67,11 +67,10 @@ Illegal instruction, illegal special-register, branch, memory, and predicated
 store integration tests cover the current programmable path, including
 convergent taken/not-taken branches, signed backward branches, R0 predicates,
 and divergent branch faults. Normal integration-test kernels now use a
-host-side assembler and checked `.kgpu`/`.memh` fixtures for command-level
-`gpu_core` flows. Lower-level programmable-core tests may still use the
-testbench-only mnemonic helper package, and malformed illegal-instruction
-fixtures still hand-build invalid encodings on purpose. The assembler is not a
-C compiler or stable C ABI. An optional Vivado synthesis smoke target is
+host-side assembler and checked `.kgpu`/`.memh` fixtures across command-level
+`gpu_core` and lower-level programmable-core flows. Directed malformed
+illegal-instruction tests use checked `.word` raw fixtures. The assembler is
+not a C compiler or stable C ABI. An optional Vivado synthesis smoke target is
 present for FPGA-facing checks once Vivado and the target part name are
 available.
 

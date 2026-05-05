@@ -106,11 +106,10 @@ architecture.
 - programmable-core illegal special-register integration coverage
 - programmable-core CMP reserved-bit illegal integration coverage
 - programmable-core zero-sized launch integration coverage
-- host-side assembler plus checked `.kgpu`/`.memh` fixtures used by command-level
-  `gpu_core` kernel tests
-- testbench-only kernel mnemonic helper package remains available for lower-level
-  programmable-core tests; malformed illegal-instruction fixtures still build
-  invalid encodings directly
+- host-side assembler plus checked `.kgpu`/`.memh` fixtures used by
+  command-level `gpu_core` and lower-level programmable-core integration tests
+- directed malformed illegal-instruction fixtures use checked `.word` raw
+  encodings
 - programmable-core convergent, signed backward, and R0 predicate branch
   integration coverage
 - programmable-core divergent branch fault integration coverage

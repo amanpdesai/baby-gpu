@@ -45,11 +45,10 @@ Current implementation state:
 - programmable core runs simulation kernels
 - `vector_add`, `STORE16`, framebuffer gradient, bounded fill, and offset fill
   integration tests exist
-- command-level `gpu_core` integration kernels use checked `.kgpu`/`.memh`
-  assembler fixtures
-- lower-level programmable-core tests may still use the testbench-only kernel
-  mnemonic helper package; malformed illegal-instruction fixtures may still use
-  raw encodings
+- command-level `gpu_core` and lower-level programmable-core integration tests
+  use checked `.kgpu`/`.memh` assembler fixtures
+- directed malformed illegal-instruction fixtures use checked `.word` raw
+  encodings
 - CMP, convergent BRA, and predicated stores exist
 - open-source synthesis smoke exists
 - formal proofs exist for FIFO, clear engine, SIMD ALU, framebuffer writer,
