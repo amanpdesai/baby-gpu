@@ -1,0 +1,6 @@
+# STORE16 recovery kernel used after command soft reset tests.
+
+MOVI R1, 0
+MOVI R2, 0x1234
+STORE16 [R1 + 0], R2
+END

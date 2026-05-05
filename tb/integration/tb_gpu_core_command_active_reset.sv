@@ -1,7 +1,6 @@
 import isa_pkg::*;
 
 module tb_gpu_core_command_active_reset;
-  import kernel_asm_pkg::*;
   `include "tb/common/gpu_core_command_driver.svh"
   `include "tb/common/kernel_program_loader.svh"
 
@@ -132,10 +131,7 @@ module tb_gpu_core_command_active_reset;
   task automatic load_store16_recovery_program;
     logic [ISA_WORD_W-1:0] kernel_words [0:3];
     begin
-      kernel_words[0] = kgpu_movi(4'd1, 18'd0);
-      kernel_words[1] = kgpu_movi(4'd2, 18'h01234);
-      kernel_words[2] = kgpu_store16(4'd2, 4'd1, 18'd0);
-      kernel_words[3] = kgpu_end();
+      $readmemh("tests/kernels/store16_zero.memh", kernel_words);
       `KGPU_LOAD_PROGRAM(kernel_words)
     end
   endtask
