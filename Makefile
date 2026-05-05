@@ -1,10 +1,13 @@
-.PHONY: check-tools tool-versions lint formal sim synth-yosys synth-vivado clean
+.PHONY: check-tools tool-versions test-tools lint formal sim synth-yosys synth-vivado clean
 
 check-tools:
 	tools/scripts/check_tools.sh
 
 tool-versions:
 	tools/scripts/tool_versions.sh
+
+test-tools:
+	pytest tests
 
 lint:
 	tools/scripts/lint.sh

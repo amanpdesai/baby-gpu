@@ -42,10 +42,12 @@ make lint
 make formal
 make sim
 make synth-yosys
+make test-tools
 ```
 
 `make check-tools` should pass before writing RTL. `make lint`, `make formal`,
 and `make sim` are allowed to report that no RTL or no formal jobs exist yet.
+`make test-tools` runs host-side tooling tests, including the assembler tests.
 
 Vivado is optional until FPGA-facing milestones. When Vivado is installed, run
 the synthesis smoke with the exact board part:
@@ -73,3 +75,15 @@ On Ubuntu, `netgen` is a 3D mesh-generation tool. The LVS tool is
 `netgen-lvs`. Scripts should call `netgen-lvs` explicitly.
 
 OpenSTA installs the executable as `sta`, not `opensta`.
+
+## Assembler
+
+The first host-side kernel tool is:
+
+```text
+tools/assembler/kgpu_asm.py
+```
+
+It emits one 32-bit hexadecimal instruction word per line for the implemented
+ISA. See [assembler.md](assembler.md) for syntax and limitations. This is a
+bring-up tool for simulation assets, not a C compiler or stable C ABI.

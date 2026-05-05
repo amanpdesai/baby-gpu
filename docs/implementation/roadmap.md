@@ -246,6 +246,7 @@ Exit criteria:
 - timeout on hang: done
 - zero sticky errors: done
 - command-driven `gpu_core` launch path: done
+- host-side assembler for deterministic ISA images: done
 
 ## Second Kernel Milestone: `framebuffer_gradient`
 
@@ -323,7 +324,6 @@ Platform work should not define the core programming model.
 
 Stretch goals are valid only after the first programmable kernels pass:
 
-- assembler
 - waveform/debug trace tooling
 - scratchpad memory
 - predicated execution

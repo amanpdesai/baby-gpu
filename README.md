@@ -69,9 +69,10 @@ convergent taken/not-taken branches, signed backward branches, R0 predicates,
 and divergent branch faults. Normal integration-test kernels now use a
 testbench-only mnemonic helper package instead of raw ISA constructors;
 malformed illegal-instruction fixtures still hand-build invalid encodings on
-purpose. The helper package is not a full assembler or C toolchain. An optional
-Vivado synthesis smoke target is present for FPGA-facing checks once Vivado and
-the target part name are available.
+purpose. A host-side assembler now exists for deterministic kernel images, but
+it is not a C compiler or stable C ABI. An optional Vivado synthesis smoke
+target is present for FPGA-facing checks once Vivado and the target part name
+are available.
 
 The command-driven kernel ABI is current RTL behavior: `PROGRAM_BASE` is an
 instruction-word offset, `GRID_X` and `GRID_Y` define the work-item rectangle,
