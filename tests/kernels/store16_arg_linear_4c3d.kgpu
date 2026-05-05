@@ -1,0 +1,11 @@
+# Store 0x4C3D at arg_base + linear_global_id * 2.
+# Used by the nonzero PROGRAM_BASE command test.
+
+MOVSR R1, LINEAR_GLOBAL_ID
+MOVI  R2, 2
+MUL   R3, R1, R2
+MOVSR R4, ARG_BASE
+ADD   R5, R4, R3
+MOVI  R6, 0x4C3D
+STORE16 [R5 + 0], R6
+END
