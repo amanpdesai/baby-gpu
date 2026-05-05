@@ -31,15 +31,18 @@ module tb_gpu_core_command_program_base_snapshot;
   logic [31:0] mem_req_addr;
   logic [31:0] mem_req_wdata;
   logic [3:0] mem_req_wmask;
+logic [1:0] mem_req_id;
   logic mem_rsp_valid;
   logic mem_rsp_ready;
   logic [31:0] mem_rsp_rdata;
+logic [1:0] mem_rsp_id;
   logic hold_rsp;
   logic pending_rsp;
   logic saw_mem_req;
   logic accepted_req_write;
   logic [31:0] accepted_req_addr;
   logic [31:0] pending_rdata;
+logic [1:0] pending_rsp_id;
   logic [31:0] memory [0:MEM_WORDS-1];
 
   `include "tb/common/gpu_core_memory_helpers.svh"
@@ -67,9 +70,11 @@ module tb_gpu_core_command_program_base_snapshot;
     .mem_req_addr(mem_req_addr),
     .mem_req_wdata(mem_req_wdata),
     .mem_req_wmask(mem_req_wmask),
+        .mem_req_id(mem_req_id),
     .mem_rsp_valid(mem_rsp_valid),
     .mem_rsp_ready(mem_rsp_ready),
-    .mem_rsp_rdata(mem_rsp_rdata)
+    .mem_rsp_rdata(mem_rsp_rdata),
+        .mem_rsp_id(mem_rsp_id)
   );
 
   initial begin
@@ -84,8 +89,10 @@ module tb_gpu_core_command_program_base_snapshot;
     if (reset) begin
       mem_rsp_valid <= 1'b0;
       mem_rsp_rdata <= '0;
+      mem_rsp_id <= '0;
       pending_rsp <= 1'b0;
       pending_rdata <= '0;
+      pending_rsp_id <= '0;
       saw_mem_req <= 1'b0;
       accepted_req_write <= 1'b0;
       accepted_req_addr <= '0;
@@ -100,6 +107,7 @@ module tb_gpu_core_command_program_base_snapshot;
         accepted_req_addr <= mem_req_addr;
         pending_rsp <= 1'b1;
         pending_rdata <= mem_req_write ? '0 : read_memory_word(mem_req_addr);
+      pending_rsp_id <= mem_req_id;
 
         if (mem_req_write) begin
           write_memory_masked(mem_req_addr, mem_req_wdata, mem_req_wmask);
@@ -108,6 +116,7 @@ module tb_gpu_core_command_program_base_snapshot;
         pending_rsp <= 1'b0;
         mem_rsp_valid <= 1'b1;
         mem_rsp_rdata <= pending_rdata;
+      mem_rsp_id <= pending_rsp_id;
       end
     end
   end
@@ -169,9 +178,11 @@ module tb_gpu_core_command_program_base_snapshot;
     init_command_driver();
     mem_rsp_valid = 1'b0;
     mem_rsp_rdata = '0;
+mem_rsp_id = '0;
     hold_rsp = 1'b0;
     pending_rsp = 1'b0;
     pending_rdata = '0;
+  pending_rsp_id = '0;
     saw_mem_req = 1'b0;
     accepted_req_write = 1'b0;
     accepted_req_addr = '0;

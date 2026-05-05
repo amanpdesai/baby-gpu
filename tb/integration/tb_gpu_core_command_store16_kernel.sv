@@ -26,9 +26,11 @@ module tb_gpu_core_command_store16_kernel;
   logic [31:0] mem_req_addr;
   logic [31:0] mem_req_wdata;
   logic [3:0] mem_req_wmask;
+logic [1:0] mem_req_id;
   logic mem_rsp_valid;
   logic mem_rsp_ready;
   logic [31:0] mem_rsp_rdata;
+logic [1:0] mem_rsp_id;
   logic [31:0] memory [0:MEM_WORDS-1];
   int i;
   `include "tb/common/gpu_core_memory_helpers.svh"
@@ -56,9 +58,11 @@ module tb_gpu_core_command_store16_kernel;
       .mem_req_addr(mem_req_addr),
       .mem_req_wdata(mem_req_wdata),
       .mem_req_wmask(mem_req_wmask),
+        .mem_req_id(mem_req_id),
       .mem_rsp_valid(mem_rsp_valid),
       .mem_rsp_ready(mem_rsp_ready),
-      .mem_rsp_rdata(mem_rsp_rdata)
+      .mem_rsp_rdata(mem_rsp_rdata),
+        .mem_rsp_id(mem_rsp_id)
   );
 
   assign mem_req_ready = !mem_rsp_valid || mem_rsp_ready;
@@ -69,6 +73,7 @@ module tb_gpu_core_command_store16_kernel;
     if (reset) begin
       mem_rsp_valid <= 1'b0;
       mem_rsp_rdata <= '0;
+      mem_rsp_id <= '0;
     end else begin
       if (mem_rsp_valid && mem_rsp_ready) begin
         mem_rsp_valid <= 1'b0;
@@ -77,6 +82,7 @@ module tb_gpu_core_command_store16_kernel;
       if (mem_req_valid && mem_req_ready) begin
         mem_rsp_valid <= 1'b1;
         mem_rsp_rdata <= mem_req_write ? '0 : read_memory_word(mem_req_addr);
+        mem_rsp_id <= mem_req_id;
 
         if (mem_req_write) begin
           write_memory_masked(mem_req_addr, mem_req_wdata, mem_req_wmask);
@@ -109,6 +115,7 @@ module tb_gpu_core_command_store16_kernel;
     init_command_driver();
     mem_rsp_valid = 1'b0;
     mem_rsp_rdata = '0;
+mem_rsp_id = '0;
 
     init_memory(32'hDEAD_DEAD);
 

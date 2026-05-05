@@ -9,7 +9,8 @@ module gpu_core #(
     parameter int LANES = 4,
     parameter int PC_W = 8,
     parameter int REGS = 16,
-    parameter int INSTR_W = 32
+    parameter int INSTR_W = 32,
+    parameter int MEM_ID_W = 2
 ) (
     input logic clk,
     input logic reset,
@@ -33,9 +34,11 @@ module gpu_core #(
     output logic [ADDR_W-1:0] mem_req_addr,
     output logic [DATA_W-1:0] mem_req_wdata,
     output logic [(DATA_W/8)-1:0] mem_req_wmask,
+    output logic [MEM_ID_W-1:0] mem_req_id,
     input logic mem_rsp_valid,
     output logic mem_rsp_ready,
-    input logic [DATA_W-1:0] mem_rsp_rdata
+    input logic [DATA_W-1:0] mem_rsp_rdata,
+    input logic [MEM_ID_W-1:0] mem_rsp_id
 );
   localparam int FIFO_COUNT_W = $clog2(FIFO_DEPTH + 1);
 
@@ -133,7 +136,6 @@ module gpu_core #(
   localparam int MEM_CLIENTS = 2;
   localparam int MEM_LOCAL_ID_W = 1;
   localparam int MEM_SOURCE_ID_W = 1;
-  localparam int MEM_ID_W = MEM_SOURCE_ID_W + MEM_LOCAL_ID_W;
 
   logic [MEM_CLIENTS-1:0] arb_client_req_valid;
   logic [MEM_CLIENTS-1:0] arb_client_req_ready;
@@ -151,7 +153,6 @@ module gpu_core #(
   logic [DATA_W-1:0] arb_mem_req_wdata;
   logic [(DATA_W/8)-1:0] arb_mem_req_wmask;
   logic [MEM_ID_W-1:0] arb_mem_req_id;
-  logic [MEM_ID_W-1:0] tracked_mem_rsp_id;
   logic tracker_empty;
   logic tracker_full;
   logic tracker_can_accept_req;
@@ -418,6 +419,7 @@ module gpu_core #(
   assign mem_req_addr = arb_mem_req_addr;
   assign mem_req_wdata = arb_mem_req_wdata;
   assign mem_req_wmask = arb_mem_req_wmask;
+  assign mem_req_id = arb_mem_req_id;
 
   memory_response_tracker #(
       .ID_W(MEM_ID_W),
@@ -429,7 +431,7 @@ module gpu_core #(
       .req_fire(mem_req_valid && mem_req_ready),
       .req_id(arb_mem_req_id),
       .rsp_fire(mem_rsp_valid && mem_rsp_ready),
-      .rsp_id(tracked_mem_rsp_id),
+      .rsp_id(),
       .empty(tracker_empty),
       .full(tracker_full),
       .outstanding_count(),
@@ -466,7 +468,7 @@ module gpu_core #(
       .mem_rsp_valid(mem_rsp_valid),
       .mem_rsp_ready(mem_rsp_ready),
       .mem_rsp_rdata(mem_rsp_rdata),
-      .mem_rsp_id(tracked_mem_rsp_id),
+      .mem_rsp_id(mem_rsp_id),
       .mem_rsp_error(1'b0)
   );
 endmodule

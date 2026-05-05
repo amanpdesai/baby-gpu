@@ -31,9 +31,11 @@ module tb_gpu_core_command_vector_add;
   logic [31:0] mem_req_addr;
   logic [31:0] mem_req_wdata;
   logic [3:0] mem_req_wmask;
+logic [1:0] mem_req_id;
   logic mem_rsp_valid;
   logic mem_rsp_ready;
   logic [31:0] mem_rsp_rdata;
+logic [1:0] mem_rsp_id;
   logic [2:0] mem_stall_phase;
   logic pending_valid;
   logic pending_write;
@@ -41,10 +43,12 @@ module tb_gpu_core_command_vector_add;
   logic [31:0] pending_wdata;
   logic [3:0] pending_wmask;
   logic [31:0] pending_rdata;
-  logic [1:0] pending_delay;
-  logic saw_req_stall;
-  logic saw_rsp_delay;
-  logic [31:0] memory [0:MEM_WORDS-1];
+logic [1:0] pending_rsp_id;
+logic [1:0] pending_delay;
+logic saw_req_stall;
+logic saw_rsp_delay;
+logic saw_programmable_mem_id;
+logic [31:0] memory [0:MEM_WORDS-1];
   int i;
   `include "tb/common/gpu_core_memory_helpers.svh"
 
@@ -71,9 +75,11 @@ module tb_gpu_core_command_vector_add;
       .mem_req_addr(mem_req_addr),
       .mem_req_wdata(mem_req_wdata),
       .mem_req_wmask(mem_req_wmask),
+        .mem_req_id(mem_req_id),
       .mem_rsp_valid(mem_rsp_valid),
       .mem_rsp_ready(mem_rsp_ready),
-      .mem_rsp_rdata(mem_rsp_rdata)
+      .mem_rsp_rdata(mem_rsp_rdata),
+        .mem_rsp_id(mem_rsp_id)
   );
 
   assign mem_req_ready = !pending_valid && (!mem_rsp_valid || mem_rsp_ready) &&
@@ -85,6 +91,7 @@ module tb_gpu_core_command_vector_add;
     if (reset) begin
       mem_rsp_valid <= 1'b0;
       mem_rsp_rdata <= '0;
+      mem_rsp_id <= '0;
       mem_stall_phase <= '0;
       pending_valid <= 1'b0;
       pending_write <= 1'b0;
@@ -92,9 +99,11 @@ module tb_gpu_core_command_vector_add;
       pending_wdata <= '0;
       pending_wmask <= '0;
       pending_rdata <= '0;
+      pending_rsp_id <= '0;
       pending_delay <= '0;
       saw_req_stall <= 1'b0;
       saw_rsp_delay <= 1'b0;
+      saw_programmable_mem_id <= 1'b0;
     end else begin
       mem_stall_phase <= mem_stall_phase + 3'd1;
 
@@ -116,6 +125,7 @@ module tb_gpu_core_command_vector_add;
           pending_valid <= 1'b0;
           mem_rsp_valid <= 1'b1;
           mem_rsp_rdata <= pending_rdata;
+          mem_rsp_id <= pending_rsp_id;
 
           if (pending_write) begin
             write_memory_masked(pending_addr, pending_wdata, pending_wmask);
@@ -124,12 +134,16 @@ module tb_gpu_core_command_vector_add;
       end
 
       if (mem_req_valid && mem_req_ready) begin
+        if (mem_req_id[1]) begin
+          saw_programmable_mem_id <= 1'b1;
+        end
         pending_valid <= 1'b1;
         pending_write <= mem_req_write;
         pending_addr <= mem_req_addr;
         pending_wdata <= mem_req_wdata;
         pending_wmask <= mem_req_wmask;
         pending_rdata <= mem_req_write ? '0 : read_memory_word(mem_req_addr);
+        pending_rsp_id <= mem_req_id;
         pending_delay <= mem_req_write ? 2'd1 : 2'd2;
       end
     end
@@ -147,6 +161,7 @@ module tb_gpu_core_command_vector_add;
     init_command_driver();
     mem_rsp_valid = 1'b0;
     mem_rsp_rdata = '0;
+mem_rsp_id = '0;
 
     init_memory(32'hDEAD_DEAD);
 
@@ -176,8 +191,9 @@ module tb_gpu_core_command_vector_add;
     wait_idle(1000, "gpu_core wait_idle timeout");
 
     check(error_status == 8'h00, "command vector_add completes without error");
-    check(saw_req_stall, "command vector_add observes memory request backpressure");
-    check(saw_rsp_delay, "command vector_add observes delayed memory responses");
+check(saw_req_stall, "command vector_add observes memory request backpressure");
+check(saw_rsp_delay, "command vector_add observes delayed memory responses");
+check(saw_programmable_mem_id, "command vector_add uses external programmable memory IDs");
     for (i = 0; i < ELEMENTS; i = i + 1) begin
       check(memory[C_BASE[31:2] + i] == (32'd1100 + 32'(i * 4)),
             "command vector_add output matches");

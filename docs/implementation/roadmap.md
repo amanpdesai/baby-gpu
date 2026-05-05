@@ -121,6 +121,8 @@ architecture.
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset
+- `gpu_core` top-level memory interface exposes request and response IDs for
+  external memory wrappers
 - memory response tracker records accepted request IDs, returns oldest
   outstanding ID for in-order external responses, flags overflow/underflow, and
   has unit simulation, bounded formal coverage, and synthesis smoke

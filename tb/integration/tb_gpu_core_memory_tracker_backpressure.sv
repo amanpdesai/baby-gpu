@@ -19,9 +19,11 @@ module tb_gpu_core_memory_tracker_backpressure;
     logic [31:0] mem_req_addr;
     logic [31:0] mem_req_wdata;
     logic [3:0] mem_req_wmask;
+logic [1:0] mem_req_id;
     logic mem_rsp_valid;
     logic mem_rsp_ready;
     logic [31:0] mem_rsp_rdata;
+logic [1:0] mem_rsp_id;
     int accepted_requests;
     int accepted_responses;
 
@@ -50,9 +52,11 @@ module tb_gpu_core_memory_tracker_backpressure;
         .mem_req_addr(mem_req_addr),
         .mem_req_wdata(mem_req_wdata),
         .mem_req_wmask(mem_req_wmask),
+        .mem_req_id(mem_req_id),
         .mem_rsp_valid(mem_rsp_valid),
         .mem_rsp_ready(mem_rsp_ready),
-        .mem_rsp_rdata(mem_rsp_rdata)
+        .mem_rsp_rdata(mem_rsp_rdata),
+        .mem_rsp_id(mem_rsp_id)
     );
 
     always #5 clk = ~clk;
@@ -74,6 +78,7 @@ module tb_gpu_core_memory_tracker_backpressure;
         mem_req_ready = 1'b1;
         mem_rsp_valid = 1'b0;
         mem_rsp_rdata = '0;
+mem_rsp_id = '0;
         accepted_requests = 0;
         accepted_responses = 0;
 

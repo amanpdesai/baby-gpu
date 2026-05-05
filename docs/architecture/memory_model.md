@@ -132,10 +132,11 @@ rsp_id.source_id selects the response sink
 rsp_id.local_request_id is returned to that sink unchanged
 ```
 
-Until the top-level memory port carries returned IDs, `gpu_core` tracks accepted
-request IDs in FIFO order and supplies the oldest outstanding ID to the arbiter
-when a memory response is accepted. That makes the current in-order external
-memory contract explicit without pretending to support out-of-order responses.
+`gpu_core` exposes `mem_req_id` and `mem_rsp_id` at its top-level memory port.
+Memory wrappers that can return IDs should copy the accepted request ID into the
+matching response. In-order memories may still use the response tracker as
+outstanding-capacity accounting, but response routing uses the external
+`mem_rsp_id`.
 
 The first arbiter is intentionally a small valid/ready mux with response
 routing. It does not reorder, allocate IDs, track completion, or implement
