@@ -142,6 +142,44 @@ module tb_command_processor;
     end
   endtask
 
+  task automatic check_no_dispatch(input string message);
+    begin
+      check(!clear_start, message);
+      check(!rect_start, message);
+      check(!launch_start, message);
+      check(!reg_write_valid, message);
+    end
+  endtask
+
+  task automatic send_word_no_dispatch(input logic [31:0] word,
+                                       input string message);
+    begin
+      cmd_data = word;
+      cmd_valid = 1'b1;
+      while (!cmd_ready) begin
+        #1;
+        check_no_dispatch(message);
+        step();
+      end
+      #1;
+      check_no_dispatch(message);
+      step();
+      check_no_dispatch(message);
+      cmd_valid = 1'b0;
+      cmd_data = '0;
+    end
+  endtask
+
+  task automatic expect_bad_reserved(input string message);
+    begin
+      check(error_status[2], message);
+      check(!error_status[1], "reserved header does not set bad-word-count error");
+      step();
+      check_no_dispatch(message);
+      clear_error_status();
+    end
+  endtask
+
   initial begin
     clk = 1'b0;
     reset = 1'b1;
@@ -276,10 +314,30 @@ module tb_command_processor;
     step();
     clear_errors = 1'b0;
 
-    send_word(32'h2001_0001);
-    check(!launch_start, "reserved-flag LAUNCH_KERNEL does not start");
-    check(error_status[2], "reserved-flag LAUNCH_KERNEL sets bad-reserved error");
-    clear_error_status();
+    send_word_no_dispatch(32'h2001_0001, "reserved LAUNCH_KERNEL emits no dispatch");
+    expect_bad_reserved("reserved LAUNCH_KERNEL sets bad-reserved error");
+
+    send_word_no_dispatch(32'h0001_0001, "reserved NOP emits no dispatch");
+    expect_bad_reserved("reserved NOP sets bad-reserved error");
+
+    send_word_no_dispatch(32'h0301_0001, "reserved WAIT_IDLE emits no dispatch");
+    expect_bad_reserved("reserved WAIT_IDLE sets bad-reserved error");
+
+    send_word_no_dispatch(32'h0102_0001, "reserved CLEAR emits no dispatch");
+    send_word_no_dispatch(32'h0000_1357, "reserved CLEAR skips color payload");
+    expect_bad_reserved("reserved CLEAR sets bad-reserved error");
+
+    send_word_no_dispatch(32'h0205_0001, "reserved FILL_RECT emits no dispatch");
+    send_word_no_dispatch({16'd1, 16'd2}, "reserved FILL_RECT skips xy payload");
+    send_word_no_dispatch({16'd3, 16'd4}, "reserved FILL_RECT skips size payload");
+    send_word_no_dispatch(32'h0000_2468, "reserved FILL_RECT skips color payload");
+    send_word_no_dispatch(32'h0000_0000, "reserved FILL_RECT skips reserved payload");
+    expect_bad_reserved("reserved FILL_RECT sets bad-reserved error");
+
+    send_word_no_dispatch(32'h1003_0001, "reserved SET_REGISTER emits no dispatch");
+    send_word_no_dispatch(32'h0000_0010, "reserved SET_REGISTER skips address payload");
+    send_word_no_dispatch(32'h0000_0240, "reserved SET_REGISTER skips data payload");
+    expect_bad_reserved("reserved SET_REGISTER sets bad-reserved error");
 
     launch_grid_x = 16'd0;
     expect_invalid_launch("zero-grid-x LAUNCH_KERNEL does not start");
