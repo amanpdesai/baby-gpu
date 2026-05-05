@@ -6,6 +6,8 @@ module tb_gpu_core_command_launch_invalid;
   `include "tb/common/kernel_program_loader.svh"
 
   localparam int IMEM_ADDR_W = 8;
+  localparam logic [31:0] CLEAR_SKIP_ARG_BASE = 32'h0000_0040;
+  localparam logic [31:0] RECT_SKIP_ARG_BASE = 32'h0000_0080;
 
   logic clk;
   logic reset;
@@ -85,6 +87,59 @@ module tb_gpu_core_command_launch_invalid;
   end
   endtask
 
+  task automatic check_no_starts(input logic watch_clear,
+                                 input logic watch_rect,
+                                 input logic watch_launch,
+                                 input string message);
+  begin
+    if (watch_clear) begin
+      check(!dut.u_command_processor.clear_start, message);
+    end
+    if (watch_rect) begin
+      check(!dut.u_command_processor.rect_start, message);
+    end
+    if (watch_launch) begin
+      check(!dut.u_command_processor.launch_start, message);
+    end
+  end
+  endtask
+
+  task automatic send_word_no_starts(input logic [31:0] word,
+                                     input logic watch_clear,
+                                     input logic watch_rect,
+                                     input logic watch_launch,
+                                     input string message);
+  begin
+    cmd_data = word;
+    cmd_valid = 1'b1;
+    while (!cmd_ready) begin
+      #1;
+      check_no_starts(watch_clear, watch_rect, watch_launch, message);
+      step();
+    end
+    #1;
+    check_no_starts(watch_clear, watch_rect, watch_launch, message);
+    step();
+    check_no_starts(watch_clear, watch_rect, watch_launch, message);
+    cmd_valid = 1'b0;
+    cmd_data = '0;
+  end
+  endtask
+
+  task automatic set_arg_base_no_starts(input logic [31:0] value,
+                                        input logic watch_clear,
+                                        input logic watch_rect,
+                                        input string message);
+  begin
+    send_word_no_starts(KGPU_CMD_SET_REGISTER, watch_clear, watch_rect, 1'b0, message);
+    send_word_no_starts(KGPU_REG_ARG_BASE, watch_clear, watch_rect, 1'b0, message);
+    send_word_no_starts(value, watch_clear, watch_rect, 1'b0, message);
+    wait_idle(20, message);
+    step();
+    check(dut.register_launch_arg_base == value, message);
+  end
+  endtask
+
   task automatic expect_invalid_launch(input string message);
     int timeout;
   begin
@@ -125,6 +180,36 @@ module tb_gpu_core_command_launch_invalid;
     send_word(32'h5501_0000);
     wait_idle(20, "unknown opcode returns idle");
     check(error_status == KGPU_ERR_UNKNOWN_OPCODE, "unknown opcode reaches gpu_core error status");
+    reset_errors();
+
+    send_word_no_starts(32'h0103_0000, 1'b1, 1'b0, 1'b0,
+                        "bad-count CLEAR does not pulse clear_start");
+    send_word_no_starts(32'h0000_CAFE, 1'b1, 1'b0, 1'b0,
+                        "bad-count CLEAR skipped word keeps clear_start low");
+    send_word_no_starts(KGPU_CMD_SET_REGISTER, 1'b1, 1'b0, 1'b0,
+                        "bad-count CLEAR hostile skipped word keeps clear_start low");
+    set_arg_base_no_starts(CLEAR_SKIP_ARG_BASE, 1'b1, 1'b0,
+                           "bad-count CLEAR post-skip SET_REGISTER is aligned");
+    check(error_status == KGPU_ERR_BAD_WORD_COUNT,
+          "bad-count CLEAR reaches gpu_core error status");
+    reset_errors();
+
+    send_word_no_starts(32'h0206_0000, 1'b0, 1'b1, 1'b0,
+                        "bad-count FILL_RECT does not pulse rect_start");
+    send_word_no_starts(32'h0000_BEEF, 1'b0, 1'b1, 1'b0,
+                        "bad-count FILL_RECT skipped payload keeps rect_start low");
+    send_word_no_starts(32'h0000_1234, 1'b0, 1'b1, 1'b0,
+                        "bad-count FILL_RECT skipped payload keeps rect_start low");
+    send_word_no_starts(32'h0000_ABCD, 1'b0, 1'b1, 1'b0,
+                        "bad-count FILL_RECT skipped payload keeps rect_start low");
+    send_word_no_starts(32'h0000_5678, 1'b0, 1'b1, 1'b0,
+                        "bad-count FILL_RECT skipped payload keeps rect_start low");
+    send_word_no_starts(KGPU_CMD_SET_REGISTER, 1'b0, 1'b1, 1'b0,
+                        "bad-count FILL_RECT hostile skipped word keeps rect_start low");
+    set_arg_base_no_starts(RECT_SKIP_ARG_BASE, 1'b0, 1'b1,
+                           "bad-count FILL_RECT post-skip SET_REGISTER is aligned");
+    check(error_status == KGPU_ERR_BAD_WORD_COUNT,
+          "bad-count FILL_RECT reaches gpu_core error status");
     reset_errors();
 
     send_word(32'h2002_0000);
