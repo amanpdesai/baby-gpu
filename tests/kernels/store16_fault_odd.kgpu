@@ -1,0 +1,6 @@
+# Odd-address STORE16 fault kernel. No memory request should be issued.
+
+MOVI R1, 1
+MOVI R2, 0x2A5B
+STORE16 [R1 + 0], R2
+END

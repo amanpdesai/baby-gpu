@@ -1,0 +1,6 @@
+# Valid STORE16 recovery kernel for programmable fault reset tests.
+
+MOVI R1, 0
+MOVI R2, 0x2A5B
+STORE16 [R1 + 0], R2
+END
