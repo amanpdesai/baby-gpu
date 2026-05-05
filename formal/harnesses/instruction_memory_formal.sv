@@ -70,6 +70,9 @@ module instruction_memory_formal (
             4'd7: begin
                 fetch_addr = 2'd0;
             end
+            4'd8: begin
+                fetch_addr = 2'd3;
+            end
             default: begin
                 fetch_addr = '0;
             end
@@ -95,7 +98,7 @@ module instruction_memory_formal (
             assert(!fetch_error);
         end
 
-        if (past_valid && (cycle_q == 4'd5 || cycle_q == 4'd6)) begin
+        if (past_valid && (cycle_q == 4'd5 || cycle_q == 4'd6 || cycle_q == 4'd8)) begin
             assert(fetch_instruction == '0);
             assert(fetch_error);
         end
