@@ -5,7 +5,7 @@ cover
 [options]
 prove: mode bmc
 cover: mode cover
-depth 10
+depth 12
 
 [engines]
 smtbmc z3

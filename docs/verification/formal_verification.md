@@ -141,7 +141,7 @@ Initial formal adoption is already active when:
 - instruction memory smoke proof passes, including low and high out-of-range fetch faults
 - lane register file smoke proof passes
 - special register mux smoke proof passes
-- simulation data memory smoke proof and cover tasks pass
+- simulation data memory smoke proof and cover tasks pass, including masked writes and out-of-range sticky-error response
 - LSU prep smoke proof passes
 - LSU request/response sequencing smoke proof passes
 - LSU multi-lane response routing smoke proof passes

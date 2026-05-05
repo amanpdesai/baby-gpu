@@ -77,6 +77,11 @@ module data_memory_formal (
                 req_valid = 1'b1;
                 req_write = 1'b0;
             end
+            4'd9: begin
+                req_valid = 1'b1;
+                req_write = 1'b0;
+                req_addr = 4'h4;
+            end
             default: begin
                 req_valid = 1'b0;
             end
@@ -117,9 +122,21 @@ module data_memory_formal (
             assert(rsp_rdata == 32'h5678_CC44);
         end
 
+        if (past_valid && (cycle_q == 4'd10)) begin
+            assert(rsp_valid);
+            assert(error);
+            assert(rsp_rdata == '0);
+        end
+
+        if (past_valid && (cycle_q > 4'd10)) begin
+            assert(error);
+        end
+
         cover(past_valid && (cycle_q == 4'd2) && rsp_valid && !req_ready &&
               !error && (rsp_rdata == '0));
         cover(past_valid && (cycle_q == 4'd8) && rsp_valid && !error &&
               (rsp_rdata == 32'h5678_CC44));
+        cover(past_valid && (cycle_q == 4'd10) && rsp_valid && error &&
+              (rsp_rdata == '0));
     end
 endmodule

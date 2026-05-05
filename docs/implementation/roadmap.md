@@ -101,7 +101,7 @@ architecture.
 - instruction decoder CMP reserved-field and highest-valid-CMP bounded formal
   cover
 - instruction decoder unassigned-opcode side-effect suppression formal coverage
-- simulation data memory bounded formal smoke and scenario reachability covers
+- simulation data memory bounded formal smoke, out-of-range sticky-error response, and scenario reachability covers
 - integrated programmable core Yosys synthesis smoke
 - programmable-core illegal-instruction integration coverage
 - programmable-core illegal special-register integration coverage
