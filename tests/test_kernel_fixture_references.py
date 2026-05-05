@@ -3,7 +3,8 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-READMEMH_RE = re.compile(r'\$readmemh\("([^"]+\.memh)"')
+READMEMH_RE = re.compile(r'\$readmemh\s*\(\s*"([^"]+\.memh)"')
+RETIRED_HELPER_RE = re.compile(r"\b(kernel_asm_pkg|kgpu_[a-z0-9_]+)\b")
 
 
 def referenced_memh_paths():
@@ -26,3 +27,14 @@ def test_testbench_memh_references_are_checked_kernel_fixtures():
         assert fixture_path.with_suffix(".kgpu").exists(), (
             f"{source_path} references {fixture_path} without matching .kgpu source"
         )
+
+
+def test_testbench_rtl_does_not_use_retired_kernel_helpers():
+    offenders = []
+    for source_path in sorted((REPO_ROOT / "tb").rglob("*.sv")):
+        text = source_path.read_text()
+        match = RETIRED_HELPER_RE.search(text)
+        if match:
+            offenders.append(f"{source_path.relative_to(REPO_ROOT)}:{match.group(1)}")
+
+    assert offenders == []
