@@ -164,6 +164,8 @@ Implemented coverage for this lifecycle is intentionally narrow:
   memory
 - queued `SET_REGISTER(ARG_BASE)` behind blocked `WAIT_IDLE` while a
   command-launched kernel is stalled on held memory response
+- command FIFO flush through `clear_errors` while a blocked `WAIT_IDLE` has a
+  queued `SET_REGISTER(ARG_BASE)` behind it
 - command-driven command-structure error reporting for unknown opcode, malformed
   word counts, and nonzero reserved header bits on every current command opcode
 - launch-register snapshot behavior for `PROGRAM_BASE` while the host rewrites

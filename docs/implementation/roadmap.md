@@ -140,6 +140,8 @@ architecture.
   flags
 - command-driven `gpu_core` soft reset while a kernel is stalled on memory,
   followed by successful relaunch
+- command-driven `gpu_core` command FIFO flush while a blocked `WAIT_IDLE` has a
+  queued `SET_REGISTER` behind it
 - command-driven `gpu_core` odd-address STORE16 fault smoke through
   host-visible programmable error status
 - command-driven `gpu_core` soft-reset recovery after programmable STORE16
@@ -198,6 +200,8 @@ Current lifecycle/ABI coverage:
 - launch-while-busy dispatch rejection and WAIT_IDLE barrier smoke
 - queued `SET_REGISTER` behind blocked `WAIT_IDLE` does not retire while a
   command-driven kernel is stalled, then retires after `WAIT_IDLE` clears
+- command FIFO flush while blocked `WAIT_IDLE` has a queued `SET_REGISTER`
+  behind it
 - command-structure error reporting through real `gpu_core` command path for
   unknown opcode, malformed word counts, and nonzero reserved header bits on
   every current command opcode
