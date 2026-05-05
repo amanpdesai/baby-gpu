@@ -144,9 +144,17 @@ def test_cli_writes_memh_file(tmp_path):
 
 
 def test_checked_in_vector_add_fixture_matches_assembler():
+    assert_fixture_matches_source("vector_add")
+
+
+def test_checked_in_framebuffer_gradient_fixture_matches_assembler():
+    assert_fixture_matches_source("framebuffer_gradient")
+
+
+def assert_fixture_matches_source(kernel_name):
     asm = load_assembler()
-    source_path = REPO_ROOT / "tests" / "kernels" / "vector_add.kgpu"
-    memh_path = REPO_ROOT / "tests" / "kernels" / "vector_add.memh"
+    source_path = REPO_ROOT / "tests" / "kernels" / f"{kernel_name}.kgpu"
+    memh_path = REPO_ROOT / "tests" / "kernels" / f"{kernel_name}.memh"
 
     assembled = "".join(f"{word:08x}\n" for word in asm.assemble(source_path))
 
