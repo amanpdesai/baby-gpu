@@ -87,6 +87,7 @@
       ],
       "kernels": [
         "tests/kernels/branch_backward_loop.kgpu",
+        "tests/kernels/branch_divergent_lane_id.kgpu",
         "tests/kernels/branch_not_taken.kgpu",
         "tests/kernels/branch_r0_never_taken.kgpu",
         "tests/kernels/branch_taken.kgpu"
@@ -162,8 +163,10 @@
       ],
       "kernels": [
         "tests/kernels/store16_2a5b_zero.kgpu",
+        "tests/kernels/store16_arg_linear_4c3d.kgpu",
         "tests/kernels/store16_linear.kgpu",
         "tests/kernels/store16_linear_id_plus_50.kgpu",
+        "tests/kernels/store16_zero.kgpu",
         "tests/kernels/pstore16_even_lanes.kgpu"
       ],
       "formal": [
@@ -180,6 +183,7 @@
       "kernels": [
         "tests/kernels/illegal_opcode_raw.kgpu",
         "tests/kernels/illegal_special_register_raw.kgpu",
+        "tests/kernels/empty.kgpu",
         "tests/kernels/reserved_cmp_payload_raw.kgpu"
       ],
       "formal": [

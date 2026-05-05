@@ -43,6 +43,8 @@ The regression intent is tracked in
 [`tests/scenario_coverage.json`](../../tests/scenario_coverage.json). The
 `make test-tools` gate validates that each scenario references existing
 simulation tests, kernel fixtures, and formal jobs under the expected roots.
+It also checks that each listed `.kgpu` has a generated `.memh`, and that every
+kernel fixture read by a testbench is claimed by at least one scenario.
 This is not a coverage database; it is an enforceable coverage manifest that
 keeps documented verification intent tied to runnable artifacts.
 
