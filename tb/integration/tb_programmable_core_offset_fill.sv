@@ -2,7 +2,6 @@ import isa_pkg::*;
 `include "tb/common/kernel_program_loader.svh"
 
 module tb_programmable_core_offset_fill;
-    import kernel_asm_pkg::*;
     localparam int LANES = 4;
     localparam int DATA_W = 32;
     localparam int COORD_W = 16;
@@ -294,29 +293,7 @@ module tb_programmable_core_offset_fill;
     task automatic load_offset_fill_program;
         logic [ISA_WORD_W-1:0] kernel_words [0:22];
         begin
-            kernel_words[0] = kgpu_movsr(4'd1, ISA_SR_GLOBAL_ID_Y);
-            kernel_words[1] = kgpu_movsr(4'd2, ISA_SR_FRAMEBUFFER_WIDTH);
-            kernel_words[2] = kgpu_mul(4'd3, 4'd1, 4'd2);
-            kernel_words[3] = kgpu_movsr(4'd4, ISA_SR_GLOBAL_ID_X);
-            kernel_words[4] = kgpu_add(4'd3, 4'd3, 4'd4);
-            kernel_words[5] = kgpu_movi(4'd5, 18'd2);
-            kernel_words[6] = kgpu_mul(4'd3, 4'd3, 4'd5);
-            kernel_words[7] = kgpu_movsr(4'd6, ISA_SR_FRAMEBUFFER_BASE);
-            kernel_words[8] = kgpu_add(4'd7, 4'd6, 4'd3);
-            kernel_words[9] = kgpu_movi(4'd8, 18'(FILL_COLOR));
-            kernel_words[10] = kgpu_movi(4'd9, 18'(RECT_X));
-            kernel_words[11] = kgpu_cmp(4'd10, 4'd4, 4'd9, ISA_CMP_GEU);
-            kernel_words[12] = kgpu_movi(4'd9, 18'(RECT_X + RECT_WIDTH));
-            kernel_words[13] = kgpu_cmp(4'd11, 4'd4, 4'd9, ISA_CMP_LTU);
-            kernel_words[14] = kgpu_and(4'd10, 4'd10, 4'd11);
-            kernel_words[15] = kgpu_movi(4'd9, 18'(RECT_Y));
-            kernel_words[16] = kgpu_cmp(4'd11, 4'd1, 4'd9, ISA_CMP_GEU);
-            kernel_words[17] = kgpu_and(4'd10, 4'd10, 4'd11);
-            kernel_words[18] = kgpu_movi(4'd9, 18'(RECT_Y + RECT_HEIGHT));
-            kernel_words[19] = kgpu_cmp(4'd11, 4'd1, 4'd9, ISA_CMP_LTU);
-            kernel_words[20] = kgpu_and(4'd10, 4'd10, 4'd11);
-            kernel_words[21] = kgpu_pstore16(4'd8, 4'd7, 4'd10, 14'd0);
-            kernel_words[22] = kgpu_end();
+            $readmemh("tests/kernels/offset_fill_1x1_at_1_1_0a5c.memh", kernel_words);
             `KGPU_LOAD_PROGRAM(kernel_words)
         end
     endtask

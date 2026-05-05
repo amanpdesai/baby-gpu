@@ -1,0 +1,2 @@
+# CMP.EQ R1, R2, R3 with a reserved payload bit set.
+.word 0x2448e000

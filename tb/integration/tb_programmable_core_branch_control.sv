@@ -1,7 +1,7 @@
 import isa_pkg::*;
+`include "tb/common/kernel_program_loader.svh"
 
 module tb_programmable_core_branch_control;
-    import kernel_asm_pkg::*;
     localparam int LANES = 4;
     localparam int DATA_W = 32;
     localparam int COORD_W = 16;
@@ -158,45 +158,43 @@ module tb_programmable_core_branch_control;
         end
     endtask
 
-    task automatic load_branch_program(input logic predicate);
+    task automatic load_branch_taken_program();
+        logic [ISA_WORD_W-1:0] kernel_words [0:5];
         begin
-            write_imem(8'd0, kgpu_movi(4'd1, {17'd0, predicate}));
-            write_imem(8'd1, kgpu_bra(4'd1, 22'd2));
-            write_imem(8'd2, kgpu_movi(4'd2, 18'd11));
-            write_imem(8'd3, kgpu_end());
-            write_imem(8'd4, kgpu_movi(4'd2, 18'd22));
-            write_imem(8'd5, kgpu_end());
+            $readmemh("tests/kernels/branch_taken.memh", kernel_words);
+            `KGPU_LOAD_PROGRAM(kernel_words)
         end
     endtask
 
     task automatic load_r0_branch_program();
+        logic [ISA_WORD_W-1:0] kernel_words [0:5];
         begin
-            write_imem(8'd0, kgpu_movi(4'd0, 18'd1));
-            write_imem(8'd1, kgpu_bra(4'd0, 22'd2));
-            write_imem(8'd2, kgpu_movi(4'd2, 18'd33));
-            write_imem(8'd3, kgpu_end());
-            write_imem(8'd4, kgpu_movi(4'd2, 18'd44));
-            write_imem(8'd5, kgpu_end());
+            $readmemh("tests/kernels/branch_r0_never_taken.memh", kernel_words);
+            `KGPU_LOAD_PROGRAM(kernel_words)
         end
     endtask
 
     task automatic load_divergent_branch_program();
+        logic [ISA_WORD_W-1:0] kernel_words [0:2];
         begin
-            write_imem(8'd0, kgpu_movsr(4'd1, ISA_SR_LANE_ID));
-            write_imem(8'd1, kgpu_bra(4'd1, 22'd1));
-            write_imem(8'd2, kgpu_end());
+            $readmemh("tests/kernels/branch_divergent_lane_id.memh", kernel_words);
+            `KGPU_LOAD_PROGRAM(kernel_words)
         end
     endtask
 
     task automatic load_backward_branch_program();
+        logic [ISA_WORD_W-1:0] kernel_words [0:6];
         begin
-            write_imem(8'd0, kgpu_movi(4'd1, 18'd3));
-            write_imem(8'd1, kgpu_movi(4'd2, 18'd1));
-            write_imem(8'd2, kgpu_sub(4'd1, 4'd1, 4'd2));
-            write_imem(8'd3, kgpu_cmp(4'd3, 4'd1, 4'd0, ISA_CMP_NE));
-            write_imem(8'd4, kgpu_bra(4'd3, 22'h3f_fffd));
-            write_imem(8'd5, kgpu_movi(4'd4, 18'd99));
-            write_imem(8'd6, kgpu_end());
+            $readmemh("tests/kernels/branch_backward_loop.memh", kernel_words);
+            `KGPU_LOAD_PROGRAM(kernel_words)
+        end
+    endtask
+
+    task automatic load_branch_not_taken_program();
+        logic [ISA_WORD_W-1:0] kernel_words [0:5];
+        begin
+            $readmemh("tests/kernels/branch_not_taken.memh", kernel_words);
+            `KGPU_LOAD_PROGRAM(kernel_words)
         end
     endtask
 
@@ -287,13 +285,13 @@ module tb_programmable_core_branch_control;
 
     initial begin
         reset_dut();
-        load_branch_program(1'b1);
+        load_branch_taken_program();
         launch_full_group();
         wait_kernel_done("taken branch");
         expect_all_lanes(32'd22, "taken branch skips fallthrough write");
 
         reset_dut();
-        load_branch_program(1'b0);
+        load_branch_not_taken_program();
         launch_full_group();
         wait_kernel_done("not-taken branch");
         expect_all_lanes(32'd11, "not-taken branch executes fallthrough write");

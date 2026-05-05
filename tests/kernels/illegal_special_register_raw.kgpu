@@ -1,0 +1,2 @@
+# MOVSR R1, 0x3f.
+.word 0x0c7f0000

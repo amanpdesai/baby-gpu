@@ -1,7 +1,7 @@
 import isa_pkg::*;
+`include "tb/common/kernel_program_loader.svh"
 
 module tb_programmable_core_groups;
-  import kernel_asm_pkg::*;
   localparam int LANES = 4;
   localparam int DATA_W = 32;
   localparam int COORD_W = 16;
@@ -124,6 +124,14 @@ module tb_programmable_core_groups;
     end
   endtask
 
+  task automatic load_group_special_registers_program;
+    logic [ISA_WORD_W-1:0] kernel_words [0:3];
+    begin
+      $readmemh("tests/kernels/group_special_registers.memh", kernel_words);
+      `KGPU_LOAD_PROGRAM(kernel_words)
+    end
+  endtask
+
   task automatic launch(input logic [COORD_W-1:0] launch_grid_x,
                         input logic [COORD_W-1:0] launch_grid_y);
     int cycles;
@@ -183,10 +191,7 @@ module tb_programmable_core_groups;
     imem_write_data = '0;
 
     step();
-    write_imem(8'd0, kgpu_movsr(4'd1, ISA_SR_LINEAR_GLOBAL_ID));
-    write_imem(8'd1, kgpu_movsr(4'd2, ISA_SR_GLOBAL_ID_X));
-    write_imem(8'd2, kgpu_movsr(4'd3, ISA_SR_GLOBAL_ID_Y));
-    write_imem(8'd3, kgpu_end());
+    load_group_special_registers_program();
 
     reset = 1'b0;
     step();

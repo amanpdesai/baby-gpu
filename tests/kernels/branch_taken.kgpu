@@ -1,0 +1,7 @@
+MOVI R1, 1
+BRA R1, taken
+MOVI R2, 11
+END
+taken:
+MOVI R2, 22
+END

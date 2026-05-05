@@ -1,0 +1,7 @@
+MOVI R0, 1
+BRA R0, skipped
+MOVI R2, 33
+END
+skipped:
+MOVI R2, 44
+END

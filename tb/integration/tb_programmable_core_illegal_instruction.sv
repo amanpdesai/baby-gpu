@@ -1,7 +1,7 @@
 import isa_pkg::*;
+`include "tb/common/kernel_program_loader.svh"
 
 module tb_programmable_core_illegal_instruction;
-    import kernel_asm_pkg::*;
     localparam int LANES = 4;
     localparam int DATA_W = 32;
     localparam int COORD_W = 16;
@@ -151,6 +151,22 @@ module tb_programmable_core_illegal_instruction;
         end
     endtask
 
+    task automatic load_one_word_program(input string path);
+        logic [ISA_WORD_W-1:0] kernel_words [0:0];
+        begin
+            $readmemh(path, kernel_words);
+            `KGPU_LOAD_PROGRAM(kernel_words)
+        end
+    endtask
+
+    task automatic load_empty_program();
+        logic [ISA_WORD_W-1:0] kernel_words [0:0];
+        begin
+            $readmemh("tests/kernels/empty.memh", kernel_words);
+            `KGPU_LOAD_PROGRAM(kernel_words)
+        end
+    endtask
+
     task automatic launch_kernel(
         input logic [COORD_W-1:0] launch_grid_x,
         input logic [COORD_W-1:0] launch_grid_y
@@ -239,28 +255,27 @@ module tb_programmable_core_illegal_instruction;
 
     initial begin
         reset_dut();
-        write_imem(8'd0, {6'h3F, 26'd0});
+        load_one_word_program("tests/kernels/illegal_opcode_raw.memh");
         launch_one_group();
         wait_for_illegal_instruction_error();
 
         reset_dut();
-        write_imem(8'd0, isa_pkg::isa_s_type(ISA_OP_MOVSR, 4'd1, 6'h3F));
+        load_one_word_program("tests/kernels/illegal_special_register_raw.memh");
         launch_one_group();
         wait_for_illegal_instruction_error();
 
         reset_dut();
-        write_imem(8'd0,
-                   isa_pkg::isa_cmp_type(4'd1, 4'd2, 4'd3, ISA_CMP_EQ) | 32'h0000_2000);
+        load_one_word_program("tests/kernels/reserved_cmp_payload_raw.memh");
         launch_one_group();
         wait_for_illegal_instruction_error();
 
         reset_dut();
-        write_imem(8'd0, kgpu_end());
+        load_empty_program();
         launch_kernel(16'd0, 16'd1);
         wait_for_launch_geometry_error("zero grid_x launch");
 
         reset_dut();
-        write_imem(8'd0, kgpu_end());
+        load_empty_program();
         launch_kernel(16'd1, 16'd0);
         wait_for_launch_geometry_error("zero grid_y launch");
 

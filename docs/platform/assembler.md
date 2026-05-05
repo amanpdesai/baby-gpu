@@ -91,6 +91,17 @@ PSTORE [R13 + 16], R4, R1
 PSTORE16 [R13 + 2], R4, R1
 ```
 
+Deliberate raw instruction fixtures can use `.word` with one unsigned 32-bit
+literal:
+
+```text
+.word 0xfc000000
+```
+
+Use `.word` only for directed encoding tests, such as illegal-instruction
+traps. Normal kernel sources should prefer mnemonics so invalid opcodes,
+special registers, and reserved fields remain rejected by construction.
+
 The current RTL treats `MOVI` and memory offsets as unsigned fields. Signed
 immediates should be added as an explicit ISA extension rather than inferred by
 the assembler. Numeric special-register IDs outside the implemented names are

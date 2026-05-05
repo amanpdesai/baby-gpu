@@ -1,0 +1,2 @@
+# Reserved opcode 0x3f.
+.word 0xfc000000

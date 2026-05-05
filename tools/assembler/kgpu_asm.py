@@ -238,6 +238,11 @@ def assemble_instruction(inst: ParsedInstruction, pc: int, labels: dict[str, int
     op = inst.op
     args = inst.args
 
+    if op == ".WORD":
+        if len(args) != 1:
+            raise AsmError(".WORD expects one 32-bit value")
+        return require_range(parse_int(args[0]), 32, ".WORD value")
+
     if "." in op:
         base_op, suffix = op.split(".", 1)
         if base_op != "CMP":

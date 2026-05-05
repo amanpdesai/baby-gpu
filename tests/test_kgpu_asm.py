@@ -76,6 +76,21 @@ def test_resolves_forward_and_backward_branch_labels(tmp_path):
     ]
 
 
+def test_encodes_explicit_raw_word_directive(tmp_path):
+    words = assemble_text(
+        tmp_path,
+        """
+        .word 0xfc000000
+        END
+        """,
+    )
+
+    assert words == [
+        0xFC000000,
+        0x04000000,
+    ]
+
+
 def test_rejects_out_of_range_immediate_with_source_location(tmp_path):
     source_path = tmp_path / "bad.kgpu"
     source_path.write_text("MOVI R1, 0x40000\n")

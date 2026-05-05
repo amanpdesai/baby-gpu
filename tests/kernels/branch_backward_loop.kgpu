@@ -1,0 +1,8 @@
+MOVI R1, 3
+MOVI R2, 1
+loop:
+SUB R1, R1, R2
+CMP.NE R3, R1, R0
+BRA R3, loop
+MOVI R4, 99
+END
