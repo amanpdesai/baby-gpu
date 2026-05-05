@@ -2,7 +2,6 @@ import isa_pkg::*;
 `include "tb/common/kernel_program_loader.svh"
 
 module tb_programmable_core_store16_framebuffer;
-  import kernel_asm_pkg::*;
 
   localparam int LANES = 4;
   localparam int DATA_W = 32;
@@ -278,16 +277,7 @@ module tb_programmable_core_store16_framebuffer;
   task automatic load_store16_program();
     logic [ISA_WORD_W-1:0] kernel_words [0:9];
     begin
-      kernel_words[0] = kgpu_movsr(4'd1, ISA_SR_LINEAR_GLOBAL_ID);
-      kernel_words[1] = kgpu_movi(4'd2, 18'd2);
-      kernel_words[2] = kgpu_mul(4'd1, 4'd1, 4'd2);
-      kernel_words[3] = kgpu_movsr(4'd3, ISA_SR_FRAMEBUFFER_BASE);
-      kernel_words[4] = kgpu_add(4'd4, 4'd3, 4'd1);
-      kernel_words[5] = kgpu_movsr(4'd5, ISA_SR_LINEAR_GLOBAL_ID);
-      kernel_words[6] = kgpu_movi(4'd6, 18'h50);
-      kernel_words[7] = kgpu_add(4'd5, 4'd5, 4'd6);
-      kernel_words[8] = kgpu_store16(4'd5, 4'd4, 18'd0);
-      kernel_words[9] = kgpu_end();
+      $readmemh("tests/kernels/store16_linear_id_plus_50.memh", kernel_words);
       `KGPU_LOAD_PROGRAM(kernel_words)
     end
   endtask

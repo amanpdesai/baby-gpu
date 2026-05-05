@@ -1,0 +1,12 @@
+# Store 0x50 + linear_global_id at framebuffer_base + linear_global_id * 2.
+
+MOVSR R1, LINEAR_GLOBAL_ID
+MOVI  R2, 2
+MUL   R1, R1, R2
+MOVSR R3, FRAMEBUFFER_BASE
+ADD   R4, R3, R1
+MOVSR R5, LINEAR_GLOBAL_ID
+MOVI  R6, 0x50
+ADD   R5, R5, R6
+STORE16 [R4 + 0], R5
+END
