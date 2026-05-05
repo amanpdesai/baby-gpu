@@ -20,8 +20,9 @@ Every command starts with a 32-bit header:
 
 `word_count` includes the header word.
 
-Reserved flag bits must be written as zero until documented. Strict validation
-can reject nonzero reserved bits later.
+Reserved flag bits must be written as zero until documented. Current
+command-path coverage validates nonzero `LAUNCH_KERNEL` reserved bits; broader
+reserved-field validation is future work.
 
 ## Command Set
 
@@ -74,8 +75,8 @@ LAUNCH_FLAGS
 The command processor must reject or report:
 
 - unknown command opcodes
-- malformed `CLEAR`, `FILL_RECT`, and `LAUNCH_KERNEL` word counts
-- nonzero reserved command fields
+- malformed word counts for every current command opcode
+- nonzero `LAUNCH_KERNEL` reserved bits
 - launch while busy
 - zero grid dimensions
 - unsupported group dimensions
@@ -145,7 +146,7 @@ The command processor sets sticky error bits for:
 - unsupported flags
 - launch while busy
 - invalid launch configuration
-- strict validation failure on reserved fields
+- nonzero `LAUNCH_KERNEL` reserved bits
 
 Errors should never hang hardware. The command processor should return to a
 safe idle/error state and wait for software to clear errors or reset.

@@ -133,7 +133,7 @@ architecture.
 - command-driven `gpu_core` launch-while-busy dispatch rejection and WAIT_IDLE
   barrier smoke while a kernel is stalled on memory
 - command-driven `gpu_core` command-structure error smoke for unknown opcode,
-  malformed `CLEAR`, `FILL_RECT`, and `LAUNCH_KERNEL` word counts, and nonzero
+  malformed word counts on every current command opcode, and nonzero
   `LAUNCH_KERNEL` reserved bits
 - command-driven `gpu_core` invalid-launch rejection through real launch
   registers for zero grid dimensions, unsupported group dimensions, and nonzero
@@ -199,8 +199,8 @@ Current lifecycle/ABI coverage:
 - queued `SET_REGISTER` behind blocked `WAIT_IDLE` does not retire while a
   command-driven kernel is stalled, then retires after `WAIT_IDLE` clears
 - command-structure error reporting through real `gpu_core` command path for
-  unknown opcode, malformed `CLEAR`, `FILL_RECT`, and `LAUNCH_KERNEL` word
-  counts, and nonzero `LAUNCH_KERNEL` reserved bits
+  unknown opcode, malformed word counts on every current command opcode, and
+  nonzero `LAUNCH_KERNEL` reserved bits
 - `PROGRAM_BASE` launch snapshot behavior while a command-driven kernel is
   stalled
 - `ARG_BASE` launch snapshot behavior while a command-driven kernel is stalled
