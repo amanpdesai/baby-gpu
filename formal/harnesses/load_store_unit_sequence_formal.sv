@@ -10,6 +10,8 @@ module load_store_unit_sequence_checker #(
     input logic [1:0] op_q,
     input logic [LANES-1:0] active_mask_q,
     input logic [LANE_IDX_W-1:0] lane_idx_q,
+    input logic start_ready,
+    input logic busy,
     input logic req_valid_q,
     input logic req_write_q,
     input logic [ADDR_W-1:0] req_addr_q,
@@ -51,6 +53,11 @@ module load_store_unit_sequence_checker #(
 
     always_comb begin
         assume(scenario <= SCENARIO_INVALID_OP);
+
+        assert(start_ready == (state_q == STATE_IDLE));
+        assert(busy == (state_q != STATE_IDLE));
+        assert(rsp_ready == (state_q == STATE_WAIT_RSP));
+        assert(!(done_q && error_q));
 
         if (!checked_q) begin
             case (scenario)
@@ -237,6 +244,8 @@ bind load_store_unit load_store_unit_sequence_checker #(
     .op_q(op_q),
     .active_mask_q(active_mask_q),
     .lane_idx_q(lane_idx_q),
+    .start_ready(start_ready),
+    .busy(busy),
     .req_valid_q(req_valid_q),
     .req_write_q(req_write_q),
     .req_addr_q(req_addr_q),
