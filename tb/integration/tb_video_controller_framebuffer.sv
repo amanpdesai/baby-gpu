@@ -184,6 +184,45 @@ module tb_video_controller_framebuffer;
         end
     endtask
 
+    task automatic test_scanout_response_error;
+        begin
+            reset_dut();
+            check(scanout_start_ready, "error scanout starts idle");
+            scanout_start_valid = 1'b1;
+            tick();
+            scanout_start_valid = 1'b0;
+
+            check(mem_req_valid, "error scanout issues framebuffer request");
+            check(!mem_req_write, "error scanout issues read");
+            check(mem_req_addr == 32'h0000_9000, "error scanout requests fb base");
+            tick();
+
+            check(mem_rsp_ready, "error scanout waits for memory response");
+            mem_rsp_rdata = 32'hDDDD_CCCC;
+            mem_rsp_id = '0;
+            mem_rsp_error = 1'b1;
+            mem_rsp_valid = 1'b1;
+            tick();
+            mem_rsp_valid = 1'b0;
+            mem_rsp_error = 1'b0;
+
+            tick();
+            check(scanout_error, "controller propagates scanout memory error");
+            check(fifo_full, "errored response still queues returned pixel");
+            check(fifo_count == 1'b1, "errored response fifo count");
+            check(!fifo_underflow, "errored response does not underflow fifo");
+            tick_enable = 1'b1;
+            #1;
+            expect_pixel(4'd0, 16'hCCCC, "error response pixel still visible");
+            check(scanout_error, "scanout error remains sticky while pixel is consumed");
+            tick();
+            check(scanout_error, "scanout error remains sticky after errored pixel pop");
+            check(!fifo_overflow, "errored pixel pop does not overflow fifo");
+            check(!fifo_underflow, "errored pixel pop does not underflow fifo");
+            tick_enable = 1'b0;
+        end
+    endtask
+
     initial begin
         errors = 0;
         reset_dut();
@@ -206,6 +245,8 @@ module tb_video_controller_framebuffer;
         check(!scanout_error, "controller scanout no error");
         check(!pixel_valid, "controller front porch suppresses pixel_valid");
         check(rgb == 16'h0000, "controller front porch emits black");
+
+        test_scanout_response_error();
 
         if (errors == 0) begin
             $display("PASS");
