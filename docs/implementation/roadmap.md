@@ -120,7 +120,8 @@ architecture.
   bounded formal smoke, and Yosys synthesis coverage
 - portable framebuffer scanout leaf reads 32-bit memory words into RGB565 pixel
   output, handles odd frame widths, request and pixel backpressure, and response
-  errors in unit simulation
+  errors in unit simulation, with additional even-width, width-1, and widened
+  local-response-ID coverage
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset

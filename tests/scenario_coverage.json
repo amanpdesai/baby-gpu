@@ -247,7 +247,9 @@
       "id": "video_scanout_prep",
       "description": "Portable framebuffer scanout reads RGB565 pixels from global memory before platform video timing is integrated.",
       "tests": [
-        "tb/unit/tb_framebuffer_scanout.sv"
+        "tb/unit/tb_framebuffer_scanout.sv",
+        "tb/unit/tb_framebuffer_scanout_even_width.sv",
+        "tb/unit/tb_framebuffer_scanout_width1_id.sv"
       ]
     }
   ]

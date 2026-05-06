@@ -121,6 +121,10 @@ allocation in row-major order, issues one 32-bit read for two RGB565 pixels, and
 emits a valid/ready pixel stream with `x`, `y`, and 16-bit color. Odd frame
 widths drop the unused high halfword at end of row.
 
+Unit coverage includes odd-width, even-width, width-1, request backpressure,
+pixel backpressure, response error, and widened local response-ID mismatch
+cases.
+
 Current limits:
 
 - one outstanding memory read
