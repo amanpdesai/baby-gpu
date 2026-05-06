@@ -1,0 +1,19 @@
+[tasks]
+prove
+cover
+
+[options]
+prove: mode bmc
+cover: mode cover
+depth 40
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv video_timing.sv video_timing_formal.sv
+prep -top video_timing_formal
+
+[files]
+rtl/core/video_timing.sv
+formal/harnesses/video_timing_formal.sv

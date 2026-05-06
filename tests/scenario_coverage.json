@@ -266,6 +266,10 @@
         "tb/integration/tb_video_controller_source_switch.sv",
         "tb/integration/tb_video_controller_system.sv",
         "tb/integration/tb_framebuffer_scanout_arbiter.sv"
+      ],
+      "formal": [
+        "formal/scripts/video_pixel_fifo.sby",
+        "formal/scripts/video_timing.sby"
       ]
     }
   ]

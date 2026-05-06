@@ -152,6 +152,9 @@ architecture.
   framebuffer-mode integration coverage; source-switch coverage documents that
   mode selection does not cancel scanout and that platform control must flush
   stale FIFO pixels during mode changes
+- video timing and pixel FIFO leaves have bounded formal smoke coverage for
+  timing output equations, sync regions, FIFO count/flag consistency, flush
+  behavior, overflow/underflow reporting, and stalled-output payload stability
 - simulation `video_controller_system` wrapper connects `video_controller` to
   round-robin arbitration, host framebuffer preload requests, and simulation
   data memory, with coverage for solid-pattern output, host-preloaded
