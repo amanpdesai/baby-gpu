@@ -169,6 +169,10 @@ architecture.
 - command-driven framebuffer-gradient scanout integration writes RGB565 pixels
   through `gpu_core` `STORE16` into simulation `data_memory`, then reads the
   same framebuffer convention through `framebuffer_scanout`
+- simulation `gpu_video_controller_system` wrapper connects `gpu_core`,
+  `video_controller`, round-robin arbitration, and shared `data_memory` so a
+  command-driven framebuffer-gradient kernel can be displayed by the video
+  controller path
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset
