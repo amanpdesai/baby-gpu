@@ -50,6 +50,9 @@ run_synth framebuffer_writer \
 run_synth framebuffer_scanout \
   rtl/core/framebuffer_scanout.sv
 
+run_synth video_timing \
+  rtl/core/video_timing.sv
+
 run_synth instruction_decoder \
   rtl/common/isa_pkg.sv \
   rtl/core/instruction_decoder.sv
@@ -74,6 +77,7 @@ run_synth gpu_core \
   rtl/core/simd_alu.sv \
   rtl/core/simd_core.sv \
   rtl/core/special_registers.sv \
+  rtl/core/video_timing.sv \
   rtl/core/work_scheduler.sv \
   rtl/draw_units/clear_engine.sv \
   rtl/draw_units/rect_fill_engine.sv

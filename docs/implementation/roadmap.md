@@ -124,6 +124,9 @@ architecture.
   local-response-ID coverage; scanout-to-arbiter integration coverage verifies
   round-robin contention with framebuffer-writer traffic and routed scanout
   responses
+- portable video timing leaf generates active-area pixel-valid, x/y coordinate,
+  line-start, frame-start, hsync, and vsync timing from parameterized active,
+  porch, and sync widths with tick-enable and sync-polarity unit coverage
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset

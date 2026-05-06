@@ -61,7 +61,8 @@ Success condition: clean synchronized reset and a visible heartbeat counter.
 
 ## Step 3: Video Output
 
-Display test patterns without framebuffer memory:
+Use the portable `video_timing` leaf for active-area coordinates and sync
+signals, then display test patterns without framebuffer memory:
 
 - solid color
 - bars
