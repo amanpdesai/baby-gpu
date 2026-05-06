@@ -170,6 +170,31 @@ module tb_video_controller_system;
         end
     endtask
 
+    task automatic host_write_masked_word(
+        input logic [ADDR_W-1:0] addr,
+        input logic [DATA_W-1:0] data,
+        input logic [MASK_W-1:0] mask
+    );
+        begin
+            host_req_valid = 1'b1;
+            host_req_write = 1'b1;
+            host_req_addr = addr;
+            host_req_wdata = data;
+            host_req_wmask = mask;
+            #1;
+            check(host_req_ready, "host masked write request accepted");
+            tick();
+            host_req_valid = 1'b0;
+            host_req_write = 1'b0;
+            host_rsp_ready = 1'b1;
+            #1;
+            check(host_rsp_valid, "host masked write response valid");
+            check(!host_rsp_error, "host masked write has no error");
+            tick();
+            host_rsp_ready = 1'b0;
+        end
+    endtask
+
     task automatic host_read_word(
         input logic [ADDR_W-1:0] addr,
         input logic [DATA_W-1:0] expected_data
@@ -269,6 +294,19 @@ module tb_video_controller_system;
         end
     endtask
 
+    task automatic test_host_write_byte_masks;
+        begin
+            reset_dut();
+            host_write_word(8'h28, 32'h1122_3344);
+
+            host_write_masked_word(8'h28, 32'hAA55_CC77, 4'b0101);
+            host_read_word(8'h28, 32'h1155_3377);
+
+            host_write_masked_word(8'h28, 32'hDEAD_BEEF, 4'b1010);
+            host_read_word(8'h28, 32'hDE55_BE77);
+        end
+    endtask
+
     task automatic test_host_video_contention;
         begin
             reset_dut();
@@ -326,6 +364,7 @@ module tb_video_controller_system;
         test_pattern_output();
         test_host_preload_framebuffer_output();
         test_host_readback_backpressure();
+        test_host_write_byte_masks();
         test_host_video_contention();
 
         if (errors == 0) begin

@@ -264,12 +264,40 @@ module tb_video_controller_source_switch;
         end
     endtask
 
+    task automatic test_switch_to_pattern_after_underrun;
+        begin
+            reset_dut();
+            source_select = 1'b1;
+            tick_enable = 1'b1;
+            #1;
+            check(pixel_valid, "framebuffer underrun still produces active pixel timing");
+            check(active, "framebuffer underrun occurs on active pixel");
+            check(x == 4'd0, "framebuffer underrun starts at x0");
+            check(rgb == 16'h0000, "framebuffer underrun blanks rgb");
+            check(source_missing, "framebuffer underrun reports missing source");
+            check(framebuffer_underrun, "framebuffer mode reports underrun before switch");
+            tick();
+
+            source_select = 1'b0;
+            #1;
+            check(pixel_valid, "pattern switch recovers active pixel timing");
+            check(active, "pattern switch remains active");
+            check(x == 4'd1, "pattern switch continues at x1");
+            check(rgb == 16'h0A5C, "pattern switch emits solid color");
+            check(!source_missing, "pattern switch clears source_missing output");
+            check(!framebuffer_underrun, "pattern switch masks framebuffer underrun output");
+            tick();
+            tick_enable = 1'b0;
+        end
+    endtask
+
     initial begin
         errors = 0;
         reset_dut();
         start_scanout_while_pattern_selected();
         check_pattern_output_before_switch();
         flush_and_switch_to_framebuffer();
+        test_switch_to_pattern_after_underrun();
 
         if (errors == 0) begin
             $display("PASS");
