@@ -152,6 +152,10 @@ architecture.
   framebuffer-mode integration coverage; source-switch coverage documents that
   mode selection does not cancel scanout and that platform control must flush
   stale FIFO pixels during mode changes
+- simulation `video_controller_system` wrapper connects `video_controller` to
+  round-robin arbitration, host framebuffer preload requests, and simulation
+  data memory, with coverage for solid-pattern output and host-preloaded
+  framebuffer scanout
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset

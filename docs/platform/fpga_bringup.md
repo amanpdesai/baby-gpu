@@ -86,6 +86,12 @@ underruns or scanout/timing coordinate mismatches.
 owns when to start framebuffer scanout and when to flush the pixel FIFO during
 mode changes.
 
+For simulation, `platform/sim/video_controller_system.sv` wraps the controller
+with round-robin memory arbitration, a host framebuffer preload port, and
+`data_memory`. FPGA wrappers should keep the same external control/video
+shape while replacing the simulation memory with board BRAM or DDR-backed
+memory.
+
 Success condition: framebuffer image appears and scaling is correct.
 
 ## Step 5: GPU Core Integration
