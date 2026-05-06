@@ -63,6 +63,7 @@ run_synth gpu_core \
   rtl/core/lane_register_file.sv \
   rtl/core/load_store_unit.sv \
   rtl/core/memory_arbiter.sv \
+  rtl/core/memory_arbiter_rr.sv \
   rtl/core/memory_response_tracker.sv \
   rtl/core/programmable_core.sv \
   rtl/core/register_file.sv \
@@ -81,6 +82,9 @@ run_synth load_store_unit \
 
 run_synth memory_arbiter \
   rtl/core/memory_arbiter.sv
+
+run_synth memory_arbiter_rr \
+  rtl/core/memory_arbiter_rr.sv
 
 run_synth memory_response_tracker \
   rtl/core/memory_response_tracker.sv

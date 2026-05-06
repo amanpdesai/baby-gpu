@@ -141,9 +141,11 @@ outstanding-capacity accounting, but response routing uses the external
 The first arbiter is intentionally a small valid/ready mux with response
 routing. It does not reorder, allocate IDs, track completion, or implement
 fairness. Those are later memory-system blocks. Priority arbitration is
-acceptable while all requesters are blocking or low-throughput. Round-robin or
-weighted arbitration should be added before attaching high-rate scanout, DMA, or
-multiple cores.
+acceptable while all requesters are blocking or low-throughput. The
+round-robin arbiter leaf is available for scale-up and preserves the same
+`source_id || local_request_id` response-routing contract. Use it before adding
+multiple peer cores, high-rate DMA, or cache refills unless a written priority
+policy intentionally favors one client.
 
 Multiple cores require response routing before they are added.
 

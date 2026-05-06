@@ -115,9 +115,9 @@ architecture.
 - regression-observability tooling for simulation listing, exact-test
   selection, glob selection, custom output directories, opt-in VCD traces, full
   local `make regress`, and enforced simulation-test scenario accounting
-- memory arbiter scale-prep leaf with fixed-priority request selection,
-  source-local request IDs, response-ID routing, unit simulation, bounded formal
-  smoke, and Yosys synthesis coverage
+- memory arbiter scale-prep leaves with fixed-priority and round-robin request
+  selection, source-local request IDs, response-ID routing, unit simulation,
+  bounded formal smoke, and Yosys synthesis coverage
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset

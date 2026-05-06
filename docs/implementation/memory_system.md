@@ -62,8 +62,10 @@ mem_req_id = source_id || local_request_id
 ```
 
 The response path routes by `source_id` and returns `local_request_id` unchanged
-to the selected client. The first RTL arbiter is a fixed-priority mux with this
-identity contract. It is a scale-prep block, not a throughput feature.
+to the selected client. The first integrated RTL arbiter is a fixed-priority mux
+with this identity contract. A separate round-robin arbiter leaf now exists for
+future high-rate clients. It preserves the same request-ID and response-routing
+contract while rotating priority only after an accepted request.
 
 The current `gpu_core` top-level memory port exposes `mem_req_id` and
 `mem_rsp_id`. Simple in-order memories should return the accepted `mem_req_id`
@@ -94,9 +96,12 @@ flowchart TB
 ## Arbitration Policy
 
 Version 1 can use fixed-priority arbitration while requesters are blocking or
-low-throughput. The current leaf arbiter grants the lowest-index valid client.
-The functional requirement is that accepted requests preserve payload and
-responses route to exactly one client by ID.
+low-throughput. The integrated arbiter grants the lowest-index valid client.
+The `memory_arbiter_rr` leaf is the scale-prep option for more symmetric
+clients: it starts at client 0 after reset, skips inactive clients, holds its
+grant under backpressure, and advances the starting point only when the memory
+accepts a request. The functional requirement for either policy is that accepted
+requests preserve payload and responses route to exactly one client by ID.
 
 Initial priority recommendation:
 
@@ -104,8 +109,9 @@ Initial priority recommendation:
 2. framebuffer writer or programmable LSU, depending on active demo
 3. command or future fetch clients
 
-Later versions can add buffering or round-robin arbitration to relax scanout
-priority. Do this before high-rate DMA, multiple cores, or cache refills.
+Later versions can add buffering or weighted arbitration to relax scanout
+priority. Switch to round-robin before high-rate DMA, multiple peer cores, or
+cache refills unless a written priority rule says otherwise.
 
 ## Write Masking
 
