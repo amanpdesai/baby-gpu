@@ -14,6 +14,7 @@ flowchart LR
     Scan[video_scanout]
     Timing[video_timing]
     Pattern[video_test_pattern]
+    Mux[video_stream_mux]
     Arb[memory_arbiter]
   end
 
@@ -27,10 +28,11 @@ flowchart LR
   end
 
   Core <--> Mem
-  Scan <--> Vid
   Timing --> Vid
   Timing --> Pattern
-  Pattern --> Vid
+  Pattern --> Mux
+  Scan --> Mux
+  Mux --> Vid
   Cmd <--> Uart
   Clk --> Core
   Rst --> Core

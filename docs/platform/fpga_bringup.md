@@ -63,7 +63,8 @@ Success condition: clean synchronized reset and a visible heartbeat counter.
 
 Use the portable `video_timing` leaf for active-area coordinates and sync
 signals, then feed `video_test_pattern` to display deterministic output without
-framebuffer memory:
+framebuffer memory. Route pattern output through `video_stream_mux` so the same
+platform sink can later switch to framebuffer scanout without changing timing:
 
 - solid color
 - bars

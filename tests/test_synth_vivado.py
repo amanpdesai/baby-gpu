@@ -30,7 +30,7 @@ def test_vivado_dry_run_validates_source_manifest(tmp_path):
 
     assert "VIVADO DRY-RUN gpu_core (xc7a35tcpg236-1)" in result.stdout
     assert "Vivado Tcl:" in result.stdout
-    assert "Sources: 23" in result.stdout
+    assert "Sources: 24" in result.stdout
     assert not out_dir.exists()
 
 

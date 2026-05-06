@@ -130,6 +130,10 @@ architecture.
 - portable video test-pattern leaf emits RGB565 solid, bar, checker, and
   coordinate-gradient patterns from timing coordinates, with direct unit
   coverage and timing-to-pattern integration coverage
+- portable video stream mux selects pattern or framebuffer RGB565 pixels under
+  the same timing contract, preserves timing metadata, emits black on missing
+  active-pixel sources, and flags source starvation in unit and integration
+  coverage
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset
