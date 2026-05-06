@@ -76,9 +76,10 @@ Success condition: stable display with expected geometry.
 ## Step 4: Framebuffer Scanout
 
 Connect the portable `framebuffer_scanout` leaf to a small BRAM or inferred
-framebuffer initialized by logic. Feed scanout pixels through
-`video_framebuffer_source` before `video_stream_mux` so the platform can detect
-active-pixel underruns and scanout/timing coordinate mismatches.
+framebuffer initialized by logic. Buffer scanout pixels with `video_pixel_fifo`,
+then feed them through `video_framebuffer_source` before `video_stream_mux` so
+the platform can absorb memory latency and detect active-pixel underruns or
+scanout/timing coordinate mismatches.
 
 Success condition: framebuffer image appears and scaling is correct.
 

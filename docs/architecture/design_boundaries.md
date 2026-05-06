@@ -14,6 +14,7 @@ flowchart LR
     Scan[framebuffer_scanout]
     Timing[video_timing]
     Pattern[video_test_pattern]
+    PixelFifo[video_pixel_fifo]
     FbSource[video_framebuffer_source]
     Mux[video_stream_mux]
     Arb[memory_arbiter]
@@ -32,7 +33,8 @@ flowchart LR
   Timing --> Vid
   Timing --> Pattern
   Pattern --> Mux
-  Scan --> FbSource
+  Scan --> PixelFifo
+  PixelFifo --> FbSource
   FbSource --> Mux
   Mux --> Vid
   Cmd <--> Uart

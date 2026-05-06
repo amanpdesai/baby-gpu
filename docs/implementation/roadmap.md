@@ -137,8 +137,13 @@ architecture.
 - portable framebuffer-source adapter accepts scanout pixels only on active
   timing pixels, validates scanout coordinates against timing coordinates, and
   flags underrun or coordinate mismatch before framebuffer pixels reach the mux
+- portable video pixel FIFO provides scanout-to-timing elasticity, preserves
+  pixel coordinates and RGB565 color, supports full-cycle push/pop, exposes
+  count/full/empty state, and flags overflow or underflow in unit and
+  source/mux integration coverage
 - full portable framebuffer video path integration coverage primes
-  `framebuffer_scanout`, drives `video_timing`, checks RGB565 output through
+  `framebuffer_scanout`, verifies a full-FIFO stall into `video_pixel_fifo`,
+  drives `video_timing`, checks RGB565 output through
   `video_framebuffer_source` and `video_stream_mux`, and verifies blanking
   behavior without board-specific video logic
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and

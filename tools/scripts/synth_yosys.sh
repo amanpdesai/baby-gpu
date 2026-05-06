@@ -62,6 +62,9 @@ run_synth video_stream_mux \
 run_synth video_framebuffer_source \
   rtl/core/video_framebuffer_source.sv
 
+run_synth video_pixel_fifo \
+  rtl/core/video_pixel_fifo.sv
+
 run_synth instruction_decoder \
   rtl/common/isa_pkg.sv \
   rtl/core/instruction_decoder.sv

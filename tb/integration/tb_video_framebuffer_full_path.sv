@@ -7,6 +7,8 @@ module tb_video_framebuffer_full_path;
     localparam int COLOR_W = 16;
     localparam int LOCAL_ID_W = 1;
     localparam int MASK_W = DATA_W / 8;
+    localparam int FIFO_DEPTH = 1;
+    localparam int FIFO_COUNT_W = 1;
 
     logic clk;
     logic rst_n;
@@ -42,6 +44,18 @@ module tb_video_framebuffer_full_path;
     logic [DATA_W-1:0] mem_rsp_rdata;
     logic [LOCAL_ID_W-1:0] mem_rsp_id;
     logic mem_rsp_error;
+
+    logic fifo_flush;
+    logic fifo_out_valid;
+    logic fifo_out_ready;
+    logic [COORD_W-1:0] fifo_out_x;
+    logic [COORD_W-1:0] fifo_out_y;
+    logic [COLOR_W-1:0] fifo_out_color;
+    logic fifo_full;
+    logic fifo_empty;
+    logic [FIFO_COUNT_W-1:0] fifo_count;
+    logic fifo_overflow;
+    logic fifo_underflow;
 
     logic framebuffer_rgb_valid;
     logic [15:0] framebuffer_rgb;
@@ -120,6 +134,32 @@ module tb_video_framebuffer_full_path;
         .mem_rsp_error(mem_rsp_error)
     );
 
+    video_pixel_fifo #(
+        .COORD_W(COORD_W),
+        .COLOR_W(COLOR_W),
+        .DEPTH(FIFO_DEPTH),
+        .COUNT_W(FIFO_COUNT_W)
+    ) fifo (
+        .clk(clk),
+        .rst_n(rst_n),
+        .flush(fifo_flush),
+        .in_valid(scanout_pixel_valid),
+        .in_ready(scanout_pixel_ready),
+        .in_x(scanout_pixel_x),
+        .in_y(scanout_pixel_y),
+        .in_color(scanout_pixel_color),
+        .out_valid(fifo_out_valid),
+        .out_ready(fifo_out_ready),
+        .out_x(fifo_out_x),
+        .out_y(fifo_out_y),
+        .out_color(fifo_out_color),
+        .full(fifo_full),
+        .empty(fifo_empty),
+        .count(fifo_count),
+        .overflow(fifo_overflow),
+        .underflow(fifo_underflow)
+    );
+
     video_framebuffer_source #(
         .COORD_W(COORD_W)
     ) source (
@@ -127,11 +167,11 @@ module tb_video_framebuffer_full_path;
         .active(timing_active),
         .x(timing_x),
         .y(timing_y),
-        .scanout_pixel_valid(scanout_pixel_valid),
-        .scanout_pixel_ready(scanout_pixel_ready),
-        .scanout_pixel_x(scanout_pixel_x),
-        .scanout_pixel_y(scanout_pixel_y),
-        .scanout_pixel_color(scanout_pixel_color),
+        .scanout_pixel_valid(fifo_out_valid),
+        .scanout_pixel_ready(fifo_out_ready),
+        .scanout_pixel_x(fifo_out_x),
+        .scanout_pixel_y(fifo_out_y),
+        .scanout_pixel_color(fifo_out_color),
         .framebuffer_rgb_valid(framebuffer_rgb_valid),
         .framebuffer_rgb(framebuffer_rgb),
         .underrun(source_underrun),
@@ -190,6 +230,7 @@ module tb_video_framebuffer_full_path;
             rst_n = 1'b0;
             tick_enable = 1'b0;
             scanout_start_valid = 1'b0;
+            fifo_flush = 1'b0;
             mem_req_ready = 1'b1;
             mem_rsp_valid = 1'b0;
             mem_rsp_rdata = '0;
@@ -221,10 +262,19 @@ module tb_video_framebuffer_full_path;
             tick();
             mem_rsp_valid = 1'b0;
 
-            check(scanout_pixel_valid, "scanout holds first pixel before timing starts");
-            check(scanout_pixel_x == 4'd0, "primed scanout x0");
-            check(scanout_pixel_y == 4'd0, "primed scanout y0");
-            check(scanout_pixel_color == 16'h1111, "primed scanout low halfword");
+            check(scanout_pixel_valid, "scanout presents first pixel to fifo");
+            check(scanout_pixel_ready, "empty fifo accepts first scanout pixel");
+            check(scanout_pixel_x == 4'd0, "scanout first pixel x0");
+            check(scanout_pixel_y == 4'd0, "scanout first pixel y0");
+            check(scanout_pixel_color == 16'h1111, "scanout first pixel low halfword");
+            tick();
+
+            check(fifo_full, "one-entry fifo holds first pixel");
+            check(fifo_count == 1'b1, "fifo count after first scanout pixel");
+            check(scanout_pixel_valid, "scanout holds second pixel while fifo is full");
+            check(!scanout_pixel_ready, "full fifo backpressures scanout before timing starts");
+            check(scanout_pixel_x == 4'd1, "scanout second pixel x1");
+            check(scanout_pixel_color == 16'h2222, "scanout second pixel high halfword");
         end
     endtask
 
@@ -253,12 +303,16 @@ module tb_video_framebuffer_full_path;
             expect_output_pixel(4'd0, 16'h1111, "framebuffer pixel0");
             check(out_line_start, "framebuffer pixel0 line_start");
             check(out_frame_start, "framebuffer pixel0 frame_start");
+            check(scanout_pixel_ready, "timing pop opens fifo for held scanout pixel");
             tick();
 
             expect_output_pixel(4'd1, 16'h2222, "framebuffer pixel1");
+            check(scanout_done, "scanout completes after fifo accepts held pixel");
             tick();
 
-            check(scanout_done, "scanout completes after final active pixel");
+            check(fifo_empty, "fifo drains after final active pixel");
+            check(!fifo_underflow, "aligned frame does not underflow fifo");
+            check(!fifo_overflow, "aligned frame does not overflow fifo");
             check(!scanout_error, "scanout has no error");
             check(!out_pixel_valid, "front porch suppresses output valid");
             check(!out_active, "front porch suppresses output active");
