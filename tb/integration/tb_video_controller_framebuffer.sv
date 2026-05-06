@@ -223,6 +223,31 @@ module tb_video_controller_framebuffer;
         end
     endtask
 
+    task automatic test_empty_framebuffer_source_missing;
+        begin
+            reset_dut();
+            tick_enable = 1'b1;
+            #1;
+            check(pixel_valid, "empty framebuffer timing still produces active pixel");
+            check(active, "empty framebuffer pixel is active");
+            check(line_start, "empty framebuffer pixel line_start");
+            check(frame_start, "empty framebuffer pixel frame_start");
+            check(x == 4'd0, "empty framebuffer pixel x");
+            check(y == 4'd0, "empty framebuffer pixel y");
+            check(rgb == 16'h0000, "empty framebuffer pixel blanks rgb");
+            check(source_missing, "empty framebuffer flags missing source");
+            check(framebuffer_underrun, "empty framebuffer flags underrun");
+            check(!framebuffer_coordinate_mismatch, "empty framebuffer has no coordinate mismatch");
+            check(fifo_underflow, "empty framebuffer pop reports fifo underflow");
+            check(!fifo_overflow, "empty framebuffer does not overflow fifo");
+            tick();
+            check(!scanout_busy, "empty framebuffer does not start scanout implicitly");
+            check(!mem_req_valid, "empty framebuffer does not request memory implicitly");
+            check(scanout_start_ready, "empty framebuffer leaves scanout start ready");
+            tick_enable = 1'b0;
+        end
+    endtask
+
     initial begin
         errors = 0;
         reset_dut();
@@ -247,6 +272,7 @@ module tb_video_controller_framebuffer;
         check(rgb == 16'h0000, "controller front porch emits black");
 
         test_scanout_response_error();
+        test_empty_framebuffer_source_missing();
 
         if (errors == 0) begin
             $display("PASS");
