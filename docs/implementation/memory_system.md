@@ -113,6 +113,26 @@ Later versions can add buffering or weighted arbitration to relax scanout
 priority. Switch to round-robin before high-rate DMA, multiple peer cores, or
 cache refills unless a written priority rule says otherwise.
 
+## Framebuffer Scanout Leaf
+
+`framebuffer_scanout` is the first portable read client for video bring-up. It
+is not a timing generator and does not own VGA/HDMI sync. It walks a framebuffer
+allocation in row-major order, issues one 32-bit read for two RGB565 pixels, and
+emits a valid/ready pixel stream with `x`, `y`, and 16-bit color. Odd frame
+widths drop the unused high halfword at end of row.
+
+Current limits:
+
+- one outstanding memory read
+- 32-bit memory data path
+- RGB565 pixels only
+- no line buffer
+- no double buffering
+- no integration into `gpu_core` yet
+
+This makes scanout a memory client that can be arbitrated and tested before the
+platform video timing layer exists.
+
 ## Write Masking
 
 RGB565 pixels are 16-bit values. The abstract memory bus may be wider than one
@@ -146,5 +166,7 @@ The wrapper is responsible for:
 - no writes outside framebuffer bounds
 - read-after-write behavior in simulation memory
 - arbitration under simultaneous scanout and drawing
+- framebuffer scanout address walk, odd-width high-half suppression, request
+  backpressure, pixel backpressure, and response error reporting
 - response-ID routing when responses return in a different order than requests
   were accepted

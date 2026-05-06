@@ -47,6 +47,9 @@ run_synth command_processor \
 run_synth framebuffer_writer \
   rtl/core/framebuffer_writer.sv
 
+run_synth framebuffer_scanout \
+  rtl/core/framebuffer_scanout.sv
+
 run_synth instruction_decoder \
   rtl/common/isa_pkg.sv \
   rtl/core/instruction_decoder.sv
@@ -57,6 +60,7 @@ run_synth gpu_core \
   platform/sim/instruction_memory.sv \
   rtl/core/command_fifo.sv \
   rtl/core/command_processor.sv \
+  rtl/core/framebuffer_scanout.sv \
   rtl/core/framebuffer_writer.sv \
   rtl/core/gpu_core.sv \
   rtl/core/instruction_decoder.sv \

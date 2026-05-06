@@ -72,7 +72,9 @@ Success condition: stable display with expected geometry.
 
 ## Step 4: Framebuffer Scanout
 
-Connect scanout to a small BRAM or inferred framebuffer initialized by logic.
+Connect the portable `framebuffer_scanout` leaf to a small BRAM or inferred
+framebuffer initialized by logic, then adapt its pixel stream to the platform
+video timing block.
 
 Success condition: framebuffer image appears and scaling is correct.
 

@@ -118,6 +118,9 @@ architecture.
 - memory arbiter scale-prep leaves with fixed-priority and round-robin request
   selection, source-local request IDs, response-ID routing, unit simulation,
   bounded formal smoke, and Yosys synthesis coverage
+- portable framebuffer scanout leaf reads 32-bit memory words into RGB565 pixel
+  output, handles odd frame widths, request and pixel backpressure, and response
+  errors in unit simulation
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset

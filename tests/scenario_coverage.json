@@ -242,6 +242,13 @@
         "formal/scripts/clear_engine.sby",
         "formal/scripts/framebuffer_writer.sby"
       ]
+    },
+    {
+      "id": "video_scanout_prep",
+      "description": "Portable framebuffer scanout reads RGB565 pixels from global memory before platform video timing is integrated.",
+      "tests": [
+        "tb/unit/tb_framebuffer_scanout.sv"
+      ]
     }
   ]
 }

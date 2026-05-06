@@ -19,6 +19,7 @@ sources=(
   "${repo_root}/platform/sim/instruction_memory.sv"
   "${repo_root}/rtl/core/command_fifo.sv"
   "${repo_root}/rtl/core/command_processor.sv"
+  "${repo_root}/rtl/core/framebuffer_scanout.sv"
   "${repo_root}/rtl/core/framebuffer_writer.sv"
   "${repo_root}/rtl/core/gpu_core.sv"
   "${repo_root}/rtl/core/instruction_decoder.sv"
