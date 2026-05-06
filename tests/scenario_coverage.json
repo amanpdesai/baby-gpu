@@ -80,7 +80,8 @@
       "description": "2D global IDs, framebuffer convention, RGB565 packing, and STORE16 output.",
       "tests": [
         "tb/integration/tb_programmable_core_framebuffer_gradient.sv",
-        "tb/integration/tb_gpu_core_command_framebuffer_gradient.sv"
+        "tb/integration/tb_gpu_core_command_framebuffer_gradient.sv",
+        "tb/integration/tb_gpu_core_command_framebuffer_scanout.sv"
       ],
       "kernels": [
         "tests/kernels/framebuffer_gradient.kgpu"
@@ -265,7 +266,8 @@
         "tb/integration/tb_video_controller_framebuffer.sv",
         "tb/integration/tb_video_controller_source_switch.sv",
         "tb/integration/tb_video_controller_system.sv",
-        "tb/integration/tb_framebuffer_scanout_arbiter.sv"
+        "tb/integration/tb_framebuffer_scanout_arbiter.sv",
+        "tb/integration/tb_gpu_core_command_framebuffer_scanout.sv"
       ],
       "formal": [
         "formal/scripts/video_framebuffer_source.sby",

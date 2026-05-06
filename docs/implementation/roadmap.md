@@ -166,6 +166,9 @@ architecture.
   data memory, with coverage for solid-pattern output, host-preloaded
   framebuffer scanout, host readback held under response backpressure, and
   host/video request contention through the round-robin memory path
+- command-driven framebuffer-gradient scanout integration writes RGB565 pixels
+  through `gpu_core` `STORE16` into simulation `data_memory`, then reads the
+  same framebuffer convention through `framebuffer_scanout`
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset
