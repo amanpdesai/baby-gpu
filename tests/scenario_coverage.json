@@ -249,7 +249,8 @@
       "tests": [
         "tb/unit/tb_framebuffer_scanout.sv",
         "tb/unit/tb_framebuffer_scanout_even_width.sv",
-        "tb/unit/tb_framebuffer_scanout_width1_id.sv"
+        "tb/unit/tb_framebuffer_scanout_width1_id.sv",
+        "tb/integration/tb_framebuffer_scanout_arbiter.sv"
       ]
     }
   ]

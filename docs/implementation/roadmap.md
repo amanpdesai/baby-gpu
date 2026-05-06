@@ -121,7 +121,9 @@ architecture.
 - portable framebuffer scanout leaf reads 32-bit memory words into RGB565 pixel
   output, handles odd frame widths, request and pixel backpressure, and response
   errors in unit simulation, with additional even-width, width-1, and widened
-  local-response-ID coverage
+  local-response-ID coverage; scanout-to-arbiter integration coverage verifies
+  round-robin contention with framebuffer-writer traffic and routed scanout
+  responses
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset

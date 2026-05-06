@@ -125,6 +125,10 @@ Unit coverage includes odd-width, even-width, width-1, request backpressure,
 pixel backpressure, response error, and widened local response-ID mismatch
 cases.
 
+Integration coverage connects the scanout read client and framebuffer writer to
+the round-robin arbiter, forces request contention, verifies writer-first then
+scanout grant order, and returns the scanout response by source ID.
+
 Current limits:
 
 - one outstanding memory read
