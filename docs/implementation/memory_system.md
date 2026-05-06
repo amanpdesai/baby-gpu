@@ -140,3 +140,5 @@ The wrapper is responsible for:
 - no writes outside framebuffer bounds
 - read-after-write behavior in simulation memory
 - arbitration under simultaneous scanout and drawing
+- response-ID routing when responses return in a different order than requests
+  were accepted

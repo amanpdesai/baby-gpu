@@ -123,6 +123,9 @@ architecture.
   behavior across active soft reset
 - `gpu_core` top-level memory interface exposes request and response IDs for
   external memory wrappers
+- command-level response-ID reorder regression returns a programmable LSU
+  response before older fixed-function writer responses and verifies routing by
+  external `mem_rsp_id`
 - memory response tracker records accepted request IDs, returns oldest
   outstanding ID for in-order external responses, flags overflow/underflow, and
   has unit simulation, bounded formal coverage, and synthesis smoke

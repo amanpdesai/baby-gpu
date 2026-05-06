@@ -246,6 +246,8 @@ Required tests:
 - framebuffer address calculation
 - LSU request stability under backpressure
 - arbiter priority and response-ID routing
+- top-level `gpu_core` response-ID routing when a programmable LSU response
+  returns before older fixed-function writer responses
 - vector add memory result
 - framebuffer gradient golden image
 - out-of-bounds or illegal access behavior once specified
