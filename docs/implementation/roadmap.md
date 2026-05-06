@@ -149,7 +149,9 @@ architecture.
 - portable `video_controller` wrapper composes timing, test-pattern,
   framebuffer scanout, pixel FIFO, framebuffer-source, and stream-mux leaves
   behind one video stream and memory-request interface, with pattern-mode and
-  framebuffer-mode integration coverage
+  framebuffer-mode integration coverage; source-switch coverage documents that
+  mode selection does not cancel scanout and that platform control must flush
+  stale FIFO pixels during mode changes
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset

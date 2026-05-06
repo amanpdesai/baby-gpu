@@ -263,6 +263,7 @@
         "tb/integration/tb_video_fifo_source_mux.sv",
         "tb/integration/tb_video_controller_pattern.sv",
         "tb/integration/tb_video_controller_framebuffer.sv",
+        "tb/integration/tb_video_controller_source_switch.sv",
         "tb/integration/tb_framebuffer_scanout_arbiter.sv"
       ]
     }
