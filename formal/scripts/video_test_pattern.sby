@@ -1,0 +1,19 @@
+[tasks]
+prove
+cover
+
+[options]
+prove: mode prove
+cover: mode cover
+depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv video_test_pattern.sv video_test_pattern_formal.sv
+prep -top video_test_pattern_formal
+
+[files]
+rtl/core/video_test_pattern.sv
+formal/harnesses/video_test_pattern_formal.sv

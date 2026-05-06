@@ -271,6 +271,7 @@
         "formal/scripts/video_framebuffer_source.sby",
         "formal/scripts/video_pixel_fifo.sby",
         "formal/scripts/video_stream_mux.sby",
+        "formal/scripts/video_test_pattern.sby",
         "formal/scripts/video_timing.sby"
       ]
     }

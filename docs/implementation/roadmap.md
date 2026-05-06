@@ -158,6 +158,9 @@ architecture.
 - framebuffer-source and stream-mux leaves have combinational formal smoke
   coverage for ready/valid, underrun, coordinate mismatch, source selection,
   missing-source blanking, and timing/control pass-through behavior
+- video test-pattern leaf has combinational formal smoke coverage for
+  timing-valid pass-through, inactive black output, solid color, color bars,
+  checker, and RGB565 gradient packing
 - simulation `video_controller_system` wrapper connects `video_controller` to
   round-robin arbitration, host framebuffer preload requests, and simulation
   data memory, with coverage for solid-pattern output, host-preloaded
