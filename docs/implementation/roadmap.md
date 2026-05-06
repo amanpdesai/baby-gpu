@@ -155,6 +155,9 @@ architecture.
 - video timing and pixel FIFO leaves have bounded formal smoke coverage for
   timing output equations, sync regions, FIFO count/flag consistency, flush
   behavior, overflow/underflow reporting, and stalled-output payload stability
+- framebuffer-source and stream-mux leaves have combinational formal smoke
+  coverage for ready/valid, underrun, coordinate mismatch, source selection,
+  missing-source blanking, and timing/control pass-through behavior
 - simulation `video_controller_system` wrapper connects `video_controller` to
   round-robin arbitration, host framebuffer preload requests, and simulation
   data memory, with coverage for solid-pattern output, host-preloaded

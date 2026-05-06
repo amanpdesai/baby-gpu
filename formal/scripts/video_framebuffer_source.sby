@@ -1,0 +1,19 @@
+[tasks]
+prove
+cover
+
+[options]
+prove: mode prove
+cover: mode cover
+depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv video_framebuffer_source.sv video_framebuffer_source_formal.sv
+prep -top video_framebuffer_source_formal
+
+[files]
+rtl/core/video_framebuffer_source.sv
+formal/harnesses/video_framebuffer_source_formal.sv

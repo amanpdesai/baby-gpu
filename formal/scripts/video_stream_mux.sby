@@ -1,0 +1,19 @@
+[tasks]
+prove
+cover
+
+[options]
+prove: mode prove
+cover: mode cover
+depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv video_stream_mux.sv video_stream_mux_formal.sv
+prep -top video_stream_mux_formal
+
+[files]
+rtl/core/video_stream_mux.sv
+formal/harnesses/video_stream_mux_formal.sv
