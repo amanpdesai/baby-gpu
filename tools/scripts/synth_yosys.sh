@@ -59,6 +59,9 @@ run_synth video_test_pattern \
 run_synth video_stream_mux \
   rtl/core/video_stream_mux.sv
 
+run_synth video_framebuffer_source \
+  rtl/core/video_framebuffer_source.sv
+
 run_synth instruction_decoder \
   rtl/common/isa_pkg.sv \
   rtl/core/instruction_decoder.sv

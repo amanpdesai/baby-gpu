@@ -11,9 +11,10 @@ flowchart LR
     Core[gpu_core]
     Cmd[command_processor]
     Draw[draw_units]
-    Scan[video_scanout]
+    Scan[framebuffer_scanout]
     Timing[video_timing]
     Pattern[video_test_pattern]
+    FbSource[video_framebuffer_source]
     Mux[video_stream_mux]
     Arb[memory_arbiter]
   end
@@ -31,7 +32,8 @@ flowchart LR
   Timing --> Vid
   Timing --> Pattern
   Pattern --> Mux
-  Scan --> Mux
+  Scan --> FbSource
+  FbSource --> Mux
   Mux --> Vid
   Cmd <--> Uart
   Clk --> Core

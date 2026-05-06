@@ -251,11 +251,13 @@
         "tb/unit/tb_video_timing_polarity.sv",
         "tb/unit/tb_video_test_pattern.sv",
         "tb/unit/tb_video_stream_mux.sv",
+        "tb/unit/tb_video_framebuffer_source.sv",
         "tb/unit/tb_framebuffer_scanout.sv",
         "tb/unit/tb_framebuffer_scanout_even_width.sv",
         "tb/unit/tb_framebuffer_scanout_width1_id.sv",
         "tb/integration/tb_video_timing_pattern_mux.sv",
         "tb/integration/tb_video_timing_test_pattern.sv",
+        "tb/integration/tb_video_framebuffer_source_mux.sv",
         "tb/integration/tb_framebuffer_scanout_arbiter.sv"
       ]
     }

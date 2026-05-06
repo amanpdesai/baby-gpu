@@ -134,6 +134,9 @@ architecture.
   the same timing contract, preserves timing metadata, emits black on missing
   active-pixel sources, and flags source starvation in unit and integration
   coverage
+- portable framebuffer-source adapter accepts scanout pixels only on active
+  timing pixels, validates scanout coordinates against timing coordinates, and
+  flags underrun or coordinate mismatch before framebuffer pixels reach the mux
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset
