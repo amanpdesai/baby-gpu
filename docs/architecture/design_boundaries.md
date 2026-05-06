@@ -17,6 +17,7 @@ flowchart LR
     PixelFifo[video_pixel_fifo]
     FbSource[video_framebuffer_source]
     Mux[video_stream_mux]
+    VidCtrl[video_controller]
     Arb[memory_arbiter]
   end
 
@@ -36,6 +37,12 @@ flowchart LR
   Scan --> PixelFifo
   PixelFifo --> FbSource
   FbSource --> Mux
+  Timing --> VidCtrl
+  Scan --> VidCtrl
+  PixelFifo --> VidCtrl
+  FbSource --> VidCtrl
+  Mux --> VidCtrl
+  VidCtrl --> Vid
   Mux --> Vid
   Cmd <--> Uart
   Clk --> Core

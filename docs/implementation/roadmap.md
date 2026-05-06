@@ -146,6 +146,10 @@ architecture.
   drives `video_timing`, checks RGB565 output through
   `video_framebuffer_source` and `video_stream_mux`, and verifies blanking
   behavior without board-specific video logic
+- portable `video_controller` wrapper composes timing, test-pattern,
+  framebuffer scanout, pixel FIFO, framebuffer-source, and stream-mux leaves
+  behind one video stream and memory-request interface, with pattern-mode and
+  framebuffer-mode integration coverage
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset

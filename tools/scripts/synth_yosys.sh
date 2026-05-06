@@ -65,6 +65,15 @@ run_synth video_framebuffer_source \
 run_synth video_pixel_fifo \
   rtl/core/video_pixel_fifo.sv
 
+run_synth video_controller \
+  rtl/core/video_timing.sv \
+  rtl/core/framebuffer_scanout.sv \
+  rtl/core/video_pixel_fifo.sv \
+  rtl/core/video_framebuffer_source.sv \
+  rtl/core/video_test_pattern.sv \
+  rtl/core/video_stream_mux.sv \
+  rtl/core/video_controller.sv
+
 run_synth instruction_decoder \
   rtl/common/isa_pkg.sv \
   rtl/core/instruction_decoder.sv

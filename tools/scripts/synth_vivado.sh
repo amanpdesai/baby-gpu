@@ -32,6 +32,7 @@ sources=(
   "${repo_root}/rtl/core/simd_alu.sv"
   "${repo_root}/rtl/core/simd_core.sv"
   "${repo_root}/rtl/core/special_registers.sv"
+  "${repo_root}/rtl/core/video_controller.sv"
   "${repo_root}/rtl/core/video_framebuffer_source.sv"
   "${repo_root}/rtl/core/video_pixel_fifo.sv"
   "${repo_root}/rtl/core/video_stream_mux.sv"
