@@ -17,6 +17,7 @@ module tb_gpu_video_controller_framebuffer_scanout;
 
     logic clk;
     logic reset;
+    logic memory_req_stall;
     logic enable;
     logic clear_errors;
     logic cmd_valid;
@@ -55,6 +56,13 @@ module tb_gpu_video_controller_framebuffer_scanout;
     logic [COORD_W-1:0] x;
     logic [COORD_W-1:0] y;
     logic [15:0] rgb;
+    logic debug_gpu_mem_req_valid;
+    logic debug_video_mem_req_valid;
+    logic debug_gpu_mem_req_fire;
+    logic debug_video_mem_req_fire;
+    int concurrent_valid_cycles;
+    int gpu_fire_while_video_pending;
+    int video_fire_while_gpu_pending;
 
     gpu_video_controller_system #(
         .H_ACTIVE(GRID_X),
@@ -78,6 +86,7 @@ module tb_gpu_video_controller_framebuffer_scanout;
     ) dut (
         .clk(clk),
         .rst_n(!reset),
+        .memory_req_stall(memory_req_stall),
         .gpu_enable(enable),
         .gpu_clear_errors(clear_errors),
         .cmd_valid(cmd_valid),
@@ -116,7 +125,11 @@ module tb_gpu_video_controller_framebuffer_scanout;
         .vsync(vsync),
         .x(x),
         .y(y),
-        .rgb(rgb)
+        .rgb(rgb),
+        .debug_gpu_mem_req_valid(debug_gpu_mem_req_valid),
+        .debug_video_mem_req_valid(debug_video_mem_req_valid),
+        .debug_gpu_mem_req_fire(debug_gpu_mem_req_fire),
+        .debug_video_mem_req_fire(debug_video_mem_req_fire)
     );
 
     initial begin
@@ -129,6 +142,26 @@ module tb_gpu_video_controller_framebuffer_scanout;
         begin
             $readmemh("tests/kernels/framebuffer_gradient.memh", kernel_words);
             `KGPU_LOAD_PROGRAM(kernel_words)
+        end
+    endtask
+
+    task automatic reset_system;
+        begin
+            init_command_driver();
+            tick_enable = 1'b0;
+            source_select = 1'b0;
+            pattern_select = 2'd0;
+            solid_rgb = 16'h0000;
+            scanout_start_valid = 1'b0;
+            fifo_flush = 1'b0;
+            memory_req_stall = 1'b0;
+            concurrent_valid_cycles = 0;
+            gpu_fire_while_video_pending = 0;
+            video_fire_while_gpu_pending = 0;
+
+            step();
+            reset = 1'b0;
+            step();
         end
     endtask
 
@@ -211,19 +244,60 @@ module tb_gpu_video_controller_framebuffer_scanout;
         end
     endtask
 
+    task automatic test_concurrent_gpu_video_memory;
+        int timeout;
+        logic contention_seen;
+        begin
+            reset_system();
+            load_gradient_program();
+            set_reg(KGPU_REG_FB_BASE, FRAMEBUFFER_BASE);
+            configure_launch(32'h0000_0000, 32'(GRID_X), 32'(GRID_Y), 32'h0000_0000);
+
+            source_select = 1'b1;
+            tick_enable = 1'b1;
+            memory_req_stall = 1'b1;
+            scanout_start_valid = 1'b1;
+            check(scanout_start_ready, "concurrent scanout starts before GPU launch");
+            step();
+            scanout_start_valid = 1'b0;
+            check(debug_video_mem_req_valid, "stalled video request is pending before GPU launch");
+
+            launch_kernel();
+            send_word(KGPU_CMD_WAIT_IDLE);
+            timeout = 0;
+            contention_seen = 1'b0;
+            while ((busy || scanout_busy) && timeout < 500) begin
+                if (debug_gpu_mem_req_valid && debug_video_mem_req_valid) begin
+                    contention_seen = 1'b1;
+                end
+                memory_req_stall = !contention_seen;
+                if (debug_gpu_mem_req_valid && debug_video_mem_req_valid) begin
+                    concurrent_valid_cycles = concurrent_valid_cycles + 1;
+                end
+                if (debug_gpu_mem_req_fire && debug_video_mem_req_valid) begin
+                    gpu_fire_while_video_pending = gpu_fire_while_video_pending + 1;
+                end
+                if (debug_video_mem_req_fire && debug_gpu_mem_req_valid) begin
+                    video_fire_while_gpu_pending = video_fire_while_gpu_pending + 1;
+                end
+                step();
+                timeout = timeout + 1;
+            end
+            scanout_start_valid = 1'b0;
+            memory_req_stall = 1'b0;
+            tick_enable = 1'b0;
+
+            check(timeout < 500, "concurrent GPU/video memory use completes");
+            check(error_status == 8'h00, "concurrent GPU/video memory has no GPU error");
+            check(!scanout_error, "concurrent GPU/video memory has no scanout error");
+            check(concurrent_valid_cycles > 0, "GPU and video request memory in the same cycle");
+            check((gpu_fire_while_video_pending + video_fire_while_gpu_pending) > 0,
+                "one memory request fires while the other client remains pending");
+        end
+    endtask
+
     initial begin
-        init_command_driver();
-        tick_enable = 1'b0;
-        source_select = 1'b0;
-        pattern_select = 2'd0;
-        solid_rgb = 16'h0000;
-        scanout_start_valid = 1'b0;
-        fifo_flush = 1'b0;
-
-        step();
-        reset = 1'b0;
-        step();
-
+        reset_system();
         load_gradient_program();
         set_reg(KGPU_REG_FB_BASE, FRAMEBUFFER_BASE);
         configure_launch(32'h0000_0000, 32'(GRID_X), 32'(GRID_Y), 32'h0000_0000);
@@ -233,6 +307,7 @@ module tb_gpu_video_controller_framebuffer_scanout;
 
         check(error_status == 8'h00, "GPU framebuffer producer has no errors");
         display_gpu_framebuffer();
+        test_concurrent_gpu_video_memory();
 
         $display("tb_gpu_video_controller_framebuffer_scanout PASS");
         $finish;

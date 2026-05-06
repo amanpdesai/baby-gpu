@@ -172,7 +172,7 @@ architecture.
 - simulation `gpu_video_controller_system` wrapper connects `gpu_core`,
   `video_controller`, round-robin arbitration, and shared `data_memory` so a
   command-driven framebuffer-gradient kernel can be displayed by the video
-  controller path
+  controller path, including a concurrent GPU/video memory arbitration smoke
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset

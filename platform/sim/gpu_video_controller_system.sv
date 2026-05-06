@@ -31,6 +31,7 @@ module gpu_video_controller_system #(
 ) (
     input logic clk,
     input logic rst_n,
+    input logic memory_req_stall,
 
     input logic gpu_enable,
     input logic gpu_clear_errors,
@@ -73,7 +74,12 @@ module gpu_video_controller_system #(
     output logic vsync,
     output logic [COORD_W-1:0] x,
     output logic [COORD_W-1:0] y,
-    output logic [15:0] rgb
+    output logic [15:0] rgb,
+
+    output logic debug_gpu_mem_req_valid,
+    output logic debug_video_mem_req_valid,
+    output logic debug_gpu_mem_req_fire,
+    output logic debug_video_mem_req_fire
 );
     localparam int GPU_CLIENT = 0;
     localparam int VIDEO_CLIENT = 1;
@@ -117,7 +123,8 @@ module gpu_video_controller_system #(
     logic [CLIENTS-1:0] client_rsp_error;
 
     logic mem_req_valid;
-    logic mem_req_ready;
+    logic arb_mem_req_ready;
+    logic memory_req_ready;
     logic mem_req_write;
     logic [ADDR_W-1:0] mem_req_addr;
     logic [DATA_W-1:0] mem_req_wdata;
@@ -129,6 +136,8 @@ module gpu_video_controller_system #(
     logic [MEM_ID_W-1:0] mem_rsp_id;
     logic mem_rsp_error;
     logic [MEM_ID_W-1:0] pending_mem_id_q;
+    logic debug_gpu_mem_req_fire_q;
+    logic debug_video_mem_req_fire_q;
 
     initial begin
         if (CLIENTS != 2) $fatal(1, "gpu_video_controller_system requires CLIENTS == 2");
@@ -141,12 +150,20 @@ module gpu_video_controller_system #(
     always_ff @(posedge clk) begin
         if (!rst_n) begin
             pending_mem_id_q <= '0;
-        end else if (mem_req_valid && mem_req_ready) begin
+            debug_gpu_mem_req_fire_q <= 1'b0;
+            debug_video_mem_req_fire_q <= 1'b0;
+        end else if (mem_req_valid && arb_mem_req_ready) begin
             pending_mem_id_q <= mem_req_id;
+            debug_gpu_mem_req_fire_q <= gpu_mem_req_valid && gpu_mem_req_ready;
+            debug_video_mem_req_fire_q <= video_req_valid && video_req_ready;
+        end else begin
+            debug_gpu_mem_req_fire_q <= 1'b0;
+            debug_video_mem_req_fire_q <= 1'b0;
         end
     end
 
     assign mem_rsp_id = pending_mem_id_q;
+    assign arb_mem_req_ready = memory_req_ready && !memory_req_stall;
 
     gpu_core #(
         .FB_WIDTH(GPU_FB_WIDTH),
@@ -277,6 +294,11 @@ module gpu_video_controller_system #(
     assign video_rsp_id = client_rsp_id[(VIDEO_CLIENT*LOCAL_ID_W) +: LOCAL_ID_W];
     assign video_rsp_error = client_rsp_error[VIDEO_CLIENT];
 
+    assign debug_gpu_mem_req_valid = gpu_mem_req_valid;
+    assign debug_video_mem_req_valid = video_req_valid;
+    assign debug_gpu_mem_req_fire = debug_gpu_mem_req_fire_q;
+    assign debug_video_mem_req_fire = debug_video_mem_req_fire_q;
+
     memory_arbiter_rr #(
         .CLIENTS(CLIENTS),
         .ADDR_W(ADDR_W),
@@ -298,7 +320,7 @@ module gpu_video_controller_system #(
         .client_rsp_id(client_rsp_id),
         .client_rsp_error(client_rsp_error),
         .mem_req_valid(mem_req_valid),
-        .mem_req_ready(mem_req_ready),
+        .mem_req_ready(arb_mem_req_ready),
         .mem_req_write(mem_req_write),
         .mem_req_addr(mem_req_addr),
         .mem_req_wdata(mem_req_wdata),
@@ -318,8 +340,8 @@ module gpu_video_controller_system #(
     ) framebuffer_memory (
         .clk(clk),
         .reset(!rst_n),
-        .req_valid(mem_req_valid),
-        .req_ready(mem_req_ready),
+        .req_valid(mem_req_valid && !memory_req_stall),
+        .req_ready(memory_req_ready),
         .req_write(mem_req_write),
         .req_addr(mem_req_addr),
         .req_wdata(mem_req_wdata),
