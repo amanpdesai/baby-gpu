@@ -127,6 +127,9 @@ architecture.
 - portable video timing leaf generates active-area pixel-valid, x/y coordinate,
   line-start, frame-start, hsync, and vsync timing from parameterized active,
   porch, and sync widths with tick-enable and sync-polarity unit coverage
+- portable video test-pattern leaf emits RGB565 solid, bar, checker, and
+  coordinate-gradient patterns from timing coordinates, with direct unit
+  coverage and timing-to-pattern integration coverage
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset

@@ -62,7 +62,7 @@ coverage for command/clear/rectangle/framebuffer paths, command-driven
 kernel coverage through `gpu_core`, command-driven stalled/delayed memory
 smoke, host-visible `STORE16` fault coverage, soft-reset recovery smoke,
 memory-arbiter identity/routing coverage, round-robin arbitration leaf coverage,
-portable video timing and framebuffer scanout unit coverage, arbiter-backed `gpu_core` memory
+portable video timing, test-pattern, and framebuffer scanout coverage, arbiter-backed `gpu_core` memory
 request routing, top-level memory request/response IDs, in-order response tracking, and Yosys synthesis smoke
 coverage for leaf blocks and the integrated programmable core path. Top-level command-kernel fault coverage checks that an LSU-detected
 programmable fault reaches host-visible status without issuing a memory write.

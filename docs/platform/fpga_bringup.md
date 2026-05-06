@@ -62,12 +62,13 @@ Success condition: clean synchronized reset and a visible heartbeat counter.
 ## Step 3: Video Output
 
 Use the portable `video_timing` leaf for active-area coordinates and sync
-signals, then display test patterns without framebuffer memory:
+signals, then feed `video_test_pattern` to display deterministic output without
+framebuffer memory:
 
 - solid color
 - bars
 - checkerboard
-- moving square
+- coordinate gradient
 
 Success condition: stable display with expected geometry.
 

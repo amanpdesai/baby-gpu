@@ -53,6 +53,9 @@ run_synth framebuffer_scanout \
 run_synth video_timing \
   rtl/core/video_timing.sv
 
+run_synth video_test_pattern \
+  rtl/core/video_test_pattern.sv
+
 run_synth instruction_decoder \
   rtl/common/isa_pkg.sv \
   rtl/core/instruction_decoder.sv

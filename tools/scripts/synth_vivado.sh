@@ -32,6 +32,7 @@ sources=(
   "${repo_root}/rtl/core/simd_alu.sv"
   "${repo_root}/rtl/core/simd_core.sv"
   "${repo_root}/rtl/core/special_registers.sv"
+  "${repo_root}/rtl/core/video_test_pattern.sv"
   "${repo_root}/rtl/core/video_timing.sv"
   "${repo_root}/rtl/core/work_scheduler.sv"
   "${repo_root}/rtl/draw_units/clear_engine.sv"
