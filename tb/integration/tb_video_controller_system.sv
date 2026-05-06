@@ -170,6 +170,32 @@ module tb_video_controller_system;
         end
     endtask
 
+    task automatic host_read_word(
+        input logic [ADDR_W-1:0] addr,
+        input logic [DATA_W-1:0] expected_data
+    );
+        begin
+            host_req_valid = 1'b1;
+            host_req_write = 1'b0;
+            host_req_addr = addr;
+            host_req_wdata = '0;
+            host_req_wmask = '0;
+            #1;
+            check(host_req_ready, "host read request accepted");
+            tick();
+            host_req_valid = 1'b0;
+            #1;
+            check(host_rsp_valid, "host read response held under backpressure");
+            check(host_rsp_rdata == expected_data, "host read response data while backpressured");
+            check(!host_rsp_error, "host read has no error");
+            tick();
+            check(host_rsp_valid, "host read response remains valid while backpressured");
+            host_rsp_ready = 1'b1;
+            tick();
+            host_rsp_ready = 1'b0;
+        end
+    endtask
+
     task automatic wait_for_fifo_full;
         begin
             for (int i = 0; i < 12 && !fifo_full; i++) begin
@@ -235,10 +261,72 @@ module tb_video_controller_system;
         end
     endtask
 
+    task automatic test_host_readback_backpressure;
+        begin
+            reset_dut();
+            host_write_word(8'h24, 32'hCAFE_BABE);
+            host_read_word(8'h24, 32'hCAFE_BABE);
+        end
+    endtask
+
+    task automatic test_host_video_contention;
+        begin
+            reset_dut();
+            host_write_word(8'h20, 32'h4444_3333);
+
+            source_select = 1'b1;
+            scanout_start_valid = 1'b1;
+            check(scanout_start_ready, "contention scanout starts idle");
+            tick();
+            scanout_start_valid = 1'b0;
+            #1;
+            check(scanout_busy, "contention scanout is waiting to request memory");
+
+            host_req_valid = 1'b1;
+            host_req_write = 1'b0;
+            host_req_addr = 8'h20;
+            host_req_wdata = '0;
+            host_req_wmask = '0;
+            #1;
+            check(!host_req_ready, "contention host waits while video request wins first grant");
+            tick();
+            check(host_req_valid, "contention host request remains asserted after video grant");
+
+            host_rsp_ready = 1'b0;
+            for (int i = 0; i < 4 && !host_req_ready; i++) begin
+                tick();
+                check(host_req_valid, "contention host request remains asserted while video response clears");
+            end
+            check(host_req_ready, "contention host request wins after video response clears");
+            tick();
+            host_req_valid = 1'b0;
+            check(host_rsp_valid, "contention host response returns after video response");
+            check(host_rsp_rdata == 32'h4444_3333, "contention host read data");
+            check(!host_rsp_error, "contention host read has no error");
+            host_rsp_ready = 1'b1;
+            tick();
+            host_rsp_ready = 1'b0;
+
+            wait_for_fifo_full();
+            check(fifo_full, "contention video request eventually fills fifo");
+            check(fifo_count == 1'b1, "contention fifo count after video request");
+
+            tick_enable = 1'b1;
+            #1;
+            check(pixel_valid, "contention framebuffer pixel valid");
+            check(rgb == 16'h3333, "contention framebuffer first pixel rgb");
+            check(!source_missing, "contention framebuffer source present");
+            tick();
+            tick_enable = 1'b0;
+        end
+    endtask
+
     initial begin
         errors = 0;
         test_pattern_output();
         test_host_preload_framebuffer_output();
+        test_host_readback_backpressure();
+        test_host_video_contention();
 
         if (errors == 0) begin
             $display("PASS");

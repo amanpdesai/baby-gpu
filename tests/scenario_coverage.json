@@ -245,7 +245,7 @@
     },
     {
       "id": "video_scanout_prep",
-      "description": "Portable video timing and framebuffer scanout prepare the platform display path before board-specific output integration.",
+      "description": "Portable video timing, framebuffer scanout, host framebuffer access, and host/video memory arbitration prepare the platform display path before board-specific output integration.",
       "tests": [
         "tb/unit/tb_video_timing.sv",
         "tb/unit/tb_video_timing_polarity.sv",
