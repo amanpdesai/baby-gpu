@@ -152,6 +152,7 @@
       "tests": [
         "tb/unit/tb_memory_arbiter.sv",
         "tb/unit/tb_memory_arbiter_rr.sv",
+        "tb/unit/tb_memory_arbiter_rr_4client.sv",
         "tb/unit/tb_memory_response_tracker.sv",
         "tb/integration/tb_gpu_core_memory_tracker_backpressure.sv",
         "tb/integration/tb_gpu_core_command_response_id_reorder.sv"
@@ -159,6 +160,7 @@
       "formal": [
         "formal/scripts/memory_arbiter.sby",
         "formal/scripts/memory_arbiter_rr.sby",
+        "formal/scripts/memory_arbiter_rr_4client.sby",
         "formal/scripts/memory_response_tracker.sby"
       ]
     },
