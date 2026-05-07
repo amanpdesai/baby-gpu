@@ -145,6 +145,14 @@ module tb_gpu_video_controller_framebuffer_scanout;
         end
     endtask
 
+    task automatic load_bounded_fill_program;
+        logic [ISA_WORD_W-1:0] kernel_words [0:31];
+        begin
+            $readmemh("tests/kernels/bounded_fill_3x2_04d2.memh", kernel_words);
+            `KGPU_LOAD_PROGRAM(kernel_words)
+        end
+    endtask
+
     task automatic reset_system;
         begin
             init_command_driver();
@@ -187,14 +195,14 @@ module tb_gpu_video_controller_framebuffer_scanout;
         end
     endtask
 
-    task automatic expect_active_pixel(input int px, input int py);
+    task automatic expect_active_pixel(input int px, input int py, input logic [15:0] expected_rgb);
         begin
             #1;
             check(pixel_valid, "video output active pixel valid");
             check(active, "video output active");
             check(x == COORD_W'(px), "video output x matches");
             check(y == COORD_W'(py), "video output y matches");
-            check(rgb == expected_pixel(px, py), "video output RGB matches GPU framebuffer");
+            check(rgb == expected_rgb, "video output RGB matches GPU framebuffer");
             check(!source_missing, "video output source present");
             check(!framebuffer_underrun, "video output has no framebuffer underrun");
             check(!framebuffer_coordinate_mismatch, "video output has no coordinate mismatch");
@@ -208,6 +216,16 @@ module tb_gpu_video_controller_framebuffer_scanout;
         end
     endtask
 
+    task automatic flush_video_fifo;
+        begin
+            fifo_flush = 1'b1;
+            step();
+            fifo_flush = 1'b0;
+            step();
+            check(fifo_empty, "video fifo is empty after flush");
+        end
+    endtask
+
     task automatic drain_row_porch;
         begin
             repeat (3) begin
@@ -218,7 +236,9 @@ module tb_gpu_video_controller_framebuffer_scanout;
         end
     endtask
 
-    task automatic display_gpu_framebuffer;
+    task automatic display_gpu_framebuffer(input bit expect_bounded_fill);
+        int align_timeout;
+        logic [15:0] expected_rgb;
         begin
             source_select = 1'b1;
             scanout_start_valid = 1'b1;
@@ -228,9 +248,18 @@ module tb_gpu_video_controller_framebuffer_scanout;
             wait_for_video_buffer();
 
             tick_enable = 1'b1;
+            align_timeout = 0;
+            #1;
+            while (!(pixel_valid && active && x == '0 && y == '0) && align_timeout < 64) begin
+                step();
+                align_timeout = align_timeout + 1;
+            end
+            check(align_timeout < 64, "video output returns to frame origin");
+
             for (int py = 0; py < GRID_Y; py = py + 1) begin
                 for (int px = 0; px < GRID_X; px = px + 1) begin
-                    expect_active_pixel(px, py);
+                    expected_rgb = expect_bounded_fill ? 16'h04d2 : expected_pixel(px, py);
+                    expect_active_pixel(px, py, expected_rgb);
                 end
                 if (py + 1 < GRID_Y) begin
                     drain_row_porch();
@@ -241,6 +270,20 @@ module tb_gpu_video_controller_framebuffer_scanout;
             check(fifo_empty, "video fifo drains after displaying GPU frame");
             check(!fifo_underflow, "video output has no fifo underflow");
             check(!fifo_overflow, "video output has no fifo overflow");
+        end
+    endtask
+
+    task automatic run_bounded_fill_frame;
+        begin
+            flush_video_fifo();
+            load_bounded_fill_program();
+            set_reg(KGPU_REG_FB_BASE, FRAMEBUFFER_BASE);
+            configure_launch(32'h0000_0000, 32'(GRID_X), 32'(GRID_Y), 32'h0000_0000);
+            launch_kernel();
+            send_word(KGPU_CMD_WAIT_IDLE);
+            wait_idle(400, "gpu video controller bounded-fill frame timed out");
+            check(error_status == 8'h00, "GPU bounded-fill frame producer has no errors");
+            display_gpu_framebuffer(1'b1);
         end
     endtask
 
@@ -306,7 +349,8 @@ module tb_gpu_video_controller_framebuffer_scanout;
         wait_idle(400, "gpu video controller framebuffer kernel timed out");
 
         check(error_status == 8'h00, "GPU framebuffer producer has no errors");
-        display_gpu_framebuffer();
+        display_gpu_framebuffer(1'b0);
+        run_bounded_fill_frame();
         test_concurrent_gpu_video_memory();
 
         $display("tb_gpu_video_controller_framebuffer_scanout PASS");
