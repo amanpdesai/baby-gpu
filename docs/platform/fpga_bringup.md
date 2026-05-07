@@ -25,6 +25,16 @@ VIVADO_DRY_RUN=1 VIVADO_PART=<xilinx-part-name> make synth-vivado
 The dry run does not synthesize RTL. It only checks script inputs and source
 file paths, and is covered by `make test-tools`.
 
+For the RealDigital Urbana board target, use the convenience dry-run target:
+
+```text
+make synth-vivado-urbana-dry-run
+```
+
+This uses the board-part assumption `xc7s50csga324-1` and
+`VIVADO_TOP=gpu_video_fpga_top`. It is the current VM setup check because Vivado
+is optional and may not be installed on the development VM.
+
 The generic FPGA-facing video scaffold can also be checked without Vivado:
 
 ```text
@@ -59,6 +69,8 @@ Current generic scaffold:
   boundaries.
 - The scaffold does not claim Urbana board validation, pinout correctness,
   timing closure, bitstream generation, or host command input.
+- The Urbana board setup notes live in
+  [platform/urbana/README.md](../../platform/urbana/README.md).
 
 Create `platform/urbana/urbana_top.sv` with:
 

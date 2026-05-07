@@ -1,6 +1,8 @@
-.PHONY: check-tools tool-versions assemble-kernels check-kernel-fixtures test-tools lint formal sim list-sim-tests synth-yosys synth-vivado regress clean
+.PHONY: check-tools tool-versions assemble-kernels check-kernel-fixtures test-tools lint formal sim list-sim-tests synth-yosys synth-vivado synth-vivado-urbana synth-vivado-urbana-dry-run regress clean
 
 REPO_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+URBANA_PART ?= xc7s50csga324-1
+URBANA_TOP ?= gpu_video_fpga_top
 
 check-tools:
 	tools/scripts/check_tools.sh
@@ -35,6 +37,12 @@ synth-yosys:
 
 synth-vivado:
 	tools/scripts/synth_vivado.sh
+
+synth-vivado-urbana:
+	VIVADO_PART=$(URBANA_PART) VIVADO_TOP=$(URBANA_TOP) tools/scripts/synth_vivado.sh
+
+synth-vivado-urbana-dry-run:
+	VIVADO_DRY_RUN=1 VIVADO_PART=$(URBANA_PART) VIVADO_TOP=$(URBANA_TOP) tools/scripts/synth_vivado.sh
 
 regress:
 	$(MAKE) check-kernel-fixtures

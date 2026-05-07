@@ -117,3 +117,14 @@ Use `VIVADO_DRY_RUN=1 VIVADO_PART=<xilinx-part-name> make synth-vivado`
 without Vivado installed to validate the Vivado source manifest and Tcl path.
 Set `VIVADO_TOP=gpu_video_fpga_top` to check the generic video/GPU FPGA
 scaffold manifest; this is still not board timing or bitstream validation.
+
+For the RealDigital Urbana board setup path:
+
+```text
+make synth-vivado-urbana-dry-run
+make synth-vivado-urbana
+```
+
+The dry-run target works before Vivado is installed. The non-dry-run target
+requires Vivado on `PATH` and currently checks the generic FPGA scaffold against
+the Urbana part assumption, not a board-constrained bitstream.

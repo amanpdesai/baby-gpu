@@ -67,6 +67,23 @@ the synthesis smoke with the exact board part:
 VIVADO_PART=<xilinx-part-name> make synth-vivado
 ```
 
+For the RealDigital Urbana board, the checked target convenience commands use
+the Spartan-7 part assumption `xc7s50csga324-1` and the generic FPGA video smoke
+top:
+
+```text
+make synth-vivado-urbana-dry-run
+make synth-vivado-urbana
+```
+
+`synth-vivado-urbana-dry-run` works on a VM without Vivado. It validates the
+source manifest, Tcl path, top name, and Urbana part default. `synth-vivado-urbana`
+requires `vivado` on `PATH`, usually after sourcing:
+
+```text
+source /tools/Xilinx/Vivado/<version>/settings64.sh
+```
+
 Without Vivado installed, use `VIVADO_DRY_RUN=1` with the same target to check
 the Tcl script path and source list. `make test-tools` covers this dry-run path.
 

@@ -82,3 +82,25 @@ def test_vivado_script_still_requires_part_in_dry_run(tmp_path):
 
     assert result.returncode == 2
     assert "VIVADO_PART is required" in result.stdout
+
+
+def test_urbana_vivado_make_target_dry_run(tmp_path):
+    env = os.environ.copy()
+    env.update(
+        {
+            "VIVADO_OUT_DIR": str(tmp_path / "urbana_vivado_out"),
+        }
+    )
+
+    result = subprocess.run(
+        ["make", "synth-vivado-urbana-dry-run"],
+        cwd=REPO_ROOT,
+        env=env,
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+
+    assert "VIVADO DRY-RUN gpu_video_fpga_top (xc7s50csga324-1)" in result.stdout
+    assert "Sources: 31" in result.stdout
