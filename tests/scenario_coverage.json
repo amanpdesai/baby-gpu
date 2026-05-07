@@ -82,7 +82,8 @@
         "tb/integration/tb_programmable_core_framebuffer_gradient.sv",
         "tb/integration/tb_gpu_core_command_framebuffer_gradient.sv",
         "tb/integration/tb_gpu_core_command_framebuffer_scanout.sv",
-        "tb/integration/tb_gpu_video_controller_framebuffer_scanout.sv"
+        "tb/integration/tb_gpu_video_controller_framebuffer_scanout.sv",
+        "tb/integration/tb_gpu_video_controller_reset_recovery.sv"
       ],
       "kernels": [
         "tests/kernels/framebuffer_gradient.kgpu"
@@ -269,7 +270,8 @@
         "tb/integration/tb_video_controller_system.sv",
         "tb/integration/tb_framebuffer_scanout_arbiter.sv",
         "tb/integration/tb_gpu_core_command_framebuffer_scanout.sv",
-        "tb/integration/tb_gpu_video_controller_framebuffer_scanout.sv"
+        "tb/integration/tb_gpu_video_controller_framebuffer_scanout.sv",
+        "tb/integration/tb_gpu_video_controller_reset_recovery.sv"
       ],
       "formal": [
         "formal/scripts/video_framebuffer_source.sby",
