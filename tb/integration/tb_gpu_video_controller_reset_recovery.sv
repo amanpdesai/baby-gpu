@@ -199,6 +199,19 @@ module tb_gpu_video_controller_reset_recovery;
         end
     endtask
 
+    task automatic wait_for_gpu_and_video_requests;
+        int timeout;
+        begin
+            timeout = 0;
+            while (!(debug_gpu_mem_req_valid && debug_video_mem_req_valid) && timeout < 200) begin
+                step();
+                timeout = timeout + 1;
+            end
+            check(debug_gpu_mem_req_valid, "stalled GPU memory request is pending with video");
+            check(debug_video_mem_req_valid, "stalled video memory request remains pending with GPU");
+        end
+    endtask
+
     task automatic launch_gradient_kernel;
         begin
             load_gradient_program();
@@ -303,9 +316,30 @@ module tb_gpu_video_controller_reset_recovery;
         end
     endtask
 
+    task automatic test_reset_during_concurrent_requests;
+        begin
+            reset_system();
+            source_select = 1'b1;
+            tick_enable = 1'b1;
+            memory_req_stall = 1'b1;
+            scanout_start_valid = 1'b1;
+            check(scanout_start_ready, "video scanout starts before concurrent reset");
+            step();
+            scanout_start_valid = 1'b0;
+            wait_for_video_request();
+
+            launch_gradient_kernel();
+            wait_for_gpu_and_video_requests();
+
+            assert_reset_clears_pending_memory();
+            prove_full_recovery();
+        end
+    endtask
+
     initial begin
         test_reset_during_video_request();
         test_reset_during_gpu_request();
+        test_reset_during_concurrent_requests();
 
         $display("tb_gpu_video_controller_reset_recovery PASS");
         $finish;
