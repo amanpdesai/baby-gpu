@@ -138,6 +138,54 @@ matching response. In-order memories may still use the response tracker as
 outstanding-capacity accounting, but response routing uses the external
 `mem_rsp_id`.
 
+## Response Identity Contract
+
+This contract is required before adding scratchpads, caches, DMA engines, or
+multiple programmable cores.
+
+- A request source owns only its local request ID field. It must not depend on
+  another source's local ID encoding.
+- The arbiter owns only the source ID field. It prepends the selected source ID
+  to the local request ID and must not rewrite the local ID bits.
+- A memory wrapper that supports IDs must return the accepted request ID on the
+  corresponding response. If the wrapper is strictly in order, a bounded
+  response tracker may regenerate the oldest outstanding ID.
+- The response path is selected only by `rsp_id.source_id`. The local ID bits are
+  delivered unchanged to the selected client.
+- Invalid response source IDs must be drained without asserting any client
+  response, client error, or backpressured sink path.
+- Backpressure is source-local on the response path. A valid response for one
+  source may be held by that source's `rsp_ready` without pretending another
+  client accepted it.
+- Reset or command-level soft reset may invalidate client-side work, but the
+  external memory interface must still be able to drain stale responses without
+  corrupting the next command or kernel launch.
+
+Initial limits:
+
+```text
+gpu_core sources: framebuffer writer, programmable LSU
+gpu_core source ID width: 1 bit
+gpu_core local response ID width: 1 bit
+memory response ordering: external responses may arrive by ID; in-order
+                          wrappers may use a response tracker
+LSU outstanding depth: blocking, one lane request at a time
+```
+
+Scaling requirements before multi-core:
+
+- Define a global source map that distinguishes core-local LSU traffic, video
+  scanout, host DMA, cache refills, and future copy engines.
+- Decide whether `core_id` is part of the arbiter source field or a separate
+  field preserved across a higher-level memory fabric.
+- Size `local_request_id` for the deepest outstanding queue behind each source,
+  including future nonblocking LSU, cache miss, and prefetch queues.
+- Add integration tests where older responses for one source remain pending
+  while a younger response for another source completes.
+- Add formal properties proving response routing, invalid-source containment,
+  selected-source backpressure, and ID FIFO ordering at every new fabric
+  boundary.
+
 The first arbiter is intentionally a small valid/ready mux with response
 routing. It does not reorder, allocate IDs, track completion, or implement
 fairness. Those are later memory-system blocks. Priority arbitration is

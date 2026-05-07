@@ -158,7 +158,8 @@
         "tb/unit/tb_memory_response_tracker_depth4.sv",
         "tb/integration/tb_memory_arbiter_rr_4client_data_memory.sv",
         "tb/integration/tb_gpu_core_memory_tracker_backpressure.sv",
-        "tb/integration/tb_gpu_core_command_response_id_reorder.sv"
+        "tb/integration/tb_gpu_core_command_response_id_reorder.sv",
+        "tb/integration/tb_gpu_core_command_response_id_interleave.sv"
       ],
       "formal": [
         "formal/scripts/memory_arbiter.sby",
