@@ -403,7 +403,8 @@ Current scale-readiness coverage includes a programmable-core integration smoke
 that runs the special-register kernel at `LANES=2` and `LANES=8`. This is not a
 commitment to a widened product configuration yet; it is a regression guard that
 the scheduler, active-lane tail handling, register-file flattening, and special
-register plumbing do not silently bake in four lanes.
+register plumbing do not silently bake in four lanes. Yosys synthesis also
+checks the default programmable core plus `LANES=2` and `LANES=8` elaborations.
 
 ## ASIC and FPGA Lane
 

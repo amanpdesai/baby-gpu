@@ -54,6 +54,12 @@ and `make sim` are allowed to report that no RTL or no formal jobs exist yet.
 `.kgpu` source. `make check-kernel-fixtures` verifies those committed images are
 not stale.
 
+`make synth-yosys` includes leaf RTL, the default integrated `gpu_core`, the
+default `programmable_core`, and explicit `programmable_core` synthesis smoke at
+`LANES=2` and `LANES=8`. The widened/narrowed lane variants are scale-readiness
+checks only; they do not imply a supported product configuration until timing,
+area, memory bandwidth, and software launch policy are validated.
+
 Vivado is optional until FPGA-facing milestones. When Vivado is installed, run
 the synthesis smoke with the exact board part:
 

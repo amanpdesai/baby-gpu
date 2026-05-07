@@ -10,7 +10,26 @@ run_synth() {
   local top="$1"
   shift
 
-  local log_file="${out_dir}/${top}.log"
+  run_synth_impl "$top" "$top" "" "$@"
+}
+
+run_synth_chparam() {
+  local top="$1"
+  local label="$2"
+  local param_name="$3"
+  local param_value="$4"
+  shift 4
+
+  run_synth_impl "$top" "$label" "chparam -set ${param_name} ${param_value} ${top}" "$@"
+}
+
+run_synth_impl() {
+  local top="$1"
+  local label="$2"
+  local setup_cmd="$3"
+  shift 3
+
+  local log_file="${out_dir}/${label}.log"
   local sources=("$@")
   local read_args=()
 
@@ -18,21 +37,22 @@ run_synth() {
     read_args+=("$source")
   done
 
-  echo "SYNTH ${top}"
+  echo "SYNTH ${label}"
   if ! timeout "${timeout_s}s" yosys -p "
     read_verilog -sv ${read_args[*]}
+    ${setup_cmd}
     hierarchy -top ${top}
     synth -run coarse
     check -assert
     stat
   " >"$log_file" 2>&1; then
-    echo "Yosys synthesis failed for ${top}. See ${log_file}."
+    echo "Yosys synthesis failed for ${label}. See ${log_file}."
     tail -n 80 "$log_file" || true
     exit 1
   fi
 
   if grep -q "Warning:" "$log_file"; then
-    echo "Yosys emitted warnings for ${top}. See ${log_file}."
+    echo "Yosys emitted warnings for ${label}. See ${log_file}."
     grep "Warning:" "$log_file" || true
     exit 1
   fi
@@ -131,6 +151,24 @@ run_synth programmable_core \
   rtl/core/load_store_unit.sv \
   rtl/core/simd_core.sv \
   rtl/core/programmable_core.sv
+
+programmable_core_sources=(
+  rtl/common/isa_pkg.sv
+  rtl/core/work_scheduler.sv
+  rtl/core/instruction_decoder.sv
+  rtl/core/special_registers.sv
+  rtl/core/lane_register_file.sv
+  rtl/core/simd_alu.sv
+  rtl/core/load_store_unit.sv
+  rtl/core/simd_core.sv
+  rtl/core/programmable_core.sv
+)
+
+run_synth_chparam programmable_core programmable_core_lanes2 LANES 2 \
+  "${programmable_core_sources[@]}"
+
+run_synth_chparam programmable_core programmable_core_lanes8 LANES 8 \
+  "${programmable_core_sources[@]}"
 
 run_synth register_file \
   rtl/core/register_file.sv
