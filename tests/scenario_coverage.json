@@ -45,7 +45,7 @@
     },
     {
       "id": "command_soft_reset_recovery",
-      "description": "Host-visible soft reset clears recoverable fault state after a command-driven fault.",
+      "description": "Host-visible soft reset clears recoverable fault state and drains stale held memory responses after command-driven kernels reset.",
       "tests": [
         "tb/integration/tb_gpu_core_command_store16_fault.sv",
         "tb/integration/tb_gpu_core_command_active_reset.sv"

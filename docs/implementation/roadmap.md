@@ -305,7 +305,7 @@ Current lifecycle/ABI coverage:
   stalled
 - invalid-launch rejection through real `gpu_core` launch registers for zero
   grid dimensions, unsupported group dimensions, and nonzero flags
-- active-kernel soft reset and relaunch while memory response is held
+- active-kernel soft reset and relaunch while memory response is held, including stale-response handshake drain
 - host-visible odd-address `STORE16` fault
 - soft-reset recovery after the `STORE16` fault
 

@@ -119,13 +119,19 @@ logic [1:0] pending_rsp_id;
 
   task automatic wait_response_drained;
     int timeout;
+    bit observed_rsp_handshake;
   begin
     timeout = 0;
+    observed_rsp_handshake = 1'b0;
     while (pending_rsp || mem_rsp_valid) begin
       check(timeout < 50, "stale memory response drains after active reset");
+      if (mem_rsp_valid && mem_rsp_ready) begin
+        observed_rsp_handshake = 1'b1;
+      end
       timeout = timeout + 1;
       step();
     end
+    check(observed_rsp_handshake, "stale memory response handshakes after active reset");
   end
   endtask
 
@@ -170,6 +176,7 @@ mem_rsp_id = '0;
     launch_kernel();
     wait_for_mem_req();
     check(busy, "kernel is busy while memory response is held before reset");
+    check(pending_rsp, "held kernel memory response is pending before reset");
 
     set_reg(KGPU_REG_CONTROL, KGPU_CONTROL_SOFT_RESET);
     wait_idle(80, "soft reset clears active command-launched kernel");
