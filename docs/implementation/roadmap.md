@@ -117,9 +117,9 @@ architecture.
   local `make regress`, and enforced simulation-test scenario accounting
 - memory arbiter scale-prep leaves with fixed-priority and round-robin request
   selection, source-local request IDs, response-ID routing, unit simulation,
-  bounded formal smoke, four-client scale simulation/formal coverage,
-  four-client arbiter-to-data-memory integration coverage, and Yosys synthesis
-  coverage
+  invalid response-source containment, bounded formal smoke, four-client scale
+  simulation/formal coverage, four-client arbiter-to-data-memory integration
+  coverage, and Yosys synthesis coverage
 - portable framebuffer scanout leaf reads 32-bit memory words into RGB565 pixel
   output, handles odd frame widths, request and pixel backpressure, and response
   errors in unit simulation, with additional even-width, width-1, and widened

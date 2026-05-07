@@ -130,6 +130,7 @@ module memory_arbiter_rr_formal(
 
             if (mem_rsp_valid && rsp_source == 2'd3) begin
                 assert(client_rsp_valid == 3'b000);
+                assert(client_rsp_error == 3'b000);
                 assert(mem_rsp_ready);
             end
 
@@ -147,6 +148,7 @@ module memory_arbiter_rr_formal(
             end
 
             cover(mem_rsp_valid && rsp_source == 2'd2 && client_rsp_valid == 3'b100 && mem_rsp_ready);
+            cover(mem_rsp_valid && rsp_source == 2'd3 && client_rsp_valid == 3'b000 && mem_rsp_ready);
         end
     end
 endmodule
