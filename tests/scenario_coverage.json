@@ -226,7 +226,8 @@
       "tests": [
         "tb/unit/tb_instruction_decoder.sv",
         "tb/unit/tb_instruction_memory.sv",
-        "tb/integration/tb_programmable_core_illegal_instruction.sv"
+        "tb/integration/tb_programmable_core_illegal_instruction.sv",
+        "tb/integration/tb_gpu_core_command_illegal_instruction.sv"
       ],
       "kernels": [
         "tests/kernels/illegal_opcode_raw.kgpu",
