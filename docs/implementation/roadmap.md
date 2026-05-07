@@ -268,6 +268,8 @@ PSTORE16
 Near-term work should harden the existing programmable path rather than adding
 speculative GPU features:
 
+- keep the generic FPGA-facing video scaffold buildable and covered in
+  simulation/Vivado dry-run without claiming board-level validation
 - add block-level formal proofs for decoder, register file, scheduler, LSU, and
   memory-facing protocol behavior
 - add coverage-oriented integration tests for corner kernels

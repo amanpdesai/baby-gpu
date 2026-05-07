@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mapfile -t rtl_files < <(find rtl platform/sim platform/asic -type f -name '*.sv' | sort)
+mapfile -t rtl_files < <(find rtl platform/sim platform/fpga platform/asic -type f -name '*.sv' | sort)
 
 if [[ "${#rtl_files[@]}" -eq 0 ]]; then
   echo "No SystemVerilog files found yet."

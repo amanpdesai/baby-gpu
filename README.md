@@ -29,9 +29,10 @@ flowchart LR
   VideoIf --> Output[Sim Sink or Urbana Video Out]
 ```
 
-The portable core lives under `rtl/`. Board-specific integration lives under
-`platform/urbana/`. Simulation and future ASIC integration layers live beside
-the Urbana wrapper rather than inside the GPU core.
+The portable core lives under `rtl/`. Generic FPGA-facing wrappers live under
+`platform/fpga/`, board-specific integration lives under `platform/urbana/`,
+and simulation/future ASIC integration layers live beside those wrappers rather
+than inside the GPU core.
 
 ## Documentation
 
@@ -113,3 +114,5 @@ VIVADO_PART=<xilinx-part-name> make synth-vivado
 
 Use `VIVADO_DRY_RUN=1 VIVADO_PART=<xilinx-part-name> make synth-vivado`
 without Vivado installed to validate the Vivado source manifest and Tcl path.
+Set `VIVADO_TOP=gpu_video_fpga_top` to check the generic video/GPU FPGA
+scaffold manifest; this is still not board timing or bitstream validation.

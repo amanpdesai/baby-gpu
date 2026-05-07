@@ -21,7 +21,7 @@ mapfile -t tb_files < <(
     cut -f2-
 )
 mapfile -t tb_common_files < <(find tb/common -type f -name '*.sv' | sort)
-mapfile -t rtl_files < <(find rtl platform/sim -type f -name '*.sv' | sort)
+mapfile -t rtl_files < <(find rtl platform/sim platform/fpga -type f -name '*.sv' | sort)
 
 if [[ "${#tb_files[@]}" -eq 0 ]]; then
   echo "No simulation testbenches found yet."

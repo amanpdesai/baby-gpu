@@ -25,6 +25,17 @@ VIVADO_DRY_RUN=1 VIVADO_PART=<xilinx-part-name> make synth-vivado
 The dry run does not synthesize RTL. It only checks script inputs and source
 file paths, and is covered by `make test-tools`.
 
+The generic FPGA-facing video scaffold can also be checked without Vivado:
+
+```text
+VIVADO_DRY_RUN=1 VIVADO_PART=<xilinx-part-name> VIVADO_TOP=gpu_video_fpga_top make synth-vivado
+```
+
+`gpu_video_fpga_top` is not a board top. It stubs host command inputs, uses the
+simulation `data_memory`, emits RGB565 test-pattern video by default, and exists
+to keep source manifests and FPGA-facing integration pressure in-tree before
+Urbana pins, clocks, constraints, and timing are known.
+
 ## Bring-Up Sequence
 
 ```mermaid
@@ -39,6 +50,15 @@ flowchart TB
 ```
 
 ## Step 1: Board Skeleton
+
+Current generic scaffold:
+
+- `platform/fpga/gpu_video_fpga_top.sv` instantiates the GPU/video simulation
+  system behind simple switch/button controls.
+- `tb_gpu_video_fpga_top_smoke` verifies active test-pattern pixels and frame
+  boundaries.
+- The scaffold does not claim Urbana board validation, pinout correctness,
+  timing closure, bitstream generation, or host command input.
 
 Create `platform/urbana/urbana_top.sv` with:
 
