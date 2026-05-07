@@ -112,6 +112,9 @@ out-of-range values.
 - fixed-function compatibility engines are idle
 
 `WAIT_IDLE` must not complete just because the command processor is idle.
+It is scoped to `gpu_core` command/kernel work; independent platform clients
+outside `gpu_core`, such as shared-memory video scanout, are not part of the
+barrier.
 
 ## Compatibility `CLEAR`
 

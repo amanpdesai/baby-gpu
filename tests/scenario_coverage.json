@@ -7,7 +7,8 @@
       "tests": [
         "tb/unit/tb_command_fifo.sv",
         "tb/unit/tb_command_processor.sv",
-        "tb/integration/tb_gpu_core_command_lifecycle.sv"
+        "tb/integration/tb_gpu_core_command_lifecycle.sv",
+        "tb/integration/tb_gpu_video_controller_framebuffer_scanout.sv"
       ],
       "formal": [
         "formal/scripts/command_fifo.sby"

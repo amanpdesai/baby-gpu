@@ -287,6 +287,43 @@ module tb_gpu_video_controller_framebuffer_scanout;
         end
     endtask
 
+    task automatic test_wait_idle_with_video_active;
+        int timeout;
+        begin
+            reset_system();
+            source_select = 1'b1;
+            tick_enable = 1'b1;
+            memory_req_stall = 1'b1;
+            scanout_start_valid = 1'b1;
+            check(scanout_start_ready, "video scanout starts before WAIT_IDLE");
+            step();
+            scanout_start_valid = 1'b0;
+
+            timeout = 0;
+            while (!debug_video_mem_req_valid && timeout < 50) begin
+                step();
+                timeout = timeout + 1;
+            end
+            check(debug_video_mem_req_valid, "video request is pending during WAIT_IDLE");
+            check(scanout_busy, "video scanout remains busy before WAIT_IDLE");
+            check(!busy, "GPU command path is idle before video-active WAIT_IDLE");
+
+            send_word(KGPU_CMD_WAIT_IDLE);
+            wait_idle(20, "WAIT_IDLE completes while only video scanout is active");
+            check(scanout_busy, "video scanout is still active after WAIT_IDLE");
+            check(debug_video_mem_req_valid, "WAIT_IDLE does not consume pending video request");
+
+            memory_req_stall = 1'b0;
+            timeout = 0;
+            while (!scanout_done && timeout < 200) begin
+                step();
+                timeout = timeout + 1;
+            end
+            check(scanout_done, "video scanout completes after WAIT_IDLE test");
+            check(!scanout_error, "video scanout has no memory error after WAIT_IDLE test");
+        end
+    endtask
+
     task automatic test_concurrent_gpu_video_memory;
         int timeout;
         logic contention_seen;
@@ -351,6 +388,7 @@ module tb_gpu_video_controller_framebuffer_scanout;
         check(error_status == 8'h00, "GPU framebuffer producer has no errors");
         display_gpu_framebuffer(1'b0);
         run_bounded_fill_frame();
+        test_wait_idle_with_video_active();
         test_concurrent_gpu_video_memory();
 
         $display("tb_gpu_video_controller_framebuffer_scanout PASS");

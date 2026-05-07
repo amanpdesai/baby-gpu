@@ -174,7 +174,8 @@ architecture.
   command-driven framebuffer-gradient kernel can be displayed by the video
   controller path; lifecycle coverage flushes and displays a second
   command-driven bounded-fill frame without reset, and robustness coverage
-  includes concurrent GPU/video memory arbitration plus single-client and
+  includes `WAIT_IDLE` completion while only video scanout is active,
+  concurrent GPU/video memory arbitration, and single-client and
   simultaneous-client reset-while-memory-pending recovery smoke
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
