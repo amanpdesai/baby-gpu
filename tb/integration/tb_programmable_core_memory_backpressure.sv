@@ -164,6 +164,22 @@ module tb_programmable_core_memory_backpressure;
         end
     endtask
 
+    task automatic reject_launch_while_busy;
+        begin
+            @(negedge clk);
+            grid_x = 16'd2;
+            grid_y = 16'd2;
+            launch_valid = 1'b1;
+            check(busy, "core is busy before rejected second launch");
+            check(!launch_ready, "second launch rejected while kernel is active");
+            step();
+            @(negedge clk);
+            launch_valid = 1'b0;
+            grid_x = 16'd1;
+            grid_y = 16'd1;
+        end
+    endtask
+
     task automatic load_memory_backpressure_program;
         logic [ISA_WORD_W-1:0] kernel_words [0:6];
         begin
@@ -279,6 +295,7 @@ module tb_programmable_core_memory_backpressure;
         load_memory_backpressure_program();
 
         launch_kernel();
+        reject_launch_while_busy();
 
         expect_request_with_stall(1'b0, 32'd16, 32'h0000_0000, 4'h0, 3, "LOAD");
         respond_after_stall(LOAD_DATA, 4, "LOAD");
