@@ -399,6 +399,12 @@ Scaling is deliberately staged:
 Do not add caches before the blocking memory model is correct. Do not add
 multiple cores before memory responses have routing identity.
 
+Current scale-readiness coverage includes a programmable-core integration smoke
+that runs the special-register kernel at `LANES=2` and `LANES=8`. This is not a
+commitment to a widened product configuration yet; it is a regression guard that
+the scheduler, active-lane tail handling, register-file flattening, and special
+register plumbing do not silently bake in four lanes.
+
 ## ASIC and FPGA Lane
 
 The programmable architecture must remain portable:

@@ -122,7 +122,8 @@
       "description": "Lane, global, local, group, linear, ARG_BASE, and framebuffer special registers.",
       "tests": [
         "tb/unit/tb_special_registers.sv",
-        "tb/integration/tb_programmable_core_groups.sv"
+        "tb/integration/tb_programmable_core_groups.sv",
+        "tb/integration/tb_programmable_core_lane_scaling.sv"
       ],
       "kernels": [
         "tests/kernels/group_special_registers.kgpu"
