@@ -27,7 +27,9 @@ module gpu_video_controller_system #(
     parameter int MASK_W = DATA_W / 8,
     parameter int CLIENTS = 2,
     parameter int SOURCE_ID_W = 1,
-    parameter int MEM_ID_W = SOURCE_ID_W + LOCAL_ID_W
+    parameter int MEM_ID_W = SOURCE_ID_W + LOCAL_ID_W,
+    parameter logic [ADDR_W-1:0] FRONT_BASE_RESET = '0,
+    parameter logic [ADDR_W-1:0] BACK_BASE_RESET = '0
 ) (
     input logic clk,
     input logic rst_n,
@@ -53,6 +55,14 @@ module gpu_video_controller_system #(
     input logic [ADDR_W-1:0] fb_base,
     input logic [ADDR_W-1:0] stride_bytes,
     input logic fifo_flush,
+
+    input logic swap_enable,
+    input logic swap_request,
+    output logic swap_ready,
+    output logic swap_pending,
+    output logic swap_pulse,
+    output logic [ADDR_W-1:0] swap_front_base,
+    output logic [ADDR_W-1:0] swap_back_base,
 
     output logic scanout_busy,
     output logic scanout_done,
@@ -138,6 +148,9 @@ module gpu_video_controller_system #(
     logic [MEM_ID_W-1:0] pending_mem_id_q;
     logic debug_gpu_mem_req_fire_q;
     logic debug_video_mem_req_fire_q;
+    logic [ADDR_W-1:0] video_fb_base;
+
+    assign video_fb_base = swap_enable ? swap_front_base : fb_base;
 
     initial begin
         if (CLIENTS != 2) $fatal(1, "gpu_video_controller_system requires CLIENTS == 2");
@@ -164,6 +177,22 @@ module gpu_video_controller_system #(
 
     assign mem_rsp_id = pending_mem_id_q;
     assign arb_mem_req_ready = memory_req_ready && !memory_req_stall;
+
+    framebuffer_swap_controller #(
+        .ADDR_W(ADDR_W),
+        .FRONT_BASE_RESET(FRONT_BASE_RESET),
+        .BACK_BASE_RESET(BACK_BASE_RESET)
+    ) swap_controller (
+        .clk(clk),
+        .rst_n(rst_n),
+        .swap_request(swap_request),
+        .swap_ready(swap_ready),
+        .frame_boundary(frame_start),
+        .front_base(swap_front_base),
+        .back_base(swap_back_base),
+        .swap_pending(swap_pending),
+        .swap_pulse(swap_pulse)
+    );
 
     gpu_core #(
         .FB_WIDTH(GPU_FB_WIDTH),
@@ -232,7 +261,7 @@ module gpu_video_controller_system #(
         .solid_rgb(solid_rgb),
         .scanout_start_valid(scanout_start_valid),
         .scanout_start_ready(scanout_start_ready),
-        .fb_base(fb_base),
+        .fb_base(video_fb_base),
         .stride_bytes(stride_bytes),
         .fifo_flush(fifo_flush),
         .scanout_busy(scanout_busy),

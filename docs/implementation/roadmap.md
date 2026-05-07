@@ -176,10 +176,11 @@ architecture.
   `video_controller`, round-robin arbitration, and shared `data_memory` so a
   command-driven framebuffer-gradient kernel can be displayed by the video
   controller path; lifecycle coverage flushes and displays a second
-  command-driven bounded-fill frame without reset, and robustness coverage
-  includes `WAIT_IDLE` completion while only video scanout is active,
-  concurrent GPU/video memory arbitration, and single-client and
-  simultaneous-client reset-while-memory-pending recovery smoke
+  command-driven bounded-fill frame without reset, double-buffer coverage uses
+  frame-boundary front/back swaps between GPU-produced frames, and robustness
+  coverage includes `WAIT_IDLE` completion while only video scanout is active,
+  concurrent GPU/video memory arbitration, and single-client and simultaneous-client
+  reset-while-memory-pending recovery smoke
 - `gpu_core` memory path uses the memory arbiter for framebuffer-writer and
   programmable LSU request selection while preserving stale-response drain
   behavior across active soft reset
