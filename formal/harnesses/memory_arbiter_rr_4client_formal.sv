@@ -140,6 +140,7 @@ module memory_arbiter_rr_4client_formal(
                 assert(client_rsp_rdata[(rsp_source*DATA_W) +: DATA_W] == mem_rsp_rdata);
                 assert(client_rsp_id[(rsp_source*LOCAL_ID_W) +: LOCAL_ID_W] == rsp_local_id);
                 assert(client_rsp_error == (mem_rsp_error ? (4'b0001 << rsp_source) : 4'b0000));
+                assert(mem_rsp_ready == client_rsp_ready[rsp_source]);
             end
 
             if (
@@ -156,6 +157,7 @@ module memory_arbiter_rr_4client_formal(
             end
 
             cover(mem_rsp_valid && rsp_source == 2'd3 && client_rsp_valid == 4'b1000 && mem_rsp_ready);
+            cover(mem_rsp_valid && rsp_source == 2'd3 && client_rsp_valid == 4'b1000 && !mem_rsp_ready);
         end
     end
 endmodule
