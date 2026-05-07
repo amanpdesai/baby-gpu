@@ -1,0 +1,19 @@
+[tasks]
+bmc
+cover
+
+[options]
+bmc: mode bmc
+cover: mode cover
+depth 6
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -sv framebuffer_swap_controller.sv framebuffer_swap_controller_formal.sv
+prep -top framebuffer_swap_controller_formal
+
+[files]
+rtl/core/framebuffer_swap_controller.sv
+formal/harnesses/framebuffer_swap_controller_formal.sv

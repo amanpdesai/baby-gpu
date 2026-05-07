@@ -277,6 +277,7 @@
         "tb/integration/tb_gpu_video_controller_reset_recovery.sv"
       ],
       "formal": [
+        "formal/scripts/framebuffer_swap_controller.sby",
         "formal/scripts/video_framebuffer_source.sby",
         "formal/scripts/video_pixel_fifo.sby",
         "formal/scripts/video_stream_mux.sby",

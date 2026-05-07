@@ -126,7 +126,8 @@ architecture.
   responses
 - framebuffer swap controller leaf holds front/back framebuffer base addresses,
   accepts one pending host swap request, commits only at a frame boundary, and
-  exposes ready/pending/pulse state for future double-buffered display control
+  exposes ready/pending/pulse state for future double-buffered display control,
+  with unit simulation, bounded formal smoke, and Yosys synthesis coverage
 - portable video timing leaf generates active-area pixel-valid, x/y coordinate,
   line-start, frame-start, hsync, and vsync timing from parameterized active,
   porch, and sync widths with tick-enable and sync-polarity unit coverage
