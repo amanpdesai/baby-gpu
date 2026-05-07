@@ -195,7 +195,8 @@ architecture.
 - memory response tracker records accepted request IDs, returns oldest
   outstanding ID for in-order external responses, flags overflow/underflow, and
   has unit simulation, depth-four wraparound/full simultaneous push-pop
-  coverage, bounded formal coverage, and synthesis smoke
+  coverage, bounded formal response-ID ordering against a reference FIFO, and
+  synthesis smoke
 - directed malformed illegal-instruction fixtures use checked `.word` raw
   encodings
 - programmable-core convergent, signed backward, and R0 predicate branch
