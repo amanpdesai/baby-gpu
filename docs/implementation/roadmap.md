@@ -124,6 +124,9 @@ architecture.
   local-response-ID coverage; scanout-to-arbiter integration coverage verifies
   round-robin contention with framebuffer-writer traffic and routed scanout
   responses
+- framebuffer swap controller leaf holds front/back framebuffer base addresses,
+  accepts one pending host swap request, commits only at a frame boundary, and
+  exposes ready/pending/pulse state for future double-buffered display control
 - portable video timing leaf generates active-area pixel-valid, x/y coordinate,
   line-start, frame-start, hsync, and vsync timing from parameterized active,
   porch, and sync widths with tick-enable and sync-polarity unit coverage

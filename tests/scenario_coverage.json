@@ -260,6 +260,7 @@
         "tb/unit/tb_framebuffer_scanout.sv",
         "tb/unit/tb_framebuffer_scanout_even_width.sv",
         "tb/unit/tb_framebuffer_scanout_width1_id.sv",
+        "tb/unit/tb_framebuffer_swap_controller.sv",
         "tb/integration/tb_video_timing_pattern_mux.sv",
         "tb/integration/tb_video_timing_test_pattern.sv",
         "tb/integration/tb_video_framebuffer_full_path.sv",

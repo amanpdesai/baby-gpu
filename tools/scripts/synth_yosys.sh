@@ -50,6 +50,9 @@ run_synth framebuffer_writer \
 run_synth framebuffer_scanout \
   rtl/core/framebuffer_scanout.sv
 
+run_synth framebuffer_swap_controller \
+  rtl/core/framebuffer_swap_controller.sv
+
 run_synth video_timing \
   rtl/core/video_timing.sv
 
