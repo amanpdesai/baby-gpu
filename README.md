@@ -59,9 +59,10 @@ path, kernel-level simulations, formal proofs for selected control/datapath
 blocks including the clear engine, scheduler sticky-error behavior, special
 register mux, LSU prep, and request/response sequencing, draw-unit corner
 coverage for command/clear/rectangle/framebuffer paths, command-driven
-`STORE16`, `vector_add`, nonzero `PROGRAM_BASE`, and multi-frame 2D
-framebuffer kernel coverage through `gpu_core`, command-driven stalled/delayed memory
-smoke, host-visible `STORE16` fault coverage, soft-reset recovery smoke,
+`STORE16`, `vector_add`, nonzero `PROGRAM_BASE`, command-driven predicated
+bounded-fill, and multi-frame 2D framebuffer kernel coverage through
+`gpu_core`, command-driven stalled/delayed memory smoke, host-visible
+`STORE16` fault coverage, soft-reset recovery smoke,
 memory-arbiter identity/routing coverage, round-robin arbitration leaf coverage,
 portable video timing, test-pattern, pixel-FIFO, framebuffer-source, stream-mux, video-controller, simulation video-system, framebuffer scanout, double-buffer swap-control, and shared GPU/video double-buffer coverage, arbiter-backed `gpu_core` memory
 request routing, top-level memory request/response IDs, in-order response tracking, and Yosys synthesis smoke

@@ -384,6 +384,7 @@ kernels.
 Implemented coverage:
 
 - top-left bounded fill using `CMP` + `AND` + `PSTORE16`
+- command-driven top-left bounded fill through `gpu_core`
 - offset 1x1 fill using lower and upper bounds
 - low-half and high-half RGB565 preservation checks
 
