@@ -202,6 +202,8 @@ architecture.
   synthesis smoke
 - directed malformed illegal-instruction fixtures use checked `.word` raw
   encodings
+- command-level taken/not-taken branch STORE16 coverage and divergent-branch
+  programmable fault coverage through `gpu_core`
 - programmable-core convergent, signed backward, and R0 predicate branch
   integration coverage
 - programmable-core divergent branch fault integration coverage

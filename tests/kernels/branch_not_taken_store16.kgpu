@@ -1,0 +1,18 @@
+# Branch predicate is false, so the fallthrough store wins.
+
+MOVSR R1, LINEAR_GLOBAL_ID
+MOVI  R2, 2
+MUL   R3, R1, R2
+MOVSR R4, ARG_BASE
+ADD   R5, R4, R3
+
+MOVI  R6, 0
+BRA   R6, taken
+MOVI  R7, 0x1111
+STORE16 [R5 + 0], R7
+END
+
+taken:
+MOVI  R7, 0x2222
+STORE16 [R5 + 0], R7
+END

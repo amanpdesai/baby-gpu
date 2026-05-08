@@ -107,14 +107,17 @@
       "id": "branch_control",
       "description": "Convergent branches, backward offsets, untaken branches, and R0 predicates.",
       "tests": [
-        "tb/integration/tb_programmable_core_branch_control.sv"
+        "tb/integration/tb_programmable_core_branch_control.sv",
+        "tb/integration/tb_gpu_core_command_branch_control.sv"
       ],
       "kernels": [
         "tests/kernels/branch_backward_loop.kgpu",
         "tests/kernels/branch_divergent_lane_id.kgpu",
         "tests/kernels/branch_not_taken.kgpu",
+        "tests/kernels/branch_not_taken_store16.kgpu",
         "tests/kernels/branch_r0_never_taken.kgpu",
-        "tests/kernels/branch_taken.kgpu"
+        "tests/kernels/branch_taken.kgpu",
+        "tests/kernels/branch_taken_store16.kgpu"
       ]
     },
     {
