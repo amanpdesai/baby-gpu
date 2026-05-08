@@ -107,6 +107,29 @@ module tb_gpu_core_command_illegal_instruction;
     end
   endtask
 
+  task automatic soft_reset_and_check(input string scenario);
+    begin
+      set_reg(KGPU_REG_CONTROL, KGPU_CONTROL_SOFT_RESET);
+      wait_error_clear(20, {scenario, " soft reset clears status"});
+      check(!busy, {scenario, " soft reset returns gpu_core idle"});
+    end
+  endtask
+
+  task automatic run_malformed_instruction(input string path, input string scenario);
+    begin
+      mem_req_seen = 1'b0;
+      load_one_word_program(path);
+      configure_1d_launch(32'h0000_0001, 32'h0000_0000);
+      launch_kernel();
+      wait_programmable_error({scenario, " programmable error timeout"});
+
+      check(error_status == ERR_PROGRAMMABLE,
+            {scenario, " sets only programmable error bit"});
+      check(!mem_req_seen, {scenario, " issues no memory request"});
+      check(busy, {scenario, " leaves gpu_core busy while fault is sticky"});
+    end
+  endtask
+
   initial begin
     init_command_driver();
     mem_req_ready = 1'b1;
@@ -119,15 +142,8 @@ module tb_gpu_core_command_illegal_instruction;
     reset = 1'b0;
     step();
 
-    load_one_word_program("tests/kernels/illegal_opcode_raw.memh");
-    configure_1d_launch(32'h0000_0001, 32'h0000_0000);
-    launch_kernel();
-    wait_programmable_error("command illegal-instruction timeout");
-
-    check(error_status == ERR_PROGRAMMABLE,
-          "command illegal instruction sets only programmable error bit");
-    check(!mem_req_seen, "command illegal instruction issues no memory request");
-    check(busy, "gpu_core remains busy while programmable error is sticky");
+    run_malformed_instruction("tests/kernels/illegal_opcode_raw.memh",
+                              "illegal opcode");
 
     launch_kernel();
     wait_dispatch_busy("launch during sticky programmable error timeout");
@@ -135,9 +151,15 @@ module tb_gpu_core_command_illegal_instruction;
           "launch during sticky programmable error reports dispatch busy");
     check(!mem_req_seen, "rejected launch after illegal instruction issues no request");
 
-    set_reg(KGPU_REG_CONTROL, KGPU_CONTROL_SOFT_RESET);
-    wait_error_clear(20, "soft reset clears command illegal-instruction status");
-    check(!busy, "soft reset returns gpu_core idle after illegal instruction");
+    soft_reset_and_check("illegal opcode");
+
+    run_malformed_instruction("tests/kernels/illegal_special_register_raw.memh",
+                              "illegal special register");
+    soft_reset_and_check("illegal special register");
+
+    run_malformed_instruction("tests/kernels/reserved_cmp_payload_raw.memh",
+                              "reserved CMP payload");
+    soft_reset_and_check("reserved CMP payload");
 
     mem_req_seen = 1'b0;
     load_one_word_program("tests/kernels/empty.memh");

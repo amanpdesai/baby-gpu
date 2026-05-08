@@ -107,6 +107,8 @@ architecture.
 - programmable-core illegal-instruction integration coverage
 - programmable-core illegal special-register integration coverage
 - programmable-core CMP reserved-bit illegal integration coverage
+- command-level illegal opcode, illegal special-register, and reserved-CMP
+  programmable fault coverage through `gpu_core`
 - programmable-core zero-sized launch integration coverage
 - host-side assembler plus checked `.kgpu`/`.memh` fixtures used by
   command-level `gpu_core` and lower-level programmable-core integration tests
