@@ -211,6 +211,8 @@ architecture.
 - programmable-core memory backpressure integration coverage
 - programmable-core STORE16 memory backpressure integration coverage
 - programmable-core predicated 32-bit store integration coverage
+- command-level predicated memory integration coverage for selected lanes,
+  R0-false `PSTORE`, and all-false misaligned `PSTORE16`
 - programmable-core R0-predicated 32-bit store no-op integration coverage
 - programmable-core predicated STORE16 masked-fault integration coverage
 - programmable-core all-false predicated STORE16 skip integration coverage

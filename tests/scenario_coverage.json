@@ -195,7 +195,8 @@
       "description": "False predicates suppress memory requests and leave memory unchanged.",
       "tests": [
         "tb/integration/tb_programmable_core_pstore_predicate.sv",
-        "tb/integration/tb_programmable_core_pstore16_masked_fault.sv"
+        "tb/integration/tb_programmable_core_pstore16_masked_fault.sv",
+        "tb/integration/tb_gpu_core_command_predicated_memory.sv"
       ],
       "kernels": [
         "tests/kernels/pstore_never_taken.kgpu",

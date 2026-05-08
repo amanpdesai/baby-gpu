@@ -76,8 +76,8 @@ before older fixed-function writer responses and verifies routing by
 Illegal instruction, illegal special-register, branch, memory, and predicated
 store integration tests cover the current programmable path, including
 command-driven taken/not-taken branch stores, convergent lower-level branches,
-signed backward branches, R0 predicates, and divergent branch faults. Normal
-integration-test kernels now use a
+signed backward branches, R0 predicates, command-driven predicated memory
+suppression, and divergent branch faults. Normal integration-test kernels now use a
 host-side assembler and checked `.kgpu`/`.memh` fixtures across command-level
 `gpu_core` and lower-level programmable-core flows. Directed malformed
 illegal-instruction tests use checked `.word` raw fixtures. The assembler is
