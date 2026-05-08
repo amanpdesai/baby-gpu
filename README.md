@@ -60,7 +60,7 @@ blocks including the clear engine, scheduler sticky-error behavior, special
 register mux, LSU prep, and request/response sequencing, draw-unit corner
 coverage for command/clear/rectangle/framebuffer paths, command-driven
 `STORE16`, `vector_add`, nonzero `PROGRAM_BASE`, command-driven predicated
-bounded-fill, and multi-frame 2D framebuffer kernel coverage through
+bounded-fill and offset-fill, and multi-frame 2D framebuffer kernel coverage through
 `gpu_core`, command-driven stalled/delayed memory smoke, host-visible
 `STORE16` fault coverage, soft-reset recovery smoke,
 memory-arbiter identity/routing coverage, round-robin arbitration leaf coverage,

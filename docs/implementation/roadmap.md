@@ -386,6 +386,7 @@ Implemented coverage:
 - top-left bounded fill using `CMP` + `AND` + `PSTORE16`
 - command-driven top-left bounded fill through `gpu_core`
 - offset 1x1 fill using lower and upper bounds
+- command-driven offset 1x1 fill through `gpu_core`
 - low-half and high-half RGB565 preservation checks
 
 ## Scaling Lane
